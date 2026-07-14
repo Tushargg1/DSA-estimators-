@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -238,6 +239,37 @@ class BackfillServiceTest {
         user.setCodeforcesUsername("cf-" + id);
         user.setGfgUsername("gfg-" + id);
         return user;
+    }
+
+    @Test
+    void gatherHistoryUsesAdaptersHistoryContractInsteadOfRecentPollingWindow() {
+        BackfillService service = newService();
+        AtomicInteger recentCalls = new AtomicInteger();
+        AtomicInteger historyCalls = new AtomicInteger();
+        RawSubmission historical = RawSubmission.of(
+                "old-problem", "Old Problem", Instant.parse("2020-01-01T00:00:00Z"));
+        SubmissionFetcher fetcher = new SubmissionFetcher() {
+            @Override
+            public List<RawSubmission> fetchRecent(String username) {
+                recentCalls.incrementAndGet();
+                return List.of();
+            }
+
+            @Override
+            public List<RawSubmission> fetchHistory(String username) {
+                historyCalls.incrementAndGet();
+                return List.of(historical);
+            }
+
+            @Override
+            public Platform platform() {
+                return PLATFORM;
+            }
+        };
+
+        assertThat(service.gatherHistory(fetcher, "user")).containsExactly(historical);
+        assertThat(historyCalls).hasValue(1);
+        assertThat(recentCalls).hasValue(0);
     }
 
     @Test

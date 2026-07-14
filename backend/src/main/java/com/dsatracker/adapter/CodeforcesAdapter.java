@@ -22,7 +22,9 @@ import java.util.List;
  * <p>HTTP client: Spring's {@link RestClient} (mirroring {@link LeetCodeAdapter}) —
  * the polling job is blocking/imperative and does not need a reactive stack.
  *
- * <p>Endpoint: {@code GET {base}/user.status?handle={handle}&from=1&count=20}.
+ * <p>Polling endpoint: {@code GET {base}/user.status?handle={handle}&from=1&count=20}.
+ * Onboarding uses the same verified {@code from}/{@code count} contract with
+ * larger pages and continues until a short raw result page is returned.
  * The base URL is injectable via {@code ${codeforces.api.base}} (default
  * {@code https://codeforces.com/api}) so the adapter tests (task 3.6) can point
  * it at a local fixture server instead of hitting the live API.
@@ -75,6 +77,9 @@ public class CodeforcesAdapter implements SubmissionFetcher {
     /** Number of recent submissions to request, sufficient for a 5-minute poll. */
     private static final int RECENT_COUNT = 20;
 
+    /** Conservative page size for complete onboarding history pagination. */
+    private static final int HISTORY_PAGE_SIZE = 1_000;
+
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final String apiBase;
@@ -92,18 +97,45 @@ public class CodeforcesAdapter implements SubmissionFetcher {
 
     @Override
     public List<RawSubmission> fetchRecent(String username) {
+        validateUsername(username);
+        return fetchPage(username, 1, RECENT_COUNT).submissions();
+    }
+
+    /**
+     * Pages the official {@code user.status from/count} contract until the API
+     * returns a short page. Termination uses the raw result size (not accepted
+     * count), because rejected submissions are filtered from the returned data.
+     */
+    @Override
+    public List<RawSubmission> fetchHistory(String username) {
+        validateUsername(username);
+        List<RawSubmission> history = new ArrayList<>();
+        int from = 1;
+        while (true) {
+            SubmissionPage page = fetchPage(username, from, HISTORY_PAGE_SIZE);
+            history.addAll(page.submissions());
+            if (page.rawResultCount() < HISTORY_PAGE_SIZE) {
+                return history;
+            }
+            from += HISTORY_PAGE_SIZE;
+        }
+    }
+
+    private static void validateUsername(String username) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Codeforces handle must not be blank");
         }
+    }
 
+    private SubmissionPage fetchPage(String username, int from, int count) {
         String body;
         try {
             body = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/user.status")
                             .queryParam("handle", username)
-                            .queryParam("from", 1)
-                            .queryParam("count", RECENT_COUNT)
+                            .queryParam("from", from)
+                            .queryParam("count", count)
                             .build())
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
@@ -125,7 +157,22 @@ public class CodeforcesAdapter implements SubmissionFetcher {
                     "Codeforces user.status request failed for handle '" + username + "'", e);
         }
 
-        return parse(body, username);
+        List<RawSubmission> submissions = parse(body, username);
+        return new SubmissionPage(submissions, rawResultCount(body, username));
+    }
+
+    private int rawResultCount(String body, String username) {
+        try {
+            JsonNode result = objectMapper.readTree(body).get("result");
+            return result != null && result.isArray() ? result.size() : 0;
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Codeforces user.status response could not be counted for handle '"
+                    + username + "'", e);
+        }
+    }
+
+    private record SubmissionPage(List<RawSubmission> submissions, int rawResultCount) {
     }
 
     @Override

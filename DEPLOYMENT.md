@@ -72,7 +72,7 @@ docker run -p 8080:8080 \
   -e DB_USERNAME="<user>" \
   -e DB_PASSWORD="<password>" \
   -e CORS_ALLOWED_ORIGINS="https://your-frontend.example.com" \
-  -e WS_ALLOWED_ORIGINS="https://your-frontend.example.com" \
+  -e WEBSOCKET_ALLOWED_ORIGINS="https://your-frontend.example.com" \
   dsa-tracker-backend
 ```
 
@@ -108,25 +108,25 @@ deliverable.
 
 ### Backend
 
-| Variable               | Default (local)              | Purpose                                              |
-|------------------------|------------------------------|------------------------------------------------------|
-| `DB_URL`               | `jdbc:postgresql://localhost:5432/dsatracker` | JDBC URL (use `?sslmode=require` for managed DBs).   |
-| `DB_USERNAME`          | `dsatracker`                 | DB user.                                             |
-| `DB_PASSWORD`          | `dsatracker`                 | DB password.                                         |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173`      | Comma-separated origins allowed to call `/api/**`.  |
-| `WS_ALLOWED_ORIGINS`   | `http://localhost:5173`      | Comma-separated origins allowed for the `/ws` handshake. |
+| Variable                    | Default (local)              | Purpose                                              |
+|-----------------------------|------------------------------|------------------------------------------------------|
+| `DB_URL`                    | `jdbc:postgresql://localhost:5432/dsatracker` | JDBC URL (use `?sslmode=require` for managed DBs).   |
+| `DB_USERNAME`               | `dsatracker`                 | DB user.                                             |
+| `DB_PASSWORD`               | `dsatracker`                 | DB password.                                         |
+| `CORS_ALLOWED_ORIGINS`      | `http://localhost:5173`      | Comma-separated origins allowed to call `/api/**`.  |
+| `WEBSOCKET_ALLOWED_ORIGINS` | `http://localhost:5173`      | Comma-separated origins allowed for the `/ws` handshake. |
 
 - CORS is applied to `/api/**` (`CorsConfig`) with credentials enabled; the
   WebSocket handshake origins are set on the `/ws` endpoint (`WebSocketConfig`).
 - **Security:** the `localhost:5173` defaults are for local development only.
   Production MUST set explicit origin(s) for both `CORS_ALLOWED_ORIGINS` and
-  `WS_ALLOWED_ORIGINS`. Because CORS credentials are allowed, a wildcard is not
-  used — set the real frontend origin(s), comma-separated for multiple.
+  `WEBSOCKET_ALLOWED_ORIGINS`. Because CORS credentials are allowed, a wildcard
+  is not used — set the real frontend origin(s), comma-separated for multiple.
 
 Example (production):
 ```bash
 CORS_ALLOWED_ORIGINS=https://tracker.example.com,https://www.tracker.example.com
-WS_ALLOWED_ORIGINS=https://tracker.example.com,https://www.tracker.example.com
+WEBSOCKET_ALLOWED_ORIGINS=https://tracker.example.com,https://www.tracker.example.com
 ```
 
 See `backend/.env.example` for a copy-paste template.

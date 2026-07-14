@@ -1,3 +1,5 @@
+# This Compose file starts the local database only. When running the backend
+# alongside it, set WEBSOCKET_ALLOWED_ORIGINS as documented in backend/.env.example.
 services:
   postgres:
     image: postgres:16

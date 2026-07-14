@@ -285,12 +285,23 @@ public class GfgAdapter implements SubmissionFetcher {
         }
 
         // A present-but-empty list is the legitimate "no solved problems" case.
+        // Invalid entries are skipped so one bad row does not discard partial valid
+        // results. However, a recognised non-empty source yielding no valid rows is
+        // a schema/parse failure, not evidence that the user solved nothing.
         List<RawSubmission> results = new ArrayList<>();
         for (JsonNode item : solvedList) {
             RawSubmission submission = toRawSubmission(item);
             if (submission != null) {
                 results.add(submission);
             }
+        }
+        if (solvedList.size() > 0 && results.isEmpty()) {
+            throw new ScrapeException(
+                    "GFG '" + NEXT_DATA_ID + "' contained a recognised non-empty "
+                    + "solved-problems list with " + solvedList.size() + " entries, but zero valid "
+                    + "RawSubmission rows could be parsed. Each entry must provide a non-blank "
+                    + "problem id/slug, problem name/title, and parseable solved timestamp — the "
+                    + "upstream schema may have changed (GFG_PARSE_FAILURE).");
         }
         return results;
     }

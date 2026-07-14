@@ -69,6 +69,36 @@ class GfgAdapterTest {
     }
 
     @Test
+    @DisplayName("parse throws when a recognized nonempty solved list yields zero valid rows")
+    void parseThrowsWhenNonemptySolvedListHasNoValidRows() {
+        String html = profileHtmlWithSolvedProblems("""
+                {"slug":"missing-timestamp","name":"Missing Timestamp"},
+                {"name":"Missing Id","solvedAt":1700000000},
+                {"slug":"invalid-time","name":"Invalid Time","solvedAt":"not-a-timestamp"}
+                """);
+
+        ScrapeException exception = assertThrows(ScrapeException.class, () -> adapter.parse(html));
+
+        assertTrue(exception.getMessage().contains("3 entries"));
+        assertTrue(exception.getMessage().contains("zero valid RawSubmission rows"));
+        assertTrue(exception.getMessage().contains("GFG_PARSE_FAILURE"));
+    }
+
+    @Test
+    @DisplayName("parse preserves valid rows when another solved-list entry is malformed")
+    void parsePreservesPartialValidResults() {
+        String html = profileHtmlWithSolvedProblems("""
+                {"slug":"valid-problem","name":"Valid Problem","solvedAt":1700000000},
+                {"slug":"missing-timestamp","name":"Missing Timestamp"}
+                """);
+
+        List<RawSubmission> result = adapter.parse(html);
+
+        assertEquals(1, result.size());
+        assertEquals("valid-problem", result.get(0).problemId());
+    }
+
+    @Test
     @DisplayName("parse throws ScrapeException for a client-rendered page (no __NEXT_DATA__)")
     void parseThrowsForClientRenderedPage() {
         String html = FixtureLoader.load("gfg-client-rendered.html");
@@ -86,5 +116,16 @@ class GfgAdapterTest {
     @DisplayName("parse throws ScrapeException for empty HTML")
     void parseThrowsForEmptyHtml() {
         assertThrows(ScrapeException.class, () -> adapter.parse(""));
+    }
+
+    private static String profileHtmlWithSolvedProblems(String entries) {
+        return """
+                <!DOCTYPE html>
+                <html><body>
+                  <script id="__NEXT_DATA__" type="application/json">
+                    {"props":{"pageProps":{"solvedProblems":[%s]}}}
+                  </script>
+                </body></html>
+                """.formatted(entries);
     }
 }

@@ -41,6 +41,19 @@ public interface SubmissionFetcher {
     List<RawSubmission> fetchRecent(String username);
 
     /**
+     * Fetches the deepest reliable history supported by this adapter's verified
+     * API contract. Polling remains on {@link #fetchRecent(String)}. Adapters
+     * without a separate safe pagination contract inherit the visible/recent
+     * result rather than relying on an unverified endpoint.
+     *
+     * @param username the platform-specific public username/handle
+     * @return available submission history, never {@code null}
+     */
+    default List<RawSubmission> fetchHistory(String username) {
+        return fetchRecent(username);
+    }
+
+    /**
      * Identifies which platform this implementation serves.
      *
      * <p>Used by the polling job to select the right adapter per linked account

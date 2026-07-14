@@ -48,7 +48,7 @@ Tasks are grouped into waves. Every task in a wave may run in parallel; each wav
   - [x] 3.6 Write unit tests for each adapter using saved sample HTML/JSON fixtures (do not hit live APIs in tests)
 
 - [x] 4. Backfill (onboarding) logic
-  - [x] 4.1 On user creation, trigger async job that calls all three adapters for full history where possible (LeetCode/CF support pagination; GFG limited to what's visible on profile) (_Requirements: 1.4_)
+  - [x] 4.1 On user creation, trigger an async job that uses each adapter's deepest verified history path: complete `user.status` pagination for Codeforces, the verified recent-accepted query for LeetCode (no reliable paging contract in this codebase), and visible profile data for GFG (_Requirements: 1.4_)
   - [x] 4.2 Insert all backfilled submissions with `counted_for_target = false`, `is_first_attempt` computed normally (_Requirements: 1.5, 3.4_)
   - [x] 4.3 Set `onboarding_complete = true` once backfill finishes successfully (_Requirements: 1.6_)
   - [x] 4.4 Handle partial backfill failure (e.g. GFG scrape fails but LeetCode/CF succeed) — still mark onboarding complete, log which platform failed

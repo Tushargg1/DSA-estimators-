@@ -39,7 +39,8 @@ function Leaderboard({ groupId }) {
   const onDelta = useCallback((delta) => {
     const id = delta?.userId
     if (id != null && !knownIdsRef.current.has(id)) {
-      void resyncRef.current?.()
+      const request = resyncRef.current?.()
+      if (request) void request.catch(() => {})
     }
   }, [])
 
