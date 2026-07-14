@@ -1,0 +1,18 @@
+{
+  "data": {
+    "recentAcSubmissionList": [
+      {
+        "id": "1001",
+        "title": "Two Sum",
+        "titleSlug": "two-sum",
+        "timestamp": "1700000000"
+      },
+      {
+        "id": "1002",
+        "title": "Add Two Numbers",
+        "titleSlug": "add-two-numbers",
+        "timestamp": "1700100000"
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "data": {
+    "question": {
+      "difficulty": "Easy",
+      "topicTags": [
+        {
+          "name": "Array"
+        },
+        {
+          "name": "Hash Table"
+        }
+      ]
+    }
+  }
+}

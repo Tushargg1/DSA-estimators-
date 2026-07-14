@@ -1,0 +1,63 @@
+{
+  "status": "OK",
+  "result": [
+    {
+      "id": 300000001,
+      "verdict": "OK",
+      "creationTimeSeconds": 1700000000,
+      "problem": {
+        "contestId": 1234,
+        "index": "A",
+        "name": "Watermelon",
+        "rating": 800,
+        "tags": ["math", "brute force"]
+      }
+    },
+    {
+      "id": 300000002,
+      "verdict": "WRONG_ANSWER",
+      "creationTimeSeconds": 1700000100,
+      "problem": {
+        "contestId": 1234,
+        "index": "B",
+        "name": "Bugged Problem",
+        "rating": 1200,
+        "tags": ["greedy"]
+      }
+    },
+    {
+      "id": 300000003,
+      "verdict": "OK",
+      "creationTimeSeconds": 1700000200,
+      "problem": {
+        "contestId": 5678,
+        "index": "C",
+        "name": "Dynamic Fun",
+        "rating": 1500,
+        "tags": ["dp", "graphs"]
+      }
+    },
+    {
+      "id": 300000004,
+      "verdict": "TIME_LIMIT_EXCEEDED",
+      "creationTimeSeconds": 1700000300,
+      "problem": {
+        "contestId": 5678,
+        "index": "D",
+        "name": "Too Slow",
+        "rating": 2000,
+        "tags": ["math"]
+      }
+    },
+    {
+      "id": 300000005,
+      "verdict": "OK",
+      "creationTimeSeconds": 1700000400,
+      "problem": {
+        "index": "A",
+        "name": "Gym Problem Without ContestId",
+        "tags": ["implementation"]
+      }
+    }
+  ]
+}

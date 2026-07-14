@@ -1,0 +1,25 @@
+# Build output — always rebuilt inside the image (task 12.1).
+target/
+
+# IDE / editor cruft
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# VCS
+.git/
+.gitignore
+.gitattributes
+
+# Docs / local files not needed in the build context
+HELP.md
+*.md
+Dockerfile
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db

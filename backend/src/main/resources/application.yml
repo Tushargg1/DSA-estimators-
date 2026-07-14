@@ -1,0 +1,64 @@
+# =============================================================================
+# DSA Progress Tracker — backend configuration
+#
+# Every environment-specific value is parameterized as ${ENV_VAR:local-default}
+# so the exact same build runs locally (docker-compose) and in deployment
+# (task 12.4). Env vars use Spring's relaxed binding, e.g. CORS_ALLOWED_ORIGINS
+# maps to cors.allowed-origins and WEBSOCKET_ALLOWED_ORIGINS to
+# websocket.allowed-origins.
+#
+# Runtime env vars (see .env.example):
+#   DB_URL                   JDBC URL for Postgres
+#   DB_USERNAME              DB user
+#   DB_PASSWORD              DB password
+#   CORS_ALLOWED_ORIGINS     comma-separated REST CORS origins  -> cors.allowed-origins
+#   WEBSOCKET_ALLOWED_ORIGINS comma-separated WS handshake origins -> websocket.allowed-origins
+#   SERVER_PORT              HTTP port the app listens on (default 8080)
+#
+# SECURITY: the localhost defaults below are for local development only.
+# Production MUST set explicit CORS_ALLOWED_ORIGINS / WEBSOCKET_ALLOWED_ORIGINS
+# to the real frontend origin(s) — never "*", since CORS credentials are
+# enabled. See DEPLOYMENT.md.
+# =============================================================================
+
+server:
+  # HTTP port. EXPOSE 8080 in the Dockerfile matches this default.
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: backend
+
+  # Datasource points at the local Postgres 16 service defined in docker-compose.yml
+  # at the workspace root. Values are parameterized via env vars with local defaults
+  # so the same config works locally (docker-compose) and in deployment (task 12.4).
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/dsatracker}
+    username: ${DB_USERNAME:dsatracker}
+    password: ${DB_PASSWORD:dsatracker}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Schema is owned by Flyway/Liquibase migrations (task 2.2), not Hibernate.
+      # 'validate' ensures JPA entities (task 2.1) match the migrated schema without
+      # letting Hibernate mutate it. The Postgres dialect is auto-detected from the
+      # driver, so no explicit dialect is set.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+# Allowed origins for browser access (task 12.4). Comma-separated lists; each
+# defaults to the Vite dev server so local development needs no extra config.
+cors:
+  # REST API CORS origins, applied to /api/** (see CorsConfig). Override in prod
+  # via CORS_ALLOWED_ORIGINS, e.g. "https://app.example.com".
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+websocket:
+  # STOMP /ws handshake origins (see WebSocketConfig). Override in prod via
+  # WEBSOCKET_ALLOWED_ORIGINS, e.g. "https://app.example.com".
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:http://localhost:5173}

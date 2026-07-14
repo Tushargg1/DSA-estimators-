@@ -1,0 +1,13 @@
+{
+  "errors": [
+    {
+      "message": "That user does not exist.",
+      "locations": [
+        {
+          "line": 1,
+          "column": 50
+        }
+      ]
+    }
+  ]
+}

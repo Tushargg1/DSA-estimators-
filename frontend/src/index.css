@@ -1,0 +1,297 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.app-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* --- Shared form / card styles (OnboardingForm, GroupInvite) --- */
+.card {
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0;
+  max-width: 480px;
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.muted {
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.field input {
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  font: inherit;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: #d33;
+}
+
+.field-error {
+  color: #d33;
+  font-size: 0.82rem;
+}
+
+.form-error {
+  color: #d33;
+  font-size: 0.9rem;
+}
+
+.form-success {
+  color: #1a7f37;
+  font-size: 0.9rem;
+}
+
+button {
+  padding: 0.55rem 1rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: #4f46e5;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.group-invite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.invite-code {
+  margin-top: 1rem;
+}
+
+.invite-code-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.invite-code-row code {
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(128, 128, 128, 0.15);
+}
+
+/* ---- Leaderboard (task 10.3) ---- */
+.leaderboard-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.conn-dot {
+  font-size: 0.85rem;
+}
+.conn-live {
+  color: #16a34a;
+}
+.conn-offline {
+  color: #9ca3af;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.leaderboard-card-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.leaderboard-card-button:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.leaderboard-empty,
+.leaderboard-error {
+  margin: 1rem 0;
+}
+.leaderboard-error {
+  color: #dc2626;
+}
+
+/* ---- UserCard (task 10.4) ---- */
+.user-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: rgba(127, 127, 127, 0.06);
+}
+.user-card.hit {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+}
+.user-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.user-name {
+  font-weight: 600;
+}
+.today-count {
+  font-variant-numeric: tabular-nums;
+}
+.progress {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(127, 127, 127, 0.25);
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+.progress-bar {
+  height: 100%;
+  background: #2563eb;
+  transition: width 0.3s ease;
+}
+.user-card.hit .progress-bar {
+  background: #16a34a;
+}
+.user-card-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+/* ---- SyncStatus (task 10.6) ---- */
+.sync-status {
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+.sync-status-label {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+.sync-status-error {
+  color: #dc2626;
+}
+.sync-status-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.sync-chip {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.15);
+}
+.sync-ok {
+  color: #16a34a;
+}
+.sync-stale {
+  color: #b45309;
+}
+.sync-error {
+  color: #dc2626;
+}
+.sync-status-note {
+  margin: 0.25rem 0 0;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ---- ProblemDetailModal (task 10.5) ---- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+.modal {
+  background: Canvas;
+  color: CanvasText;
+  border-radius: 10px;
+  max-width: 480px;
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+.modal-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1rem;
+  margin: 1rem 0 0;
+}
+.modal-body dt {
+  font-weight: 600;
+}
+.modal-body dd {
+  margin: 0;
+}
