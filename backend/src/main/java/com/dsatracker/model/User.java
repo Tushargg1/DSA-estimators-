@@ -31,6 +31,12 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 150)
     private String email;
 
+    @Column(name = "password_hash", length = 60)
+    private String passwordHash;
+
+    @Column(name = "credentials_enabled", nullable = false)
+    private boolean credentialsEnabled = false;
+
     @Column(name = "leetcode_username", length = 100)
     private String leetcodeUsername;
 
@@ -71,6 +77,22 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public boolean isCredentialsEnabled() {
+        return credentialsEnabled;
+    }
+
+    public void setCredentialsEnabled(boolean credentialsEnabled) {
+        this.credentialsEnabled = credentialsEnabled;
     }
 
     public String getLeetcodeUsername() {

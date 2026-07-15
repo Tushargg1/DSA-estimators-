@@ -1,116 +1,98 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api/client.js'
 
-/**
- * SyncStatus (task 10.6, Requirement 7.3).
- *
- * Polls GET /api/status/poll on an interval and shows, per platform, how long
- * ago the last successful sync was ("last synced X min ago"). Sourced from
- * PollStatus rows:
- *   { platform, lastSuccessAt, lastFailureAt, lastFailureReason,
- *     minutesSinceLastSuccess }
- *
- * Requirement 7.3: the UI must NOT imply true real-time. This component makes
- * the 5-minute polling model explicit by surfacing the sync age per platform,
- * and flags platforms that have never synced or recently failed.
- *
- * @param {{ intervalMs?: number }} props - poll cadence (default 45s).
- */
-
-// Prefer the server-computed age; fall back to computing from the timestamp so
-// the indicator still works if the backend omits minutesSinceLastSuccess.
-function minutesSince(status) {
-  if (typeof status.minutesSinceLastSuccess === 'number') {
-    return status.minutesSinceLastSuccess
-  }
+function minutesSince(status, now, fetchedAt) {
   if (status.lastSuccessAt) {
-    const then = new Date(status.lastSuccessAt).getTime()
-    if (!Number.isNaN(then)) {
-      return Math.max(0, Math.floor((Date.now() - then) / 60000))
-    }
+    const timestamp = new Date(status.lastSuccessAt).getTime()
+    if (!Number.isNaN(timestamp)) return Math.max(0, Math.floor((now - timestamp) / 60000))
+  }
+  if (typeof status.minutesSinceLastSuccess === 'number') {
+    return status.minutesSinceLastSuccess + Math.max(0, Math.floor((now - fetchedAt) / 60000))
   }
   return null
 }
 
-function describe(status) {
-  const mins = minutesSince(status)
-  if (mins == null) {
-    return { text: 'never synced', tone: 'stale' }
-  }
-  // A failure newer than the last success means the platform is currently
-  // broken even if it synced successfully earlier.
-  const failedRecently =
-    status.lastFailureAt &&
-    (!status.lastSuccessAt ||
-      new Date(status.lastFailureAt).getTime() >
-        new Date(status.lastSuccessAt).getTime())
-
-  const agoText =
-    mins <= 0 ? 'last synced just now' : `last synced ${mins} min ago`
-
-  if (failedRecently) {
-    return {
-      text: `${agoText} · sync failing`,
-      tone: 'error',
-      detail: status.lastFailureReason ?? undefined,
-    }
-  }
-  // 5-minute polling: anything much older than a cycle or two is worth flagging.
-  const tone = mins > 15 ? 'stale' : 'ok'
-  return { text: agoText, tone }
+function describe(status, now, fetchedAt) {
+  const minutes = minutesSince(status, now, fetchedAt)
+  if (minutes == null) return { text: 'never synced', tone: 'stale' }
+  const failed = status.lastFailureAt && (!status.lastSuccessAt
+    || new Date(status.lastFailureAt) > new Date(status.lastSuccessAt))
+  const age = minutes === 0 ? 'last synced just now' : `last synced ${minutes} min ago`
+  if (failed) return { text: `${age} · sync failing`, tone: 'error', detail: status.lastFailureReason }
+  return { text: age, tone: minutes > 15 ? 'stale' : 'ok' }
 }
 
-function SyncStatus({ intervalMs = 45000 }) {
+function SyncStatus({ intervalMs = 45000, refreshKey = 0 }) {
   const [statuses, setStatuses] = useState([])
   const [error, setError] = useState(null)
+  const [fetchedAt, setFetchedAt] = useState(Date.now())
+  const [now, setNow] = useState(Date.now())
+  const mounted = useRef(true)
+  const inFlight = useRef(false)
+  const queued = useRef(false)
+  const generation = useRef(0)
 
-  useEffect(() => {
-    let cancelled = false
-
-    const load = async () => {
-      try {
-        const data = await api.getPollStatus()
-        if (!cancelled) {
-          setStatuses(Array.isArray(data) ? data : [])
-          setError(null)
-        }
-      } catch (err) {
-        if (!cancelled) setError(err.message ?? 'Failed to load sync status')
+  const load = useCallback(async () => {
+    if (inFlight.current) {
+      generation.current += 1
+      queued.current = true
+      return
+    }
+    inFlight.current = true
+    const request = ++generation.current
+    try {
+      const data = await api.getPollStatus()
+      if (mounted.current && request === generation.current) {
+        setStatuses(Array.isArray(data) ? data : [])
+        setFetchedAt(Date.now())
+        setNow(Date.now())
+        setError(null)
+      }
+    } catch (requestError) {
+      if (mounted.current && request === generation.current) setError(requestError.message)
+    } finally {
+      inFlight.current = false
+      if (queued.current) {
+        queued.current = false
+        void load()
       }
     }
+  }, [])
 
+  useEffect(() => {
+    mounted.current = true
     void load()
-    const id = setInterval(load, intervalMs)
+    const polling = setInterval(load, intervalMs)
+    const ticking = setInterval(() => setNow(Date.now()), 60000)
+    const visible = () => { if (document.visibilityState === 'visible') void load() }
+    document.addEventListener('visibilitychange', visible)
     return () => {
-      cancelled = true
-      clearInterval(id)
+      mounted.current = false
+      generation.current += 1
+      clearInterval(polling)
+      clearInterval(ticking)
+      document.removeEventListener('visibilitychange', visible)
     }
-  }, [intervalMs])
+  }, [intervalMs, load])
+
+  useEffect(() => {
+    if (refreshKey > 0) void load()
+  }, [refreshKey, load])
 
   return (
     <section className="sync-status" aria-label="Platform sync status">
       <span className="sync-status-label">Sync status</span>
       {error && <span className="sync-status-error">{error}</span>}
       <ul className="sync-status-list">
-        {statuses.map((s) => {
-          const { text, tone, detail } = describe(s)
-          return (
-            <li
-              key={s.platform}
-              className={`sync-chip sync-${tone}`}
-              title={detail}
-            >
-              <strong>{s.platform}</strong>: {text}
-            </li>
-          )
+        {statuses.map((status) => {
+          const item = describe(status, now, fetchedAt)
+          return <li key={status.platform} className={`sync-chip sync-${item.tone}`} title={item.detail}>
+            <strong>{status.platform}</strong>: {item.text}
+          </li>
         })}
-        {!error && statuses.length === 0 && (
-          <li className="sync-chip sync-stale">No sync data yet</li>
-        )}
+        {!error && statuses.length === 0 && <li className="sync-chip sync-stale">No sync data yet</li>}
       </ul>
-      <p className="sync-status-note">
-        Updates are polled every ~5 minutes, not real-time.
-      </p>
+      <p className="sync-status-note">Updates are polled every ~5 minutes, not real-time.</p>
     </section>
   )
 }

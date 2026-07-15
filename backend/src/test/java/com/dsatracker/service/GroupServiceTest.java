@@ -86,7 +86,7 @@ class GroupServiceTest {
             return g;
         });
 
-        GroupResponse response = newService().createGroup(new CreateGroupRequest("Friends", 7L));
+        GroupResponse response = newService().createGroup(new CreateGroupRequest("Friends"), 7L);
 
         assertThat(response.id()).isEqualTo(100L);
         assertThat(response.name()).isEqualTo("Friends");
@@ -112,7 +112,7 @@ class GroupServiceTest {
             return g;
         });
 
-        GroupResponse response = newService().createGroup(new CreateGroupRequest("Team", 7L));
+        GroupResponse response = newService().createGroup(new CreateGroupRequest("Team"), 7L);
 
         assertThat(response.inviteCode()).hasSize(6);
         verify(groupRepository).save(any(Group.class));
@@ -122,7 +122,7 @@ class GroupServiceTest {
     void createGroupWithMissingCreatorReturns404() {
         when(userRepository.existsById(999L)).thenReturn(false);
 
-        assertThatThrownBy(() -> newService().createGroup(new CreateGroupRequest("X", 999L)))
+        assertThatThrownBy(() -> newService().createGroup(new CreateGroupRequest("X"), 999L))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
                 .hasMessageContaining("404");
         verify(groupRepository, never()).save(any());
@@ -130,7 +130,7 @@ class GroupServiceTest {
 
     @Test
     void createGroupWithMissingFieldsReturns400() {
-        assertThatThrownBy(() -> newService().createGroup(new CreateGroupRequest(null, 1L)))
+        assertThatThrownBy(() -> newService().createGroup(new CreateGroupRequest(null), 1L))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
                 .hasMessageContaining("400");
     }
@@ -149,7 +149,7 @@ class GroupServiceTest {
         when(userRepository.existsById(9L)).thenReturn(true);
         when(groupRepository.findByInviteCode("ABC234")).thenReturn(Optional.of(group));
 
-        GroupResponse response = newService().joinGroup(new JoinGroupRequest("ABC234", 9L));
+        GroupResponse response = newService().joinGroup(new JoinGroupRequest("ABC234"), 9L);
 
         assertThat(response.id()).isEqualTo(50L);
         verify(groupMemberRepository).insertIfAbsent(50L, 9L, NOW);
@@ -160,7 +160,7 @@ class GroupServiceTest {
         when(userRepository.existsById(9L)).thenReturn(true);
         when(groupRepository.findByInviteCode("NOPE99")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> newService().joinGroup(new JoinGroupRequest("NOPE99", 9L)))
+        assertThatThrownBy(() -> newService().joinGroup(new JoinGroupRequest("NOPE99"), 9L))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
                 .hasMessageContaining("404");
         verify(groupMemberRepository, never()).insertIfAbsent(any(), any(), any());
@@ -177,7 +177,7 @@ class GroupServiceTest {
         when(groupRepository.findByInviteCode("ABC234")).thenReturn(Optional.of(group));
         when(groupMemberRepository.insertIfAbsent(50L, 9L, NOW)).thenReturn(0);
 
-        GroupResponse response = newService().joinGroup(new JoinGroupRequest("ABC234", 9L));
+        GroupResponse response = newService().joinGroup(new JoinGroupRequest("ABC234"), 9L);
 
         assertThat(response.id()).isEqualTo(50L);
         // A database conflict is the idempotent no-op result, not an exception.

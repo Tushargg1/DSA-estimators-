@@ -45,3 +45,13 @@ cors:
 websocket:
   # Comma-separated STOMP /ws handshake origins; set explicit production origins.
   allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:http://localhost:5173}
+
+auth:
+  jwt:
+    # Local/test-only fallback. Production must set a random 32+ byte secret.
+    secret: ${AUTH_JWT_SECRET:local-development-only-change-me-32-bytes-minimum!}
+    issuer: ${AUTH_JWT_ISSUER:dsa-tracker}
+    audience: ${AUTH_JWT_AUDIENCE:dsa-tracker-web}
+    expiry: ${AUTH_JWT_EXPIRY:PT12H}
+  # Empty disables the operator-assisted legacy activation endpoint.
+  legacy-setup-secret: ${LEGACY_ACCOUNT_SETUP_SECRET:}

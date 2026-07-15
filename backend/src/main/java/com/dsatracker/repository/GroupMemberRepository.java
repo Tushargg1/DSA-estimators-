@@ -28,6 +28,19 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
      */
     List<GroupMember> findByIdGroupId(Long groupId);
 
+    boolean existsByIdGroupIdAndIdUserId(Long groupId, Long userId);
+
+    @Query("""
+            select (count(gm) > 0) from GroupMember gm
+            where gm.id.userId = :firstUserId
+              and gm.id.groupId in (
+                select other.id.groupId from GroupMember other
+                where other.id.userId = :secondUserId
+              )
+            """)
+    boolean shareGroup(@Param("firstUserId") Long firstUserId,
+                       @Param("secondUserId") Long secondUserId);
+
     /**
      * Atomically inserts a membership or leaves the existing row untouched.
      * The composite primary key makes concurrent repeat joins conflict-safe.

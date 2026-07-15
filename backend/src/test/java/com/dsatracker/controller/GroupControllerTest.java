@@ -3,6 +3,7 @@ package com.dsatracker.controller;
 import com.dsatracker.dto.GroupResponse;
 import com.dsatracker.dto.HistoryResponse;
 import com.dsatracker.dto.LeaderboardResponse;
+import com.dsatracker.security.AccessService;
 import com.dsatracker.service.GroupService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -36,29 +37,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class GroupControllerTest {
 
     private GroupService groupService;
+    private AccessService access;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         groupService = Mockito.mock(GroupService.class);
+        access = Mockito.mock(AccessService.class);
+        when(access.userId(Mockito.nullable(org.springframework.security.core.Authentication.class)))
+                .thenReturn(7L);
         // Match Spring Boot's Jackson config so LocalDate serializes as an ISO
         // string ("2024-06-10") rather than a numeric array in this standalone setup.
         ObjectMapper mapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mockMvc = MockMvcBuilders.standaloneSetup(new GroupController(groupService))
+        mockMvc = MockMvcBuilders.standaloneSetup(new GroupController(groupService, access))
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
 
     @Test
     void createGroupReturns201WithBody() throws Exception {
-        when(groupService.createGroup(any()))
+        when(groupService.createGroup(any(), eq(7L)))
                 .thenReturn(new GroupResponse(100L, "Friends", "ABC234", 7L));
 
         mockMvc.perform(post("/api/groups")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Friends\",\"createdByUserId\":7}"))
+                        .content("{\"name\":\"Friends\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(100))
                 .andExpect(jsonPath("$.inviteCode").value("ABC234"))
@@ -67,12 +72,12 @@ class GroupControllerTest {
 
     @Test
     void joinGroupReturns200() throws Exception {
-        when(groupService.joinGroup(any()))
+        when(groupService.joinGroup(any(), eq(7L)))
                 .thenReturn(new GroupResponse(50L, "Squad", "XYZ789", 1L));
 
         mockMvc.perform(post("/api/groups/join")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inviteCode\":\"XYZ789\",\"userId\":9}"))
+                        .content("{\"inviteCode\":\"XYZ789\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(50));
     }

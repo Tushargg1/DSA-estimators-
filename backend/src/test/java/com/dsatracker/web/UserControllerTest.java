@@ -3,10 +3,13 @@ package com.dsatracker.web;
 import com.dsatracker.model.Platform;
 import com.dsatracker.model.Submission;
 import com.dsatracker.model.User;
+import com.dsatracker.security.AccessService;
+import com.dsatracker.security.TokenService;
 import com.dsatracker.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -42,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * unit-tested separately in {@code UserServiceTest}.
  */
 @WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
@@ -52,6 +56,12 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private AccessService access;
+
+    @MockitoBean
+    private TokenService tokenService;
 
     private static User sampleUser() {
         User user = new User();

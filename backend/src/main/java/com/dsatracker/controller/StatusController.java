@@ -28,10 +28,8 @@ import java.util.Map;
  * "last synced X min ago" indicator (task 10.6) a stable, fixed-length shape to
  * render regardless of whether a platform has ever polled.
  *
- * <p><b>Security note:</b> this endpoint exposes internal polling health and is
- * currently unauthenticated (no auth layer exists in the project yet). That is
- * acceptable for a small side project but should be locked down before any
- * production exposure.
+ * <p>This internal polling-health endpoint is available only to authenticated
+ * users through the global API security policy.
  *
  * <p>CORS is configured globally in task 12.4; no per-controller CORS is added here.
  */

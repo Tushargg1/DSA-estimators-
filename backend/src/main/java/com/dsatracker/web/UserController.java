@@ -2,6 +2,7 @@ package com.dsatracker.web;
 
 import com.dsatracker.model.Submission;
 import com.dsatracker.model.User;
+import com.dsatracker.security.AccessService;
 import com.dsatracker.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,9 +33,8 @@ import org.springframework.web.bind.annotation.RestController;
  * created {@link UserResponse}. Validation failures (Requirements 1.2, 1.3) map
  * to {@code 422 Unprocessable Entity} with a per-field {@link ErrorResponse}.
  *
- * <p><b>Security note:</b> this endpoint is currently unauthenticated (no auth
- * layer exists in the project yet). That is acceptable for onboarding a public
- * side project but should be revisited before any production exposure.
+ * <p>Endpoints are authenticated. Profile and submission reads are limited to
+ * self or co-members; target updates are self-only.
  *
  * <p>CORS is configured globally in task 12.4; no per-controller CORS is added here.
  */
@@ -42,9 +43,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final AccessService access;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AccessService access) {
         this.userService = userService;
+        this.access = access;
     }
 
     /**
@@ -66,7 +69,8 @@ public class UserController {
      * @return {@code 200 OK} with the profile, or {@code 404 Not Found} if missing
      */
     @GetMapping("/{id}")
-    public UserResponse getUser(@PathVariable Long id) {
+    public UserResponse getUser(@PathVariable Long id, Authentication authentication) {
+        access.requireVisibleUser(access.userId(authentication), id);
         return UserResponse.from(userService.getUser(id));
     }
 
@@ -80,7 +84,9 @@ public class UserController {
      */
     @PutMapping("/{id}/target")
     public UserResponse updateTarget(@PathVariable Long id,
-                                     @RequestBody UpdateTargetRequest request) {
+                                     @RequestBody UpdateTargetRequest request,
+                                     Authentication authentication) {
+        access.requireSelf(access.userId(authentication), id);
         User updated = userService.updateDailyTarget(id, request.target());
         return UserResponse.from(updated);
     }
@@ -101,7 +107,9 @@ public class UserController {
     public PageResponse<SubmissionResponse> getSubmissions(
             @PathVariable Long id,
             @PageableDefault(size = 20, sort = "solvedAtUtc", direction = Sort.Direction.DESC)
-            Pageable pageable) {
+            Pageable pageable,
+            Authentication authentication) {
+        access.requireVisibleUser(access.userId(authentication), id);
         Page<Submission> page = userService.getSubmissions(id, pageable);
         return PageResponse.from(page, SubmissionResponse::from);
     }

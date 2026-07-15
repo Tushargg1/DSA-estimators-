@@ -3,8 +3,10 @@ package com.dsatracker.controller;
 import com.dsatracker.model.Platform;
 import com.dsatracker.model.PollStatus;
 import com.dsatracker.repository.PollStatusRepository;
+import com.dsatracker.security.TokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  */
 @WebMvcTest(StatusController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class StatusControllerTest {
 
     @Autowired
@@ -37,6 +40,9 @@ class StatusControllerTest {
 
     @MockitoBean
     private PollStatusRepository pollStatusRepository;
+
+    @MockitoBean
+    private TokenService tokenService;
 
     @Test
     void returnsOneEntryPerPlatformWithStoredRowsAndNullFilledGaps() throws Exception {

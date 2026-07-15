@@ -118,13 +118,11 @@ public class GroupService {
      *                                 fields, 404 if the creator does not exist
      */
     @Transactional
-    public GroupResponse createGroup(CreateGroupRequest request) {
-        if (request == null || request.name() == null || request.name().isBlank()
-                || request.createdByUserId() == null) {
+    public GroupResponse createGroup(CreateGroupRequest request, Long creatorId) {
+        if (request == null || request.name() == null || request.name().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "name and createdByUserId are required");
+                    "name is required");
         }
-        Long creatorId = request.createdByUserId();
         if (!userRepository.existsById(creatorId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User " + creatorId + " not found");
@@ -157,13 +155,11 @@ public class GroupService {
      *                                 the user does not exist
      */
     @Transactional
-    public GroupResponse joinGroup(JoinGroupRequest request) {
-        if (request == null || request.inviteCode() == null || request.inviteCode().isBlank()
-                || request.userId() == null) {
+    public GroupResponse joinGroup(JoinGroupRequest request, Long userId) {
+        if (request == null || request.inviteCode() == null || request.inviteCode().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "inviteCode and userId are required");
+                    "inviteCode is required");
         }
-        Long userId = request.userId();
         if (!userRepository.existsById(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User " + userId + " not found");
@@ -175,6 +171,17 @@ public class GroupService {
 
         addMember(group.getId(), userId, clock.instant());
         return GroupResponse.from(group);
+    }
+
+    /** Lists groups for the authenticated user without exposing unrelated groups. */
+    public List<GroupResponse> getGroupsForUser(Long userId) {
+        List<Long> ids = groupMemberRepository.findByIdUserId(userId).stream()
+                .map(membership -> membership.getId().getGroupId())
+                .toList();
+        Map<Long, Group> byId = new LinkedHashMap<>();
+        groupRepository.findAllById(ids).forEach(group -> byId.put(group.getId(), group));
+        return ids.stream().map(byId::get).filter(java.util.Objects::nonNull)
+                .map(GroupResponse::from).toList();
     }
 
     /**

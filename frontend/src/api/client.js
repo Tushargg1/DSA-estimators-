@@ -1,78 +1,97 @@
 import axios from 'axios'
 
-/**
- * REST client for the Spring Boot backend.
- *
- * Base URL is configurable via the `VITE_API_BASE_URL` env var so the same
- * build can point at local dev, staging, or prod without code changes.
- * Falls back to the local Spring Boot default (`http://localhost:8080/api`).
- */
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'
+const localApi = 'http://localhost:8080/api'
+const configuredApi = import.meta.env.VITE_API_BASE_URL
+const localBrowser = ['localhost', '127.0.0.1'].includes(globalThis.location?.hostname)
+if (import.meta.env.PROD && !configuredApi && !localBrowser) {
+  throw new Error('VITE_API_BASE_URL is required for production deployments')
+}
+if (configuredApi) {
+  let parsed
+  try { parsed = new URL(configuredApi) } catch { throw new Error('VITE_API_BASE_URL must be an absolute URL') }
+  if (import.meta.env.PROD && !localBrowser && parsed.protocol !== 'https:') {
+    throw new Error('VITE_API_BASE_URL must use HTTPS in production')
+  }
+}
+export const API_BASE_URL = configuredApi || localApi
+const TOKEN_KEY = 'dsaTracker.jwt'
+let unauthorizedHandler = null
+
+export function getAuthToken() {
+  return sessionStorage.getItem(TOKEN_KEY)
+}
+
+export function setAuthToken(token) {
+  if (token) sessionStorage.setItem(TOKEN_KEY, token)
+  else sessionStorage.removeItem(TOKEN_KEY)
+}
+
+export function clearAuthToken() {
+  sessionStorage.removeItem(TOKEN_KEY)
+}
+
+export function onUnauthorized(handler) {
+  unauthorizedHandler = handler
+  return () => {
+    if (unauthorizedHandler === handler) unauthorizedHandler = null
+  }
+}
 
 const http = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 })
 
-// Surface a clean error message; screens decide how to render it.
-//
-// The backend returns 422 with a per-field body `{ errors: { field: message } }`
-// on validation failures (see ErrorResponse / ValidationException). A plain
-// `new Error(message)` would discard that map, so we preserve the response body
-// and expose the field errors on the thrown error. Screens (e.g. OnboardingForm)
-// read `err.fieldErrors` to render inline, per-platform validation messages.
+http.interceptors.request.use((config) => {
+  const token = getAuthToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    const data = error.response?.data
-    const message =
-      data?.message ??
-      error.message ??
-      'Request failed'
-    const err = new Error(message)
-    err.status = error.response?.status
-    if (data && typeof data === 'object') {
-      err.data = data
-      // 422 validation failures carry a { errors: { field: msg } } map.
-      if (data.errors && typeof data.errors === 'object') {
-        err.fieldErrors = data.errors
-      }
+    if (axios.isCancel(error)) {
+      const aborted = new Error('Request cancelled')
+      aborted.name = 'AbortError'
+      return Promise.reject(aborted)
     }
-    return Promise.reject(err)
+    const data = error.response?.data
+    const message = data?.detail ?? data?.message ?? data?.error ?? error.message ?? 'Request failed'
+    const wrapped = new Error(message)
+    wrapped.status = error.response?.status
+    wrapped.data = data
+    if (data?.errors && typeof data.errors === 'object') wrapped.fieldErrors = data.errors
+    if (wrapped.status === 401 && !error.config?.skipAuthReset) {
+      clearAuthToken()
+      unauthorizedHandler?.()
+    }
+    return Promise.reject(wrapped)
   },
 )
 
-/**
- * Thin wrappers around the REST API surface documented in design.md.
- * Only the endpoints needed by the frontend are exposed here; each returns
- * the parsed response body.
- */
 export const api = {
-  // Users
-  createUser: (payload) => http.post('/users', payload).then((r) => r.data),
-  getUser: (id) => http.get(`/users/${id}`).then((r) => r.data),
+  register: (payload) => http.post('/auth/register', payload).then((response) => response.data),
+  login: (payload) => http.post('/auth/login', payload).then((response) => response.data),
+  activateLegacy: (payload) => http.post('/auth/legacy-activate', payload).then((response) => response.data),
+  me: () => http.get('/auth/me').then((response) => response.data),
+  logout: () => http.post('/auth/logout', null, { skipAuthReset: true }),
+
+  getUser: (id) => http.get(`/users/${id}`).then((response) => response.data),
   updateTarget: (id, target) =>
-    http.put(`/users/${id}/target`, { target }).then((r) => r.data),
-  getSubmissions: (id, params) =>
-    http.get(`/users/${id}/submissions`, { params }).then((r) => r.data),
+    http.put(`/users/${id}/target`, { target }).then((response) => response.data),
+  getSubmissions: (id, params, signal) =>
+    http.get(`/users/${id}/submissions`, { params, signal }).then((response) => response.data),
 
-  // Groups
-  createGroup: (payload) => http.post('/groups', payload).then((r) => r.data),
-  // Backend JoinGroupRequest expects { inviteCode, userId }; callers pass the
-  // full payload so the joining user is identified.
-  joinGroup: (payload) =>
-    http.post('/groups/join', payload).then((r) => r.data),
+  getGroups: () => http.get('/groups').then((response) => response.data),
+  createGroup: (payload) => http.post('/groups', payload).then((response) => response.data),
+  joinGroup: (payload) => http.post('/groups/join', payload).then((response) => response.data),
   getLeaderboard: (groupId) =>
-    http.get(`/groups/${groupId}/leaderboard`).then((r) => r.data),
+    http.get(`/groups/${groupId}/leaderboard`).then((response) => response.data),
   getGroupHistory: (groupId, date) =>
-    http.get(`/groups/${groupId}/history`, { params: { date } }).then((r) => r.data),
-
-  // Status
-  getPollStatus: () => http.get('/status/poll').then((r) => r.data),
+    http.get(`/groups/${groupId}/history`, { params: { date } }).then((response) => response.data),
+  getPollStatus: () => http.get('/status/poll').then((response) => response.data),
 }
 
 export default http

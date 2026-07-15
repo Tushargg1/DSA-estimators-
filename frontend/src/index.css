@@ -295,3 +295,45 @@ button:disabled {
 .modal-body dd {
   margin: 0;
 }
+
+.app-header,
+.auth-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.auth-tabs {
+  justify-content: flex-start;
+}
+
+.auth-tabs button[aria-pressed='false'] {
+  background: rgba(79, 70, 229, 0.15);
+  color: inherit;
+  border-color: rgba(79, 70, 229, 0.35);
+}
+
+.group-switcher {
+  max-width: 320px;
+}
+
+.group-switcher select {
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.group-actions {
+  margin: 1rem 0;
+}
+
+.group-actions summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.leaderboard-error button {
+  padding: 0.3rem 0.6rem;
+}

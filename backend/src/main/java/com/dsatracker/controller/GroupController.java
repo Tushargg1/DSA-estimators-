@@ -5,8 +5,10 @@ import com.dsatracker.dto.GroupResponse;
 import com.dsatracker.dto.HistoryResponse;
 import com.dsatracker.dto.JoinGroupRequest;
 import com.dsatracker.dto.LeaderboardResponse;
+import com.dsatracker.security.AccessService;
 import com.dsatracker.service.GroupService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * REST controller for group management and the group leaderboard/history read
@@ -29,9 +32,8 @@ import java.time.LocalDate;
  * service, so Spring maps them to the right HTTP status without a shared
  * {@code @ControllerAdvice}.
  *
- * <p><b>Security note:</b> like the rest of the current API these endpoints are
- * unauthenticated (no auth layer exists yet). Fine for a public side project,
- * but membership/creation should be protected before any production exposure.
+ * <p>All handlers derive the acting user from the authenticated JWT. Group
+ * read models are returned only to current members.
  *
  * <p>CORS is configured globally (task 12.4); no per-controller CORS here.
  */
@@ -40,9 +42,11 @@ import java.time.LocalDate;
 public class GroupController {
 
     private final GroupService groupService;
+    private final AccessService access;
 
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, AccessService access) {
         this.groupService = groupService;
+        this.access = access;
     }
 
     /**
@@ -51,9 +55,15 @@ public class GroupController {
      * @param request create payload (name + creator user id)
      * @return {@code 201 Created} with the created group
      */
+    @GetMapping
+    public List<GroupResponse> listGroups(Authentication authentication) {
+        return groupService.getGroupsForUser(access.userId(authentication));
+    }
+
     @PostMapping
-    public ResponseEntity<GroupResponse> createGroup(@RequestBody CreateGroupRequest request) {
-        GroupResponse response = groupService.createGroup(request);
+    public ResponseEntity<GroupResponse> createGroup(@RequestBody CreateGroupRequest request,
+                                                     Authentication authentication) {
+        GroupResponse response = groupService.createGroup(request, access.userId(authentication));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -65,8 +75,9 @@ public class GroupController {
      * @return {@code 200 OK} with the joined group
      */
     @PostMapping("/join")
-    public ResponseEntity<GroupResponse> joinGroup(@RequestBody JoinGroupRequest request) {
-        return ResponseEntity.ok(groupService.joinGroup(request));
+    public ResponseEntity<GroupResponse> joinGroup(@RequestBody JoinGroupRequest request,
+                                                   Authentication authentication) {
+        return ResponseEntity.ok(groupService.joinGroup(request, access.userId(authentication)));
     }
 
     /**
@@ -76,7 +87,9 @@ public class GroupController {
      * @return {@code 200 OK} with the leaderboard
      */
     @GetMapping("/{id}/leaderboard")
-    public ResponseEntity<LeaderboardResponse> leaderboard(@PathVariable Long id) {
+    public ResponseEntity<LeaderboardResponse> leaderboard(@PathVariable Long id,
+                                                           Authentication authentication) {
+        access.requireGroupMember(access.userId(authentication), id);
         return ResponseEntity.ok(groupService.getLeaderboard(id));
     }
 
@@ -92,7 +105,9 @@ public class GroupController {
     @GetMapping("/{id}/history")
     public ResponseEntity<HistoryResponse> history(
             @PathVariable Long id,
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication) {
+        access.requireGroupMember(access.userId(authentication), id);
         return ResponseEntity.ok(groupService.getHistory(id, date));
     }
 }

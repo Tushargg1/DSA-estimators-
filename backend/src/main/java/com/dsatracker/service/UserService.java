@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -126,6 +127,11 @@ public class UserService {
      *         message map so the client can show all errors at once
      */
     public User createUser(CreateUserRequest request) {
+        return createUser(request, null, false);
+    }
+
+    /** Creates a user with optional credentials; hashes are never exposed in API responses. */
+    public User createUser(CreateUserRequest request, String passwordHash, boolean credentialsEnabled) {
         Map<String, String> errors = new LinkedHashMap<>();
 
         String name = trimToNull(request.name());
@@ -133,7 +139,7 @@ public class UserService {
             errors.put("name", "Display name is required.");
         }
 
-        String email = trimToNull(request.email());
+        String email = normalizeEmail(request.email());
         if (email == null) {
             errors.put("email", "Email is required.");
         } else if (userRepository.existsByEmail(email)) {
@@ -157,6 +163,8 @@ public class UserService {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
+        user.setPasswordHash(passwordHash);
+        user.setCredentialsEnabled(credentialsEnabled);
         user.setLeetcodeUsername(leetcode);
         user.setCodeforcesUsername(codeforces);
         user.setGfgUsername(gfg);
@@ -297,6 +305,11 @@ public class UserService {
             case CODEFORCES -> "Codeforces";
             case GFG -> "GeeksforGeeks";
         };
+    }
+
+    private static String normalizeEmail(String value) {
+        String email = trimToNull(value);
+        return email == null ? null : email.toLowerCase(Locale.ROOT);
     }
 
     private static String trimToNull(String value) {
