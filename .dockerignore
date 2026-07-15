@@ -1,0 +1,6 @@
+# Keep the root Docker build context small and free of local/generated data.
+.git/
+frontend/
+backend/target/
+**/.env
+**/.env.*
