@@ -142,6 +142,52 @@ class CountingPipelineIntegrationTest {
         assertThat(daily.getId().getDateIst()).isEqualTo(dateIst);
     }
 
+    @Test
+    @DisplayName("old history fetched after a failed backfill never scores")
+    void historicalSolveAfterFailedBackfillDoesNotIncrementDailyCounts() {
+        User user = onboardedUser(7L, "lc-7");
+        Instant trackingStartedAt = user.getCreatedAt();
+        Instant historical = trackingStartedAt.minus(Duration.ofDays(2));
+        Instant current = trackingStartedAt.plus(Duration.ofDays(1));
+
+        ScriptedFetcher leet = new ScriptedFetcher(Platform.LEETCODE, List.of(
+                RawSubmission.of("old-problem", "Old Problem", historical),
+                RawSubmission.of("new-problem", "New Problem", current)));
+
+        pollingService(leet).pollUserPlatform(user, Platform.LEETCODE, "lc-7");
+
+        Submission oldRow = repos.submissionStore.stream()
+                .filter(s -> s.getProblemId().equals("old-problem"))
+                .findFirst().orElseThrow();
+        Submission newRow = repos.submissionStore.stream()
+                .filter(s -> s.getProblemId().equals("new-problem"))
+                .findFirst().orElseThrow();
+        assertThat(oldRow.isFirstAttempt()).isTrue();
+        assertThat(oldRow.isCountedForTarget()).isFalse();
+        assertThat(newRow.isCountedForTarget()).isTrue();
+        assertThat(repos.dailyCounts.findByIdUserIdAndIdDateIst(
+                7L, TimeUtil.toIstDate(historical))).isEmpty();
+        DailyCount currentDay = repos.dailyCounts.findByIdUserIdAndIdDateIst(
+                7L, TimeUtil.toIstDate(current)).orElseThrow();
+        assertThat(currentDay.getCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("missing tracking cutoff fails closed")
+    void missingTrackingCutoffDoesNotScore() {
+        User user = onboardedUser(8L, "lc-8");
+        user.setCreatedAt(null);
+        Instant solvedAt = Instant.parse("2024-06-01T10:00:00Z");
+
+        pollingService(new ScriptedFetcher(Platform.LEETCODE,
+                List.of(RawSubmission.of("problem", "Problem", solvedAt))))
+                .pollUserPlatform(user, Platform.LEETCODE, "lc-8");
+
+        assertThat(repos.submissionStore).singleElement()
+                .extracting(Submission::isCountedForTarget).isEqualTo(false);
+        assertThat(repos.dailyCountStore).isEmpty();
+    }
+
     // ================================================================
     // 11.2 — re-solving an already-solved problem does NOT count and
     //        does NOT increment daily_counts. (Requirement 3.3)

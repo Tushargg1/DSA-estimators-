@@ -5,6 +5,7 @@ import com.dsatracker.adapter.exception.RateLimitException;
 import com.dsatracker.adapter.exception.ScrapeException;
 import com.dsatracker.model.Platform;
 import com.dsatracker.model.User;
+import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.UserRepository;
 import com.dsatracker.web.CreateUserRequest;
 import com.dsatracker.web.ValidationException;
@@ -38,6 +39,7 @@ class UserServiceTest {
 
     private UserRepository userRepository;
     private com.dsatracker.repository.SubmissionRepository submissionRepository;
+    private DailyCountRepository dailyCountRepository;
     private BackfillService backfillService;
     private SubmissionFetcher leetcode;
     private SubmissionFetcher codeforces;
@@ -48,6 +50,7 @@ class UserServiceTest {
     void setUp() {
         userRepository = mock(UserRepository.class);
         submissionRepository = mock(com.dsatracker.repository.SubmissionRepository.class);
+        dailyCountRepository = mock(DailyCountRepository.class);
         backfillService = mock(BackfillService.class);
         leetcode = mock(SubmissionFetcher.class);
         codeforces = mock(SubmissionFetcher.class);
@@ -57,8 +60,8 @@ class UserServiceTest {
         when(codeforces.platform()).thenReturn(Platform.CODEFORCES);
         when(gfg.platform()).thenReturn(Platform.GFG);
 
-        userService = new UserService(userRepository, submissionRepository, backfillService,
-                List.of(leetcode, codeforces, gfg));
+        userService = new UserService(userRepository, submissionRepository, dailyCountRepository,
+                backfillService, List.of(leetcode, codeforces, gfg));
     }
 
     @Test
@@ -208,5 +211,21 @@ class UserServiceTest {
 
         assertThat(created.getLeetcodeUsername()).isNull();
         verify(leetcode, never()).fetchRecent(anyString());
+    }
+
+    @Test
+    void updatingTargetRecomputesAllStoredHitFlagsWithoutChangingCounts() {
+        User user = new User();
+        user.setId(42L);
+        user.setDailyTarget(5);
+        when(userRepository.findById(42L)).thenReturn(java.util.Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+        when(dailyCountRepository.recomputeTargetHit(42L, 8)).thenReturn(3);
+
+        User updated = userService.updateDailyTarget(42L, 8);
+
+        assertThat(updated.getDailyTarget()).isEqualTo(8);
+        verify(userRepository).save(user);
+        verify(dailyCountRepository).recomputeTargetHit(42L, 8);
     }
 }

@@ -257,6 +257,7 @@ class PollingServiceTest {
         user.setId(id);
         user.setName("user-" + id);
         user.setOnboardingComplete(true);
+        user.setCreatedAt(Instant.EPOCH);
         user.setLeetcodeUsername(lc);
         user.setCodeforcesUsername(cf);
         user.setGfgUsername(gfg);
@@ -268,6 +269,7 @@ class PollingServiceTest {
         user.setId(id);
         user.setName("user-" + id);
         user.setOnboardingComplete(true);
+        user.setCreatedAt(Instant.EPOCH);
         return user;
     }
 

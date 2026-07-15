@@ -8,7 +8,6 @@ import com.dsatracker.dto.LeaderboardResponse;
 import com.dsatracker.model.DailyCount;
 import com.dsatracker.model.Group;
 import com.dsatracker.model.GroupMember;
-import com.dsatracker.model.GroupMemberId;
 import com.dsatracker.model.User;
 import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.GroupMemberRepository;
@@ -19,6 +18,7 @@ import com.dsatracker.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
@@ -117,6 +117,7 @@ public class GroupService {
      * @throws ResponseStatusException 400 if the payload is missing required
      *                                 fields, 404 if the creator does not exist
      */
+    @Transactional
     public GroupResponse createGroup(CreateGroupRequest request) {
         if (request == null || request.name() == null || request.name().isBlank()
                 || request.createdByUserId() == null) {
@@ -155,6 +156,7 @@ public class GroupService {
      *                                 fields, 404 if the invite code is invalid or
      *                                 the user does not exist
      */
+    @Transactional
     public GroupResponse joinGroup(JoinGroupRequest request) {
         if (request == null || request.inviteCode() == null || request.inviteCode().isBlank()
                 || request.userId() == null) {
@@ -281,16 +283,12 @@ public class GroupService {
     }
 
     /**
-     * Idempotently persists a membership: if the {@code (groupId, userId)} row
-     * already exists it is left untouched (Requirement 6.3 allows multiple groups;
-     * a repeat join must not duplicate or error).
+     * Idempotently persists a membership with one conflict-safe database write.
+     * The database ignores only the expected composite-key conflict; unrelated
+     * persistence failures still propagate and roll back the transaction.
      */
     private void addMember(Long groupId, Long userId, Instant joinedAt) {
-        GroupMemberId id = new GroupMemberId(groupId, userId);
-        if (groupMemberRepository.existsById(id)) {
-            return;
-        }
-        groupMemberRepository.save(new GroupMember(id, joinedAt));
+        groupMemberRepository.insertIfAbsent(groupId, userId, joinedAt);
     }
 
     /**

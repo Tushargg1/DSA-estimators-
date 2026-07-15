@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Enables Spring's asynchronous method execution and defines the executor used
@@ -37,9 +38,9 @@ public class AsyncConfig {
      * <p>Sized small on purpose: backfill is I/O-bound (external HTTP calls to
      * LeetCode/Codeforces/GFG) and low-volume (only fires once per signup), so a
      * handful of worker threads with a modest queue is plenty for the small
-     * friend-group scale this app targets. {@code CallerRunsPolicy} (the default
-     * when the queue saturates) provides natural back-pressure rather than
-     * silently dropping a user's backfill.
+     * friend-group scale this app targets. {@code CallerRunsPolicy} is configured
+     * explicitly so saturation applies back-pressure instead of rejecting and
+     * losing a user's backfill.
      */
     @Bean(name = BACKFILL_EXECUTOR)
     public Executor backfillExecutor() {
@@ -48,6 +49,7 @@ public class AsyncConfig {
         executor.setMaxPoolSize(4);
         executor.setQueueCapacity(50);
         executor.setThreadNamePrefix("backfill-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
     }

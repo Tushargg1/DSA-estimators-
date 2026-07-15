@@ -6,6 +6,7 @@ import com.dsatracker.adapter.exception.ScrapeException;
 import com.dsatracker.model.Platform;
 import com.dsatracker.model.Submission;
 import com.dsatracker.model.User;
+import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.SubmissionRepository;
 import com.dsatracker.repository.UserRepository;
 import com.dsatracker.web.CreateUserRequest;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -88,6 +90,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final SubmissionRepository submissionRepository;
+    private final DailyCountRepository dailyCountRepository;
     private final BackfillService backfillService;
 
     /** Adapter per platform, indexed once from all injected {@link SubmissionFetcher}s. */
@@ -95,10 +98,12 @@ public class UserService {
 
     public UserService(UserRepository userRepository,
                        SubmissionRepository submissionRepository,
+                       DailyCountRepository dailyCountRepository,
                        BackfillService backfillService,
                        List<SubmissionFetcher> fetchers) {
         this.userRepository = userRepository;
         this.submissionRepository = submissionRepository;
+        this.dailyCountRepository = dailyCountRepository;
         this.backfillService = backfillService;
         this.fetchersByPlatform = new EnumMap<>(Platform.class);
         for (SubmissionFetcher fetcher : fetchers) {
@@ -198,6 +203,7 @@ public class UserService {
      * @throws ResponseStatusException {@code 404 Not Found} if the user is missing,
      *         or {@code 400 Bad Request} if {@code target} is null or {@code < 1}
      */
+    @Transactional
     public User updateDailyTarget(Long id, Integer target) {
         if (target == null || target < 1) {
             throw new ResponseStatusException(
@@ -206,7 +212,9 @@ public class UserService {
         User user = getUser(id);
         user.setDailyTarget(target);
         User saved = userRepository.save(user);
-        log.info("Updated daily target for user id={} to {}", id, target);
+        int recomputed = dailyCountRepository.recomputeTargetHit(id, target);
+        log.info("Updated daily target for user id={} to {} and recomputed {} daily row(s)",
+                id, target, recomputed);
         return saved;
     }
 

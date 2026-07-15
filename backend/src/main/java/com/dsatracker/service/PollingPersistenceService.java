@@ -82,9 +82,14 @@ public class PollingPersistenceService {
             boolean firstAttempt = seenProblemIds.add(problemId)
                     && !submissionRepository.existsByUserIdAndPlatformAndProblemId(
                             userId, platform, problemId);
-            boolean countedForTarget = firstAttempt && user.isOnboardingComplete();
+            // A failed platform backfill must not let old history score when it is
+            // fetched by a later poll. The immutable signup timestamp is the
+            // tracking cutoff; missing timestamps fail closed rather than score.
+            boolean countedForTarget = firstAttempt
+                    && isAtOrAfterTrackingStart(raw.solvedAt(), user.getCreatedAt());
 
             Submission submission = new Submission();
+
             submission.setUserId(userId);
             submission.setPlatform(platform);
             submission.setProblemId(problemId);
@@ -108,6 +113,12 @@ public class PollingPersistenceService {
                 userId, platform, toInsert.size(), counted.size(), skipped);
         return counted;
     }
+
+    private static boolean isAtOrAfterTrackingStart(Instant solvedAt, Instant trackingStartedAt) {
+        return solvedAt != null && trackingStartedAt != null
+                && !solvedAt.isBefore(trackingStartedAt);
+    }
+
     private List<LeaderboardUpdate> updateDailyCounts(User user, List<Submission> newlyCounted) {
         if (newlyCounted.isEmpty()) {
             return List.of();

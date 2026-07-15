@@ -19,7 +19,6 @@ import com.dsatracker.repository.UserRepository;
 import com.dsatracker.util.TimeUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -86,7 +85,6 @@ class GroupServiceTest {
             g.setId(100L);
             return g;
         });
-        when(groupMemberRepository.existsById(any(GroupMemberId.class))).thenReturn(false);
 
         GroupResponse response = newService().createGroup(new CreateGroupRequest("Friends", 7L));
 
@@ -97,12 +95,8 @@ class GroupServiceTest {
         assertThat(response.inviteCode()).hasSize(6);
         assertThat(response.inviteCode()).matches("[" + INVITE_ALPHABET + "]+");
 
-        // Creator is persisted as a member of the new group.
-        ArgumentCaptor<GroupMember> memberCaptor = ArgumentCaptor.forClass(GroupMember.class);
-        verify(groupMemberRepository).save(memberCaptor.capture());
-        GroupMemberId savedId = memberCaptor.getValue().getId();
-        assertThat(savedId.getGroupId()).isEqualTo(100L);
-        assertThat(savedId.getUserId()).isEqualTo(7L);
+        // Creator membership uses the same conflict-safe insertion as joins.
+        verify(groupMemberRepository).insertIfAbsent(100L, 7L, NOW);
     }
 
     @Test
@@ -117,7 +111,6 @@ class GroupServiceTest {
             g.setId(101L);
             return g;
         });
-        when(groupMemberRepository.existsById(any(GroupMemberId.class))).thenReturn(false);
 
         GroupResponse response = newService().createGroup(new CreateGroupRequest("Team", 7L));
 
@@ -155,15 +148,11 @@ class GroupServiceTest {
         group.setCreatedBy(1L);
         when(userRepository.existsById(9L)).thenReturn(true);
         when(groupRepository.findByInviteCode("ABC234")).thenReturn(Optional.of(group));
-        when(groupMemberRepository.existsById(any(GroupMemberId.class))).thenReturn(false);
 
         GroupResponse response = newService().joinGroup(new JoinGroupRequest("ABC234", 9L));
 
         assertThat(response.id()).isEqualTo(50L);
-        ArgumentCaptor<GroupMember> captor = ArgumentCaptor.forClass(GroupMember.class);
-        verify(groupMemberRepository).save(captor.capture());
-        assertThat(captor.getValue().getId().getGroupId()).isEqualTo(50L);
-        assertThat(captor.getValue().getId().getUserId()).isEqualTo(9L);
+        verify(groupMemberRepository).insertIfAbsent(50L, 9L, NOW);
     }
 
     @Test
@@ -174,7 +163,7 @@ class GroupServiceTest {
         assertThatThrownBy(() -> newService().joinGroup(new JoinGroupRequest("NOPE99", 9L)))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
                 .hasMessageContaining("404");
-        verify(groupMemberRepository, never()).save(any());
+        verify(groupMemberRepository, never()).insertIfAbsent(any(), any(), any());
     }
 
     @Test
@@ -186,14 +175,13 @@ class GroupServiceTest {
         group.setCreatedBy(1L);
         when(userRepository.existsById(9L)).thenReturn(true);
         when(groupRepository.findByInviteCode("ABC234")).thenReturn(Optional.of(group));
-        // User is already a member.
-        when(groupMemberRepository.existsById(any(GroupMemberId.class))).thenReturn(true);
+        when(groupMemberRepository.insertIfAbsent(50L, 9L, NOW)).thenReturn(0);
 
         GroupResponse response = newService().joinGroup(new JoinGroupRequest("ABC234", 9L));
 
         assertThat(response.id()).isEqualTo(50L);
-        // No duplicate row inserted.
-        verify(groupMemberRepository, never()).save(any());
+        // A database conflict is the idempotent no-op result, not an exception.
+        verify(groupMemberRepository).insertIfAbsent(50L, 9L, NOW);
     }
 
     // ------------------------------------------------------------------
