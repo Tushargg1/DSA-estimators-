@@ -17,7 +17,7 @@ class BackendApplicationTests {
 	/**
 	 * The context-load smoke test deliberately runs without a real datasource
 	 * (see src/test/resources/application.properties, which excludes the JDBC/JPA
-	 * auto-configuration so wiring can be verified without a running Postgres).
+	 * auto-configuration so wiring can be verified without a running MySQL database).
 	 *
 	 * <p>With JPA excluded, Spring Data repository beans are not created. Beans
 	 * that depend on a repository — such as {@link com.dsatracker.service.BackfillService}

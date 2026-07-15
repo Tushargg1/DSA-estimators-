@@ -25,4 +25,4 @@ This folder is a complete spec-driven package for Kiro to build this project end
 
 ## One flag before you deploy
 
-Given the ongoing AWS billing dispute (NAT Gateway, Elastic IPs, RDS snapshot charges), don't provision this project's Postgres on RDS or run it behind a NAT Gateway. Use a managed free-tier Postgres (Neon, Supabase, Railway) and a simple container host (Railway/Render/Fly.io) instead. Keep this one cheap; it's not worth repeating the same billing mistake.
+Use managed Aiven MySQL 8 and a simple container host such as Render. Keep database credentials in hosting-platform secrets, require TLS, and avoid self-managed AWS database/network infrastructure for this small project.

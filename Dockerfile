@@ -29,5 +29,7 @@ USER app
 
 COPY --from=build --chown=app:app /workspace/app.jar app.jar
 
+# Spring Boot defaults to 8080, while Render's injected PORT is honored by
+# application.yml at runtime. EXPOSE documents the local/default container port.
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

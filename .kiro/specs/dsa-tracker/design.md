@@ -2,13 +2,13 @@
 
 ## Overview
 
-Spring Boot backend + React frontend. Backend polls three external platforms every 5 minutes via a scheduled job, stores submissions in Postgres, pushes updates to connected clients over WebSocket (STOMP). No OAuth required — platform usernames are public profile identifiers.
+Spring Boot backend + React frontend. Backend polls three external platforms every 5 minutes via a scheduled job, stores submissions in MySQL 8, pushes updates to connected clients over WebSocket (STOMP). No OAuth required — platform usernames are public profile identifiers.
 
 ## Architecture
 
 ```
 ┌──────────────┐      ┌───────────────────────────┐      ┌───────────────┐
-│   React SPA  │◄────►│   Spring Boot Backend      │◄────►│   Postgres    │
+│   React SPA  │◄────►│   Spring Boot Backend      │◄────►│    MySQL 8    │
 │ (WebSocket + │      │  - REST API                │      └───────────────┘
 │  REST client)│      │  - Scheduled Poller Job    │
 └──────────────┘      │  - WebSocket (STOMP)       │
@@ -22,68 +22,72 @@ Spring Boot backend + React frontend. Backend polls three external platforms eve
 
 ## Data Models
 
-### Database Schema (Postgres)
+### Database Schema (MySQL 8)
 
 ```sql
 CREATE TABLE users (
-    id                  BIGSERIAL PRIMARY KEY,
-    name                VARCHAR(100) NOT NULL,
-    email               VARCHAR(150) UNIQUE NOT NULL,
-    leetcode_username   VARCHAR(100),
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    leetcode_username VARCHAR(100),
     codeforces_username VARCHAR(100),
-    gfg_username        VARCHAR(100),
-    daily_target        INT NOT NULL DEFAULT 5,
+    gfg_username VARCHAR(100),
+    daily_target INT NOT NULL DEFAULT 5,
     onboarding_complete BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at          TIMESTAMP NOT NULL DEFAULT now()
-);
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE submissions (
-    id                  BIGSERIAL PRIMARY KEY,
-    user_id             BIGINT NOT NULL REFERENCES users(id),
-    platform            VARCHAR(20) NOT NULL,       -- 'LEETCODE' | 'CODEFORCES' | 'GFG'
-    problem_id          VARCHAR(150) NOT NULL,      -- slug or platform-specific id
-    problem_name        VARCHAR(255) NOT NULL,
-    difficulty          VARCHAR(20),                -- nullable, GFG may not have it
-    tags                TEXT[],                     -- nullable
-    solved_at_utc       TIMESTAMP NOT NULL,
-    is_first_attempt    BOOLEAN NOT NULL,
-    counted_for_target  BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at          TIMESTAMP NOT NULL DEFAULT now(),
-    UNIQUE (user_id, platform, problem_id, solved_at_utc)
-);
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    platform VARCHAR(20) NOT NULL,
+    problem_id VARCHAR(150) NOT NULL,
+    problem_name VARCHAR(255) NOT NULL,
+    difficulty VARCHAR(20),
+    tags JSON,
+    solved_at_utc DATETIME(6) NOT NULL,
+    is_first_attempt BOOLEAN NOT NULL,
+    counted_for_target BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE (user_id, platform, problem_id, solved_at_utc),
+    INDEX idx_submissions_user_date (user_id, solved_at_utc),
+    INDEX idx_submissions_first_attempt (user_id, platform, problem_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE INDEX idx_submissions_user_date ON submissions(user_id, solved_at_utc);
-CREATE INDEX idx_submissions_first_attempt ON submissions(user_id, platform, problem_id);
-
-CREATE TABLE groups (
-    id          BIGSERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
-    invite_code VARCHAR(20) UNIQUE NOT NULL,
-    created_by  BIGINT NOT NULL REFERENCES users(id),
-    created_at  TIMESTAMP NOT NULL DEFAULT now()
-);
+CREATE TABLE tracker_groups (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    invite_code VARCHAR(20) NOT NULL UNIQUE,
+    created_by BIGINT NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE group_members (
-    group_id    BIGINT NOT NULL REFERENCES groups(id),
-    user_id     BIGINT NOT NULL REFERENCES users(id),
-    joined_at   TIMESTAMP NOT NULL DEFAULT now(),
-    PRIMARY KEY (group_id, user_id)
-);
+    group_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    joined_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (group_id, user_id),
+    FOREIGN KEY (group_id) REFERENCES tracker_groups(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE daily_counts (
-    user_id     BIGINT NOT NULL REFERENCES users(id),
-    date_ist    DATE NOT NULL,
-    count       INT NOT NULL DEFAULT 0,
-    target_hit  BOOLEAN NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (user_id, date_ist)
-);
+    user_id BIGINT NOT NULL,
+    date_ist DATE NOT NULL,
+    count INT NOT NULL DEFAULT 0,
+    target_hit BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (user_id, date_ist),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE poll_status (
-    platform            VARCHAR(20) PRIMARY KEY,
-    last_success_at     TIMESTAMP,
-    last_failure_at     TIMESTAMP,
+    platform VARCHAR(20) PRIMARY KEY,
+    last_success_at DATETIME(6),
+    last_failure_at DATETIME(6),
     last_failure_reason TEXT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 > **Note:** `daily_counts` is a denormalized rollup table, updated whenever a new `counted_for_target = true` submission lands. This avoids recomputing streaks from raw submissions every page load.

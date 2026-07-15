@@ -57,11 +57,11 @@ USER app
 # Copy just the built artifact from the build stage.
 COPY --from=build --chown=app:app /workspace/app.jar app.jar
 
-# Spring Boot serves on 8080 (server.port default). Documented for tooling; does
-# not actually publish the port — that is done at `docker run -p`.
+# Spring Boot defaults to 8080; application.yml also honors Render's injected
+# PORT at runtime. EXPOSE documents the local/default container port only.
 EXPOSE 8080
 
-# DB_URL / DB_USERNAME / DB_PASSWORD / CORS_ALLOWED_ORIGINS /
-# WEBSOCKET_ALLOWED_ORIGINS / SERVER_PORT are supplied at runtime via env vars
-# (see application.yml + .env.example).
+# DB_URL / DB_USERNAME / DB_PASSWORD / DB_POOL_MAX / DB_POOL_MIN_IDLE /
+# CORS_ALLOWED_ORIGINS / WEBSOCKET_ALLOWED_ORIGINS / PORT / SERVER_PORT are
+# supplied at runtime (see application.yml + .env.example).
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -25,9 +25,9 @@ import java.util.List;
  *   <li><b>platform</b> is stored as a {@link Platform} enum via
  *       {@code @Enumerated(EnumType.STRING)}, matching the {@code VARCHAR(20)}
  *       column and the documented {@code 'LEETCODE'|'CODEFORCES'|'GFG'} values.</li>
- *   <li><b>tags</b> maps the nullable Postgres {@code TEXT[]} column to a
- *       {@code List<String>} using Hibernate 6 array support
- *       ({@code @JdbcTypeCode(SqlTypes.ARRAY)} + {@code columnDefinition="text[]"}).</li>
+ *   <li><b>tags</b> maps the nullable MySQL {@code JSON} column to a
+ *       {@code List<String>} using Hibernate 6 JSON support
+ *       ({@code @JdbcTypeCode(SqlTypes.JSON)} + {@code columnDefinition="json"}).</li>
  *   <li>Timestamps are {@link Instant} (UTC).</li>
  * </ul>
  *
@@ -64,8 +64,8 @@ public class Submission {
     @Column(name = "difficulty", length = 20)
     private String difficulty;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "tags", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "tags", columnDefinition = "json")
     private List<String> tags;
 
     @Column(name = "solved_at_utc", nullable = false)

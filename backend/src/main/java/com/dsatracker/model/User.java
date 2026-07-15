@@ -12,8 +12,8 @@ import java.time.Instant;
 /**
  * A tracked user and their linked platform usernames.
  *
- * <p>Maps to the {@code users} table (design.md "Database Schema"). The identity
- * column is backed by Postgres {@code BIGSERIAL}, hence
+ * <p>Maps to the {@code users} table (design.md "Database Schema"). The
+ * MySQL {@code BIGINT AUTO_INCREMENT} identity column is generated via
  * {@link GenerationType#IDENTITY}. Timestamps are {@link Instant} (UTC); the
  * Hibernate {@code jdbc.time_zone=UTC} setting keeps stored values in UTC.
  */

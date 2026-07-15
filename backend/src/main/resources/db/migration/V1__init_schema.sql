@@ -1,105 +1,76 @@
--- V1__init_schema.sql
--- Initial schema for the DSA Progress Tracker.
---
--- This migration is the single source of truth for the database schema. Spring
--- is configured with `spring.jpa.hibernate.ddl-auto=validate`, so the tables,
--- columns and types below MUST match the JPA entities under
--- com.dsatracker.model exactly (design.md "Data Models > Database Schema").
---
--- Conventions:
---   * BIGSERIAL primary keys back @GeneratedValue(strategy = IDENTITY) (Long id).
---   * TIMESTAMP (without time zone) backs java.time.Instant columns; the app
---     stores/reads everything in UTC (hibernate.jdbc.time_zone=UTC).
---   * Platform enums (Submission.platform, PollStatus.platform) are persisted as
---     their name() via @Enumerated(STRING) into VARCHAR(20).
+-- Initial schema for a fresh MySQL 8 database. Flyway is the schema owner;
+-- Hibernate runs with ddl-auto=validate. DATETIME(6) stores UTC instants with
+-- microsecond precision, and JSON stores nullable submission tag arrays.
 
--- ---------------------------------------------------------------------------
--- users
--- ---------------------------------------------------------------------------
 CREATE TABLE users (
-    id                  BIGSERIAL PRIMARY KEY,
+    id                  BIGINT NOT NULL AUTO_INCREMENT,
     name                VARCHAR(100) NOT NULL,
-    email               VARCHAR(150) NOT NULL UNIQUE,
+    email               VARCHAR(150) NOT NULL,
     leetcode_username   VARCHAR(100),
     codeforces_username VARCHAR(100),
     gfg_username        VARCHAR(100),
-    daily_target        INTEGER NOT NULL DEFAULT 5,
+    daily_target        INT NOT NULL DEFAULT 5,
     onboarding_complete BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at          TIMESTAMP NOT NULL DEFAULT now()
-);
+    created_at          DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    CONSTRAINT uq_users_email UNIQUE (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ---------------------------------------------------------------------------
--- submissions
--- ---------------------------------------------------------------------------
 CREATE TABLE submissions (
-    id                  BIGSERIAL PRIMARY KEY,
+    id                  BIGINT NOT NULL AUTO_INCREMENT,
     user_id             BIGINT NOT NULL,
-    platform            VARCHAR(20) NOT NULL,   -- 'LEETCODE' | 'CODEFORCES' | 'GFG'
-    problem_id          VARCHAR(150) NOT NULL,  -- slug or platform-specific id
+    platform            VARCHAR(20) NOT NULL,
+    problem_id          VARCHAR(150) NOT NULL,
     problem_name        VARCHAR(255) NOT NULL,
-    difficulty          VARCHAR(20),            -- nullable; GFG may not have it
-    tags                TEXT[],                 -- nullable
-    solved_at_utc       TIMESTAMP NOT NULL,
+    difficulty          VARCHAR(20),
+    tags                JSON,
+    solved_at_utc       DATETIME(6) NOT NULL,
     is_first_attempt    BOOLEAN NOT NULL,
     counted_for_target  BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at          TIMESTAMP NOT NULL DEFAULT now(),
-    CONSTRAINT fk_submissions_user
-        FOREIGN KEY (user_id) REFERENCES users (id),
+    created_at          DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    CONSTRAINT fk_submissions_user FOREIGN KEY (user_id) REFERENCES users (id),
     CONSTRAINT uq_submissions_natural_key
-        UNIQUE (user_id, platform, problem_id, solved_at_utc)
-);
+        UNIQUE (user_id, platform, problem_id, solved_at_utc),
+    INDEX idx_submissions_user_date (user_id, solved_at_utc),
+    INDEX idx_submissions_first_attempt (user_id, platform, problem_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE INDEX idx_submissions_user_date
-    ON submissions (user_id, solved_at_utc);
-CREATE INDEX idx_submissions_first_attempt
-    ON submissions (user_id, platform, problem_id);
-
--- ---------------------------------------------------------------------------
--- groups  ("group" is a reserved keyword, table is explicitly "groups")
--- ---------------------------------------------------------------------------
-CREATE TABLE groups (
-    id          BIGSERIAL PRIMARY KEY,
+CREATE TABLE tracker_groups (
+    id          BIGINT NOT NULL AUTO_INCREMENT,
     name        VARCHAR(100) NOT NULL,
-    invite_code VARCHAR(20) NOT NULL UNIQUE,
+    invite_code VARCHAR(20) NOT NULL,
     created_by  BIGINT NOT NULL,
-    created_at  TIMESTAMP NOT NULL DEFAULT now(),
-    CONSTRAINT fk_groups_created_by
-        FOREIGN KEY (created_by) REFERENCES users (id)
-);
+    created_at  DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    CONSTRAINT uq_tracker_groups_invite_code UNIQUE (invite_code),
+    CONSTRAINT fk_tracker_groups_created_by FOREIGN KEY (created_by) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ---------------------------------------------------------------------------
--- group_members  (join table, composite PK)
--- ---------------------------------------------------------------------------
 CREATE TABLE group_members (
     group_id  BIGINT NOT NULL,
     user_id   BIGINT NOT NULL,
-    joined_at TIMESTAMP NOT NULL DEFAULT now(),
+    joined_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (group_id, user_id),
     CONSTRAINT fk_group_members_group
-        FOREIGN KEY (group_id) REFERENCES groups (id),
+        FOREIGN KEY (group_id) REFERENCES tracker_groups (id),
     CONSTRAINT fk_group_members_user
         FOREIGN KEY (user_id) REFERENCES users (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ---------------------------------------------------------------------------
--- daily_counts  (denormalized per-user/per-day rollup, composite PK)
--- ---------------------------------------------------------------------------
 CREATE TABLE daily_counts (
     user_id    BIGINT NOT NULL,
     date_ist   DATE NOT NULL,
-    count      INTEGER NOT NULL DEFAULT 0,
+    count      INT NOT NULL DEFAULT 0,
     target_hit BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (user_id, date_ist),
-    CONSTRAINT fk_daily_counts_user
-        FOREIGN KEY (user_id) REFERENCES users (id)
-);
+    CONSTRAINT fk_daily_counts_user FOREIGN KEY (user_id) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ---------------------------------------------------------------------------
--- poll_status  (one row per platform; platform name is the PK)
--- ---------------------------------------------------------------------------
 CREATE TABLE poll_status (
-    platform            VARCHAR(20) PRIMARY KEY,
-    last_success_at     TIMESTAMP,
-    last_failure_at     TIMESTAMP,
-    last_failure_reason TEXT
-);
+    platform            VARCHAR(20) NOT NULL,
+    last_success_at     DATETIME(6),
+    last_failure_at     DATETIME(6),
+    last_failure_reason TEXT,
+    PRIMARY KEY (platform)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

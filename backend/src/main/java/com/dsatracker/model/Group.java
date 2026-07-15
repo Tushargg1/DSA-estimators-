@@ -12,16 +12,15 @@ import java.time.Instant;
 /**
  * A friend group whose members share a leaderboard.
  *
- * <p>Maps to the {@code groups} table. NOTE: {@code group} is a reserved SQL
- * keyword, so the table name is explicitly {@code groups} via
- * {@code @Table(name = "groups")} (design.md).
+ * <p>Maps to {@code tracker_groups}; the explicit name avoids SQL reserved-word
+ * collisions and is shared by the Flyway migration and foreign keys.
  *
  * <p>The {@code created_by} foreign key to {@code users(id)} is modeled as a
  * plain {@code Long} column ({@link #createdBy}) rather than a JPA association,
  * keeping the entity a faithful, association-free mirror of the SQL columns.
  */
 @Entity
-@Table(name = "groups")
+@Table(name = "tracker_groups")
 public class Group {
 
     @Id

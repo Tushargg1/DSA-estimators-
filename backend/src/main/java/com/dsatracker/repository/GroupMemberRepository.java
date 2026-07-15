@@ -36,7 +36,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
     @Query(value = """
             INSERT INTO group_members (group_id, user_id, joined_at)
             VALUES (:groupId, :userId, :joinedAt)
-            ON CONFLICT (group_id, user_id) DO NOTHING
+            ON DUPLICATE KEY UPDATE joined_at = joined_at
             """, nativeQuery = true)
     int insertIfAbsent(@Param("groupId") Long groupId,
                        @Param("userId") Long userId,

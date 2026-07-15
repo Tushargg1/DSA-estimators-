@@ -1,24 +1,25 @@
-# This Compose file starts the local database only. When running the backend
-# alongside it, set WEBSOCKET_ALLOWED_ORIGINS as documented in backend/.env.example.
 services:
-  postgres:
-    image: postgres:16
-    container_name: dsa-tracker-postgres
+  mysql:
+    image: mysql:8.0.40
+    container_name: dsa-tracker-mysql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-dsatracker}
-      POSTGRES_USER: ${POSTGRES_USER:-dsatracker}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dsatracker}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dsatracker}
+      MYSQL_USER: ${MYSQL_USER:-dsatracker}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dsatracker}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-root-password}
+      TZ: UTC
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - dsa_pgdata:/var/lib/postgresql/data
+      - dsa_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dsatracker} -d ${POSTGRES_DB:-dsatracker}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 20s
 
 volumes:
-  dsa_pgdata:
-    name: dsa_tracker_pgdata
+  dsa_mysql_data:
+    name: dsa_tracker_mysql_data

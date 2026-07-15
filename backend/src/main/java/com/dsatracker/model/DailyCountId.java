@@ -11,7 +11,7 @@ import java.util.Objects;
  * Composite primary key for {@link DailyCount}: {@code (user_id, date_ist)}.
  *
  * <p>{@code date_ist} is a calendar day in IST (see design.md time handling),
- * mapped to a {@link LocalDate} to match the Postgres {@code DATE} column.
+ * mapped to a {@link LocalDate} to match the SQL {@code DATE} column.
  */
 @Embeddable
 public class DailyCountId implements Serializable {

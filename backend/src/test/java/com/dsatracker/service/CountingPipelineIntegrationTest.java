@@ -55,10 +55,9 @@ import static org.mockito.Mockito.mock;
  *         -&gt; daily_counts upsert -&gt; target_hit -&gt; streaks
  * </pre>
  *
- * <h2>Database approach (no Docker, no Postgres)</h2>
- * This host has no Docker and the production schema uses Postgres-specific types
- * ({@code TEXT[]} arrays, {@code BIGSERIAL}) that H2 does not map cleanly, so
- * Testcontainers and embedded H2 are both avoided. Instead the JPA repository
+ * <h2>Database approach (no Docker, no MySQL)</h2>
+ * This host has no Docker, so no real MySQL instance is available to the test.
+ * Testcontainers and embedded substitutes are intentionally avoided. Instead the JPA repository
  * interfaces are backed by <b>stateful in-memory fakes</b>: each repository is a
  * Mockito mock whose relevant methods delegate (via {@code thenAnswer}) to real
  * backing collections held on {@link InMemoryRepositories}. State therefore

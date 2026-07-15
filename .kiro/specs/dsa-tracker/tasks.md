@@ -30,9 +30,9 @@ Tasks are grouped into waves. Every task in a wave may run in parallel; each wav
 ## Tasks
 
 - [x] 1. Project scaffolding
-  - [x] 1.1 Initialize Spring Boot project (Spring Web, Spring Data JPA, Spring WebSocket, PostgreSQL driver, Spring Scheduling)
+  - [x] 1.1 Initialize Spring Boot project (Spring Web, Spring Data JPA, Spring WebSocket, MySQL Connector/J, Spring Scheduling)
   - [x] 1.2 Initialize React project (Vite), set up REST client and STOMP/WebSocket client (`@stomp/stompjs`, `sockjs-client`)
-  - [x] 1.3 Set up Postgres locally (docker-compose with a `postgres:16` service) and connect Spring Boot via `application.yml`
+  - [x] 1.3 Set up MySQL 8 locally (docker-compose with a pinned `mysql:8.0.40` service) and connect Spring Boot via `application.yml`
 
 - [x] 2. Database layer
   - [x] 2.1 Create JPA entities: `User`, `Submission`, `Group`, `GroupMember`, `DailyCount`, `PollStatus` matching schema in design.md section 3 (_Requirements: 1, 3, 4, 6, 9_)
@@ -106,7 +106,7 @@ Tasks are grouped into waves. Every task in a wave may run in parallel; each wav
 - [x] 12. Deployment
   - [x] 12.1 Dockerize backend (multi-stage build, Java 21 base image)
   - [x] 12.2 Dockerize frontend (build + serve via nginx, or deploy separately to Vercel/Netlify)
-  - [x] 12.3 Deploy Postgres — prefer a managed free/low-cost tier (e.g. Neon, Supabase, Railway) over self-managed RDS given the existing AWS billing dispute; avoid provisioning NAT Gateway/Elastic IPs/RDS for a small side project
+  - [x] 12.3 Deploy Aiven MySQL 8 using hosting-platform secrets and TLS; avoid provisioning self-managed RDS/NAT Gateway/Elastic IP infrastructure for a small side project
   - [x] 12.4 Set up environment variables for DB connection, CORS allowed origins, WebSocket allowed origins
 
 ## Notes
