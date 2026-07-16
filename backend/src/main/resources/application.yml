@@ -53,6 +53,9 @@ auth:
     issuer: ${AUTH_JWT_ISSUER:dsa-tracker}
     audience: ${AUTH_JWT_AUDIENCE:dsa-tracker-web}
     expiry: ${AUTH_JWT_EXPIRY:PT12H}
+  google:
+    # Public OAuth 2.0 Web client ID shared with the frontend build.
+    client-id: ${GOOGLE_CLIENT_ID:}
   # Empty disables the operator-assisted legacy activation endpoint.
   legacy-setup-secret: ${LEGACY_ACCOUNT_SETUP_SECRET:}
 

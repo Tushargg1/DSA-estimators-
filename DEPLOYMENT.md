@@ -25,6 +25,7 @@ AUTH_JWT_SECRET=<random-secret-containing-at-least-32-bytes>
 AUTH_JWT_ISSUER=dsa-tracker
 AUTH_JWT_AUDIENCE=dsa-tracker-web
 AUTH_JWT_EXPIRY=PT12H
+GOOGLE_CLIENT_ID=<public-web-client-id>.apps.googleusercontent.com
 CORS_ALLOWED_ORIGINS=https://<frontend-host>
 WEBSOCKET_ALLOWED_ORIGINS=https://<frontend-host>
 ```
@@ -50,9 +51,16 @@ Vercel builds require both build-time variables:
 ```text
 VITE_API_BASE_URL=https://<backend-host>/api
 VITE_WS_URL=https://<backend-host>/ws
+VITE_GOOGLE_CLIENT_ID=<public-web-client-id>.apps.googleusercontent.com
 ```
 
-SockJS requires `https://.../ws`, **not** `wss://.../ws`. The build fails with a clear error when either Vercel variable is absent, malformed, non-HTTPS, or has the wrong path. Local development still defaults to `http://localhost:8080/api` and `http://localhost:8080/ws`.
+SockJS requires `https://.../ws`, **not** `wss://.../ws`. The build fails with a clear error when either Vercel URL variable is absent, malformed, non-HTTPS, or has the wrong path. Local development still defaults to `http://localhost:8080/api` and `http://localhost:8080/ws`.
+
+## Google sign-in
+
+In Google Cloud Console, create an OAuth 2.0 client with application type **Web application**. Add `http://localhost:5173` and the exact production Vercel origin under **Authorized JavaScript origins**. Set its public client ID as backend `GOOGLE_CLIENT_ID` and frontend `VITE_GOOGLE_CLIENT_ID`; the two values must match.
+
+This Google Identity Services credential flow needs no client secret or redirect URI. The browser sends the ID credential over HTTPS to `POST /api/auth/google`; the backend verifies its signature, RS256 algorithm, issuer, audience, expiry, subject, and verified email before issuing the application JWT. Never configure or expose a Google client secret for this flow.
 
 The root `package.json` delegates to the frontend and pins Node 20.x. `vercel.json` remains root-compatible, serves `index.html` without caching, and gives hashed `/assets/*` one-year immutable caching.
 

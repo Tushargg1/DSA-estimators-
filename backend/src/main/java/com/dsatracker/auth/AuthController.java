@@ -40,6 +40,11 @@ public class AuthController {
         return authService.login(request);
     }
 
+    @PostMapping("/google")
+    public AuthResponse googleLogin(@RequestBody GoogleLoginRequest request) {
+        return authService.googleLogin(request);
+    }
+
     @PostMapping("/legacy-activate")
     public AuthResponse activateLegacy(@RequestBody LegacyActivationRequest request) {
         return authService.activateLegacy(request);

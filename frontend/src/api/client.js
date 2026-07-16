@@ -128,6 +128,8 @@ http.interceptors.response.use(
 export const api = {
   register: (payload) => http.post('/auth/register', payload).then((response) => response.data),
   login: (payload) => http.post('/auth/login', payload).then((response) => response.data),
+  googleLogin: (credential) =>
+    http.post('/auth/google', { credential }, { skipAuthReset: true }).then((response) => response.data),
   activateLegacy: (payload) => http.post('/auth/legacy-activate', payload).then((response) => response.data),
   me: () => http.get('/auth/me').then((response) => response.data),
   logout: () => http.post('/auth/logout', null, { skipAuthReset: true }),

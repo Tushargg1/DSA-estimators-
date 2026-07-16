@@ -12,6 +12,9 @@ record RegisterRequest(String name, String email, String password,
 record LoginRequest(String email, String password) {
 }
 
+record GoogleLoginRequest(String credential) {
+}
+
 record LegacyActivationRequest(String email, String password, String setupCode) {
 }
 

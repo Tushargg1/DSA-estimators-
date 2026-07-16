@@ -1,5 +1,34 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api/client.js'
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim()
+let googleScriptPromise
+
+function loadGoogleIdentity() {
+  if (globalThis.google?.accounts?.id) return Promise.resolve(globalThis.google)
+  if (googleScriptPromise) return googleScriptPromise
+
+  googleScriptPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById('google-identity-services')
+    const script = existing || document.createElement('script')
+    const loaded = () => globalThis.google?.accounts?.id
+      ? resolve(globalThis.google)
+      : reject(new Error('Google Identity Services did not initialize.'))
+    const failed = () => {
+      googleScriptPromise = undefined
+      reject(new Error('Unable to load Google sign-in. Check your connection and try again.'))
+    }
+    script.addEventListener('load', loaded, { once: true })
+    script.addEventListener('error', failed, { once: true })
+    if (!existing) {
+      script.id = 'google-identity-services'
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      document.head.appendChild(script)
+    }
+  })
+  return googleScriptPromise
+}
 
 const empty = {
   name: '', email: '', password: '', confirmPassword: '', setupCode: '',
@@ -18,14 +47,77 @@ function AuthScreen({ onAuthenticated }) {
   const [error, setError] = useState(null)
   const [fieldErrors, setFieldErrors] = useState({})
   const [busy, setBusy] = useState(false)
+  const [googleError, setGoogleError] = useState(null)
+  const googleButtonRef = useRef(null)
+  const googleBusyRef = useRef(false)
 
   const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }))
   const switchMode = (next) => {
+    if (busy) return
     setMode(next)
     setError(null)
+    setGoogleError(null)
     setFieldErrors({})
     setForm(empty)
   }
+
+  const authenticateWithGoogle = useCallback(async (googleResponse) => {
+    if (googleBusyRef.current) return
+    if (!googleResponse?.credential) {
+      setGoogleError('Google did not return a sign-in credential. Please try again.')
+      return
+    }
+    googleBusyRef.current = true
+    setBusy(true)
+    setError(null)
+    setGoogleError(null)
+    setFieldErrors({})
+    try {
+      const response = await api.googleLogin(googleResponse.credential)
+      await onAuthenticated(response)
+    } catch (requestError) {
+      setGoogleError(requestError.message || 'Google authentication failed. Please try again.')
+    } finally {
+      googleBusyRef.current = false
+      setBusy(false)
+    }
+  }, [onAuthenticated])
+
+  useEffect(() => {
+    if (mode === 'activate') return undefined
+    const container = googleButtonRef.current
+    container?.replaceChildren()
+    setGoogleError(null)
+    if (!googleClientId) {
+      setGoogleError('Google sign-in is not configured for this deployment.')
+      return undefined
+    }
+
+    let cancelled = false
+    loadGoogleIdentity()
+      .then((google) => {
+        if (cancelled || !container) return
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: authenticateWithGoogle,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        })
+        google.accounts.id.renderButton(container, {
+          type: 'standard', theme: 'outline', size: 'large', shape: 'rectangular',
+          text: mode === 'register' ? 'signup_with' : 'signin_with',
+          width: Math.min(400, Math.max(200, container.clientWidth || 320)),
+        })
+      })
+      .catch((scriptError) => {
+        if (!cancelled) setGoogleError(scriptError.message)
+      })
+
+    return () => {
+      cancelled = true
+      container?.replaceChildren()
+    }
+  }, [authenticateWithGoogle, mode])
 
   const submit = async (event) => {
     event.preventDefault()
@@ -81,9 +173,9 @@ function AuthScreen({ onAuthenticated }) {
 
       <div className="auth-card-shell">
         <nav className="auth-tabs" aria-label="Account access">
-          <button type="button" onClick={() => switchMode('login')} aria-pressed={mode === 'login'}>Login</button>
-          <button type="button" onClick={() => switchMode('register')} aria-pressed={mode === 'register'}>Register</button>
-          <button type="button" onClick={() => switchMode('activate')} aria-pressed={mode === 'activate'}>Activate</button>
+          <button type="button" disabled={busy} onClick={() => switchMode('login')} aria-pressed={mode === 'login'}>Login</button>
+          <button type="button" disabled={busy} onClick={() => switchMode('register')} aria-pressed={mode === 'register'}>Register</button>
+          <button type="button" disabled={busy} onClick={() => switchMode('activate')} aria-pressed={mode === 'activate'}>Activate</button>
         </nav>
         <form className="card auth-card" onSubmit={submit} noValidate aria-busy={busy}>
           <div className="auth-card-heading">
@@ -91,6 +183,14 @@ function AuthScreen({ onAuthenticated }) {
             <h2>{copy.title}</h2>
             <p>{copy.subtitle}</p>
           </div>
+
+          {mode !== 'activate' && <div className={`google-auth${busy ? ' is-busy' : ''}`} aria-busy={busy}>
+            <div ref={googleButtonRef} className="google-button" aria-label="Google account access" />
+            {googleError && <div className="google-auth-error" role="alert">{googleError}</div>}
+            <div className="auth-divider" aria-hidden="true">
+              <span>{mode === 'register' ? 'or create with email' : 'or continue with email'}</span>
+            </div>
+          </div>}
 
           {mode === 'register' && <div className="field">
             <label htmlFor="auth-name">Display name</label>

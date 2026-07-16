@@ -30,16 +30,18 @@ public class AuthService {
     private final UserService userService;
     private final PasswordEncoder passwords;
     private final TokenService tokens;
+    private final GoogleTokenVerifier googleTokens;
     private final String setupSecret;
     private final String dummyHash;
 
     public AuthService(UserRepository users, UserService userService, PasswordEncoder passwords,
-                       TokenService tokens,
+                       TokenService tokens, GoogleTokenVerifier googleTokens,
                        @Value("${auth.legacy-setup-secret:}") String setupSecret) {
         this.users = users;
         this.userService = userService;
         this.passwords = passwords;
         this.tokens = tokens;
+        this.googleTokens = googleTokens;
         this.setupSecret = setupSecret;
         this.dummyHash = passwords.encode("dummy-password-never-used");
     }
@@ -62,6 +64,24 @@ public class AuthService {
         boolean valid = passwords.matches(rawPassword, hash);
         User user = candidate.filter(User::isCredentialsEnabled).filter(ignored -> valid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_CREDENTIALS));
+        return response(user);
+    }
+
+    @Transactional
+    public AuthResponse googleLogin(GoogleLoginRequest request) {
+        GoogleTokenVerifier.GoogleIdentity identity = googleTokens.verify(
+                request == null ? null : request.credential());
+        User user = users.findByEmailForUpdate(identity.email()).orElseGet(() -> {
+            User created = new User();
+            created.setName(identity.name());
+            created.setEmail(identity.email());
+            created.setPasswordHash(null);
+            created.setCredentialsEnabled(false);
+            created.setDailyTarget(5);
+            created.setOnboardingComplete(true);
+            created.setCreatedAt(java.time.Instant.now());
+            return users.save(created);
+        });
         return response(user);
     }
 
