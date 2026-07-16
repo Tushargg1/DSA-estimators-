@@ -15,19 +15,24 @@ if (configuredApi) {
 }
 export const API_BASE_URL = configuredApi || localApi
 const TOKEN_KEY = 'dsaTracker.jwt'
+let memoryToken = null
 let unauthorizedHandler = null
 
 export function getAuthToken() {
-  return sessionStorage.getItem(TOKEN_KEY)
+  try { return sessionStorage.getItem(TOKEN_KEY) || memoryToken } catch { return memoryToken }
 }
 
 export function setAuthToken(token) {
-  if (token) sessionStorage.setItem(TOKEN_KEY, token)
-  else sessionStorage.removeItem(TOKEN_KEY)
+  memoryToken = token || null
+  try {
+    if (token) sessionStorage.setItem(TOKEN_KEY, token)
+    else sessionStorage.removeItem(TOKEN_KEY)
+  } catch { /* Restricted storage falls back to this tab's memory. */ }
 }
 
 export function clearAuthToken() {
-  sessionStorage.removeItem(TOKEN_KEY)
+  memoryToken = null
+  try { sessionStorage.removeItem(TOKEN_KEY) } catch { /* Already cleared in memory. */ }
 }
 
 export function onUnauthorized(handler) {
@@ -39,7 +44,8 @@ export function onUnauthorized(handler) {
 
 const http = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  // Render may need close to a minute to wake a sleeping free instance.
+  timeout: 90000,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -49,20 +55,68 @@ http.interceptors.request.use((config) => {
   return config
 })
 
+const stringMessage = (data) => {
+  for (const value of [data?.detail, data?.message]) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return null
+}
+
+export function normalizeApiError(error) {
+  if (axios.isCancel(error)) {
+    const aborted = new Error('Request cancelled')
+    aborted.name = 'AbortError'
+    aborted.kind = 'aborted'
+    aborted.retryable = false
+    return aborted
+  }
+
+  const status = error.response?.status
+  const data = error.response?.data
+  const timedOut = ['ECONNABORTED', 'ETIMEDOUT'].includes(error.code)
+  let kind = 'http'
+  let retryable = false
+  let message = stringMessage(data)
+
+  if (timedOut) {
+    kind = 'timeout'
+    retryable = true
+    message = 'The server is taking longer than expected to start. Please wait a moment and try again.'
+  } else if (!error.response) {
+    kind = 'network'
+    retryable = true
+    message = 'Unable to reach the server. Check your connection, wait a moment, and try again.'
+  } else if ([502, 503, 504].includes(status)) {
+    kind = 'unavailable'
+    retryable = true
+    message = 'The server is temporarily unavailable or starting up. Please try again shortly.'
+  } else if (status === 429) {
+    retryable = true
+    message = message || 'Too many requests. Please wait a moment and try again.'
+  } else if (status >= 500) {
+    retryable = true
+    message = 'Something went wrong on the server. Please try again shortly.'
+  } else if (!message) {
+    message = status === 401 ? 'Your session is invalid or has expired. Please log in again.'
+      : status === 403 ? 'You do not have permission to perform this action.'
+        : status === 404 ? 'The requested information was not found.'
+          : 'The request could not be completed. Please check the form and try again.'
+  }
+
+  const wrapped = new Error(message)
+  wrapped.status = status
+  wrapped.code = error.code
+  wrapped.kind = data?.errors ? 'validation' : kind
+  wrapped.retryable = retryable
+  wrapped.data = data
+  if (data?.errors && typeof data.errors === 'object') wrapped.fieldErrors = data.errors
+  return wrapped
+}
+
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (axios.isCancel(error)) {
-      const aborted = new Error('Request cancelled')
-      aborted.name = 'AbortError'
-      return Promise.reject(aborted)
-    }
-    const data = error.response?.data
-    const message = data?.detail ?? data?.message ?? data?.error ?? error.message ?? 'Request failed'
-    const wrapped = new Error(message)
-    wrapped.status = error.response?.status
-    wrapped.data = data
-    if (data?.errors && typeof data.errors === 'object') wrapped.fieldErrors = data.errors
+    const wrapped = normalizeApiError(error)
     if (wrapped.status === 401 && !error.config?.skipAuthReset) {
       clearAuthToken()
       unauthorizedHandler?.()
@@ -92,6 +146,7 @@ export const api = {
   getGroupHistory: (groupId, date) =>
     http.get(`/groups/${groupId}/history`, { params: { date } }).then((response) => response.data),
   getPollStatus: () => http.get('/status/poll').then((response) => response.data),
+  getPatternCatalog: () => http.get('/catalog').then((response) => response.data),
 }
 
 export default http

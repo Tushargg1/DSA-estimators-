@@ -6,6 +6,12 @@ const empty = {
   leetcodeUsername: '', codeforcesUsername: '', gfgUsername: '',
 }
 
+const modeCopy = {
+  login: { title: 'Welcome back', subtitle: 'Continue building your problem-solving streak.', action: 'Log in' },
+  register: { title: 'Create your account', subtitle: 'Connect your profiles and start tracking progress.', action: 'Create account' },
+  activate: { title: 'Activate existing account', subtitle: 'Set a password using the temporary code from the operator.', action: 'Activate account' },
+}
+
 function AuthScreen({ onAuthenticated }) {
   const [mode, setMode] = useState('login')
   const [form, setForm] = useState(empty)
@@ -13,10 +19,7 @@ function AuthScreen({ onAuthenticated }) {
   const [fieldErrors, setFieldErrors] = useState({})
   const [busy, setBusy] = useState(false)
 
-  const update = (key) => (event) => {
-    setForm((current) => ({ ...current, [key]: event.target.value }))
-  }
-
+  const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }))
   const switchMode = (next) => {
     setMode(next)
     setError(null)
@@ -48,7 +51,7 @@ function AuthScreen({ onAuthenticated }) {
         }
         response = await api.register(payload)
       }
-      onAuthenticated(response)
+      await onAuthenticated(response)
     } catch (requestError) {
       if (requestError.fieldErrors) setFieldErrors(requestError.fieldErrors)
       else setError(requestError.message || 'Authentication failed')
@@ -57,57 +60,83 @@ function AuthScreen({ onAuthenticated }) {
     }
   }
 
-  const commonEmail = (
-    <div className="field">
-      <label htmlFor="auth-email">Email</label>
-      <input id="auth-email" type="email" autoComplete="email" value={form.email}
-        onChange={update('email')} aria-invalid={fieldErrors.email ? 'true' : undefined} />
-      {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
-    </div>
-  )
+  const errorProps = (key) => ({
+    'aria-invalid': fieldErrors[key] ? 'true' : undefined,
+    'aria-describedby': fieldErrors[key] ? `${key}-error` : undefined,
+  })
+  const copy = modeCopy[mode]
 
   return (
     <section className="auth-panel">
-      <nav className="auth-tabs" aria-label="Account access">
-        <button type="button" onClick={() => switchMode('login')} aria-pressed={mode === 'login'}>Login</button>
-        <button type="button" onClick={() => switchMode('register')} aria-pressed={mode === 'register'}>Register</button>
-        <button type="button" onClick={() => switchMode('activate')} aria-pressed={mode === 'activate'}>Activate existing account</button>
-      </nav>
-      <form className="card" onSubmit={submit} noValidate>
-        <h2>{mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Create account' : 'Activate existing account'}</h2>
-        {mode === 'activate' && <p className="muted">Use the temporary setup code provided by the operator.</p>}
-        {mode === 'register' && (
-          <div className="field">
-            <label htmlFor="auth-name">Display name</label>
-            <input id="auth-name" value={form.name} onChange={update('name')} />
-            {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
-          </div>
-        )}
-        {commonEmail}
-        {mode === 'register' && ['leetcodeUsername', 'codeforcesUsername', 'gfgUsername'].map((key) => (
-          <div className="field" key={key}>
-            <label htmlFor={key}>{key === 'leetcodeUsername' ? 'LeetCode username' : key === 'codeforcesUsername' ? 'Codeforces handle' : 'GeeksforGeeks username'}</label>
-            <input id={key} value={form[key]} onChange={update(key)} placeholder="optional" />
-            {fieldErrors[key] && <span className="field-error">{fieldErrors[key]}</span>}
-          </div>
-        ))}
-        <div className="field">
-          <label htmlFor="auth-password">Password</label>
-          <input id="auth-password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={form.password} onChange={update('password')} />
-          {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
+      <aside className="auth-hero">
+        <span className="eyebrow">Practice with purpose</span>
+        <h2>Turn daily DSA practice into visible progress.</h2>
+        <p>Bring your coding profiles together, stay accountable with friends, and make consistency your competitive advantage.</p>
+        <div className="feature-list" aria-label="Tracker benefits">
+          <div><span aria-hidden="true">01</span><strong>One unified view</strong><small>LeetCode, Codeforces, and GeeksforGeeks.</small></div>
+          <div><span aria-hidden="true">02</span><strong>Daily momentum</strong><small>Targets and streaks that keep you moving.</small></div>
+          <div><span aria-hidden="true">03</span><strong>Friendly competition</strong><small>Live group leaderboards with your peers.</small></div>
         </div>
-        {mode !== 'login' && <div className="field">
-          <label htmlFor="auth-confirm">Confirm password</label>
-          <input id="auth-confirm" type="password" autoComplete="new-password" value={form.confirmPassword} onChange={update('confirmPassword')} />
-          {fieldErrors.confirmPassword && <span className="field-error">{fieldErrors.confirmPassword}</span>}
-        </div>}
-        {mode === 'activate' && <div className="field">
-          <label htmlFor="setup-code">Setup code</label>
-          <input id="setup-code" type="password" autoComplete="one-time-code" value={form.setupCode} onChange={update('setupCode')} />
-        </div>}
-        {error && <p className="form-error" role="alert">{error}</p>}
-        <button type="submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Login' : mode === 'register' ? 'Register' : 'Activate account'}</button>
-      </form>
+      </aside>
+
+      <div className="auth-card-shell">
+        <nav className="auth-tabs" aria-label="Account access">
+          <button type="button" onClick={() => switchMode('login')} aria-pressed={mode === 'login'}>Login</button>
+          <button type="button" onClick={() => switchMode('register')} aria-pressed={mode === 'register'}>Register</button>
+          <button type="button" onClick={() => switchMode('activate')} aria-pressed={mode === 'activate'}>Activate</button>
+        </nav>
+        <form className="card auth-card" onSubmit={submit} noValidate>
+          <div className="auth-card-heading">
+            <span className="eyebrow">{mode === 'login' ? 'Account access' : mode === 'register' ? 'Get started' : 'Legacy account'}</span>
+            <h2>{copy.title}</h2>
+            <p>{copy.subtitle}</p>
+          </div>
+
+          {mode === 'register' && <div className="field">
+            <label htmlFor="auth-name">Display name</label>
+            <input id="auth-name" value={form.name} onChange={update('name')} required placeholder="How others will see you" {...errorProps('name')} />
+            {fieldErrors.name && <span id="name-error" className="field-error">{fieldErrors.name}</span>}
+          </div>}
+
+          <div className="field">
+            <label htmlFor="auth-email">Email address</label>
+            <input id="auth-email" type="email" autoComplete="email" value={form.email} onChange={update('email')} required placeholder="you@example.com" {...errorProps('email')} />
+            {fieldErrors.email && <span id="email-error" className="field-error">{fieldErrors.email}</span>}
+          </div>
+
+          {mode === 'register' && <div className="platform-fields">
+            {['leetcodeUsername', 'codeforcesUsername', 'gfgUsername'].map((key) => (
+              <div className="field" key={key}>
+                <label htmlFor={key}>{key === 'leetcodeUsername' ? 'LeetCode' : key === 'codeforcesUsername' ? 'Codeforces' : 'GeeksforGeeks'}</label>
+                <input id={key} value={form[key]} onChange={update(key)} placeholder="Username (optional)" {...errorProps(key)} />
+                {fieldErrors[key] && <span id={`${key}-error`} className="field-error">{fieldErrors[key]}</span>}
+              </div>
+            ))}
+          </div>}
+
+          <div className="field">
+            <label htmlFor="auth-password">Password</label>
+            <input id="auth-password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={form.password} onChange={update('password')} required placeholder="At least 8 characters" {...errorProps('password')} />
+            {fieldErrors.password && <span id="password-error" className="field-error">{fieldErrors.password}</span>}
+          </div>
+
+          {mode !== 'login' && <div className="field">
+            <label htmlFor="auth-confirm">Confirm password</label>
+            <input id="auth-confirm" type="password" autoComplete="new-password" value={form.confirmPassword} onChange={update('confirmPassword')} required placeholder="Enter your password again" {...errorProps('confirmPassword')} />
+            {fieldErrors.confirmPassword && <span id="confirmPassword-error" className="field-error">{fieldErrors.confirmPassword}</span>}
+          </div>}
+
+          {mode === 'activate' && <div className="field">
+            <label htmlFor="setup-code">Temporary setup code</label>
+            <input id="setup-code" type="password" autoComplete="one-time-code" value={form.setupCode} onChange={update('setupCode')} required placeholder="Code from the operator" />
+          </div>}
+
+          {error && <div className="form-error" role="alert"><span aria-hidden="true">!</span>{error}</div>}
+          <button className="auth-submit" type="submit" disabled={busy}>
+            {busy ? <><span className="button-spinner" aria-hidden="true" /> Please wait…</> : copy.action}
+          </button>
+        </form>
+      </div>
     </section>
   )
 }

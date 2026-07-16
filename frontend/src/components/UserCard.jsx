@@ -9,7 +9,7 @@
  *
  * @param {{ member: object }} props
  */
-function UserCard({ member }) {
+function UserCard({ member, rank }) {
   const {
     userName,
     todayCount = 0,
@@ -19,38 +19,29 @@ function UserCard({ member }) {
     totalSolved = 0,
   } = member ?? {}
 
-  const pct =
-    dailyTarget > 0
-      ? Math.min(100, Math.round((todayCount / dailyTarget) * 100))
-      : 0
+  const pct = dailyTarget > 0 ? Math.min(100, Math.round((todayCount / dailyTarget) * 100)) : 0
   const hitTarget = dailyTarget > 0 && todayCount >= dailyTarget
 
   return (
-    <div className={`user-card${hitTarget ? ' hit' : ''}`}>
-      <div className="user-card-header">
-        <span className="user-name">{userName}</span>
-        <span className="today-count">
-          {todayCount} / {dailyTarget}
-        </span>
+    <article className={`user-card${hitTarget ? ' hit' : ''}`}>
+      <div className={`rank-badge rank-${Math.min(rank, 3)}`} aria-label={`Rank ${rank}`}>{rank}</div>
+      <div className="user-card-content">
+        <div className="user-card-header">
+          <div><span className="user-name">{userName}</span><small>{hitTarget ? 'Daily target complete' : 'Today’s progress'}</small></div>
+          <span className="today-count"><strong>{todayCount}</strong><small> / {dailyTarget}</small></span>
+        </div>
+        <div className="progress" role="progressbar" aria-valuenow={todayCount} aria-valuemin={0}
+          aria-valuemax={Math.max(dailyTarget, todayCount, 1)} aria-label={`${userName} progress: ${todayCount} of ${dailyTarget}`}>
+          <div className="progress-bar" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="user-card-stats">
+          <span><i aria-hidden="true">🔥</i><small>Current streak</small><strong>{currentStreak} days</strong></span>
+          <span><i aria-hidden="true">🏆</i><small>Best streak</small><strong>{longestStreak} days</strong></span>
+          <span><i aria-hidden="true">✓</i><small>Total solved</small><strong>{totalSolved}</strong></span>
+        </div>
       </div>
-
-      <div
-        className="progress"
-        role="progressbar"
-        aria-valuenow={todayCount}
-        aria-valuemin={0}
-        aria-valuemax={dailyTarget}
-        aria-label={`${userName} progress: ${todayCount} of ${dailyTarget}`}
-      >
-        <div className="progress-bar" style={{ width: `${pct}%` }} />
-      </div>
-
-      <div className="user-card-stats">
-        <span title="Current streak">🔥 {currentStreak}d</span>
-        <span title="Longest streak">🏆 {longestStreak}d</span>
-        <span title="Total solved (first attempts)">✅ {totalSolved}</span>
-      </div>
-    </div>
+      <span className="card-arrow" aria-hidden="true">→</span>
+    </article>
   )
 }
 

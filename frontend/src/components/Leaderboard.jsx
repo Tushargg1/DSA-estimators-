@@ -73,28 +73,32 @@ function Leaderboard({ groupId, tokenVersion }) {
   return (
     <section className="leaderboard">
       <header className="leaderboard-header">
-        <h2>{leaderboard?.groupName ?? 'Leaderboard'}</h2>
-        <span className={`conn-dot ${connected ? 'conn-live' : 'conn-offline'}`}>
-          {connected ? '● Live' : '○ Offline'}
+        <div>
+          <span className="eyebrow">Today’s standings</span>
+          <h2>{leaderboard?.groupName ?? 'Leaderboard'}</h2>
+          <p>Progress updates as your group solves new problems.</p>
+        </div>
+        <span className={`conn-dot ${connected ? 'conn-live' : 'conn-offline'}`} role="status">
+          <span aria-hidden="true" />{connected ? 'Live updates' : 'Reconnecting'}
         </span>
       </header>
       <SyncStatus refreshKey={refreshKey} />
       {socketError && <div className="leaderboard-error" role="alert">
-        <span>{socketError.message || 'Live updates are unavailable.'}</span>{' '}
-        <button type="button" onClick={retry}>Retry</button>
+        <span>{socketError.message || 'Live updates are unavailable.'}</span>
+        <button type="button" className="button-secondary" onClick={retry}>Retry</button>
       </div>}
-      {cardError && <p className="leaderboard-error" role="alert">{cardError}</p>}
-      {!leaderboard && !socketError ? <p>Loading leaderboard…</p> : sortedMembers.length === 0 ? (
-        <p className="leaderboard-empty">No members in this group yet.</p>
-      ) : <ul className="leaderboard-list">
-        {sortedMembers.map((member) => <li key={member.userId}>
-          <button type="button" className="leaderboard-card-button"
+      {cardError && <div className="leaderboard-error" role="alert">{cardError}</div>}
+      {!leaderboard && !socketError ? <div className="leaderboard-loading"><span className="button-spinner" aria-hidden="true" />Loading leaderboard…</div> : sortedMembers.length === 0 ? (
+        <div className="leaderboard-empty"><span aria-hidden="true">◇</span><strong>No activity yet</strong><p>Solved problems will appear here after the next sync.</p></div>
+      ) : <ol className="leaderboard-list">
+        {sortedMembers.map((member, index) => <li key={member.userId}>
+          <button type="button" className={`leaderboard-card-button${loadingUserId === member.userId ? ' is-loading' : ''}`}
             onClick={() => handleCardClick(member)} disabled={loadingUserId === member.userId}
             aria-label={`View ${member.userName}'s recent problem`}>
-            <UserCard member={member} />
+            <UserCard member={member} rank={index + 1} />
           </button>
         </li>)}
-      </ul>}
+      </ol>}
       <ProblemDetailModal submission={selected} onClose={() => setSelected(null)} />
     </section>
   )

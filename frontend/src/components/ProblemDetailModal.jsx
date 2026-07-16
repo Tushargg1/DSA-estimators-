@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 /**
  * ProblemDetailModal (task 10.5, Requirements 8.1, 8.2).
@@ -32,63 +32,60 @@ function formatTags(tags) {
 }
 
 function ProblemDetailModal({ submission, onClose }) {
-  // Close on Escape. Registered only while the modal is open.
+  const modalRef = useRef(null)
+  const closeRef = useRef(null)
+
   useEffect(() => {
     if (!submission) return undefined
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') onClose?.()
+    const previousFocus = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onClose?.()
+      if (event.key !== 'Tab' || !modalRef.current) return
+      const focusable = [...modalRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+      previousFocus?.focus?.()
+    }
   }, [submission, onClose])
 
   if (!submission) return null
 
-  const {
-    problemName,
-    platform,
-    difficulty,
-    tags,
-    solvedAtUtc,
-  } = submission
+  const { problemName, platform, difficulty, tags, solvedAtUtc } = submission
 
   return (
-    <div
-      className="modal-backdrop"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Problem detail"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="modal-backdrop" onMouseDown={onClose} role="presentation">
+      <div ref={modalRef} className="modal" role="dialog" aria-modal="true"
+        aria-labelledby="problem-detail-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="modal-accent" aria-hidden="true" />
         <div className="modal-header">
-          <h2 className="modal-title">{problemName ?? NOT_AVAILABLE}</h2>
-          <button
-            type="button"
-            className="modal-close"
-            aria-label="Close"
-            onClick={onClose}
-          >
-            ×
-          </button>
+          <div>
+            <span className="eyebrow">Latest accepted problem</span>
+            <h2 id="problem-detail-title" className="modal-title">{problemName ?? NOT_AVAILABLE}</h2>
+          </div>
+          <button ref={closeRef} type="button" className="modal-close" aria-label="Close problem details" onClick={onClose}>×</button>
         </div>
-
         <dl className="modal-body">
-          <dt>Platform</dt>
-          <dd>{platform ?? NOT_AVAILABLE}</dd>
-
-          <dt>Difficulty</dt>
-          <dd>{difficulty ?? NOT_AVAILABLE}</dd>
-
-          <dt>Tags</dt>
-          <dd>{formatTags(tags)}</dd>
-
-          <dt>Solved at</dt>
-          <dd>{formatTimestamp(solvedAtUtc)}</dd>
+          <div><dt>Platform</dt><dd>{platform ?? NOT_AVAILABLE}</dd></div>
+          <div><dt>Difficulty</dt><dd>{difficulty ?? NOT_AVAILABLE}</dd></div>
+          <div className="modal-wide"><dt>Tags</dt><dd>{formatTags(tags)}</dd></div>
+          <div className="modal-wide"><dt>Solved at</dt><dd>{formatTimestamp(solvedAtUtc)}</dd></div>
         </dl>
       </div>
     </div>

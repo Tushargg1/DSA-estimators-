@@ -31,6 +31,20 @@ public class AsyncConfig {
 
     /** Bean name used by {@code @Async("backfillExecutor")}. */
     public static final String BACKFILL_EXECUTOR = "backfillExecutor";
+    public static final String CATALOG_EXECUTOR = "catalogExecutor";
+
+    @Bean(name = CATALOG_EXECUTOR)
+    public Executor catalogExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(1);
+        executor.setThreadNamePrefix("catalog-sync-");
+        // Never silently lose a scheduled refresh if startup work is still queued.
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
 
     /**
      * Bounded thread pool for onboarding backfill jobs.

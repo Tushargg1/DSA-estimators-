@@ -81,18 +81,21 @@ function SyncStatus({ intervalMs = 45000, refreshKey = 0 }) {
 
   return (
     <section className="sync-status" aria-label="Platform sync status">
-      <span className="sync-status-label">Sync status</span>
-      {error && <span className="sync-status-error">{error}</span>}
+      <div className="sync-status-heading">
+        <span className="sync-status-label">Platform sync</span>
+        <span className="sync-status-note">Status checks about every minute</span>
+      </div>
+      {error && <div className="sync-status-error" role="alert"><span aria-hidden="true">!</span>{error}</div>}
       <ul className="sync-status-list">
         {statuses.map((status) => {
           const item = describe(status, now, fetchedAt)
           return <li key={status.platform} className={`sync-chip sync-${item.tone}`} title={item.detail}>
-            <strong>{status.platform}</strong>: {item.text}
+            <span className="sync-dot" aria-hidden="true" />
+            <span><strong>{status.platform}</strong><small>{item.text}</small></span>
           </li>
         })}
-        {!error && statuses.length === 0 && <li className="sync-chip sync-stale">No sync data yet</li>}
+        {!error && statuses.length === 0 && <li className="sync-chip sync-stale"><span className="sync-dot" aria-hidden="true" /><span><strong>Waiting for sync</strong><small>No platform data yet</small></span></li>}
       </ul>
-      <p className="sync-status-note">Updates are polled every ~5 minutes, not real-time.</p>
     </section>
   )
 }

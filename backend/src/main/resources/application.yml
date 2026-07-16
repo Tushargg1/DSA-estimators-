@@ -55,3 +55,13 @@ auth:
     expiry: ${AUTH_JWT_EXPIRY:PT12H}
   # Empty disables the operator-assisted legacy activation endpoint.
   legacy-setup-secret: ${LEGACY_ACCOUNT_SETUP_SECRET:}
+
+
+catalog:
+  questions-url: ${CATALOG_QUESTIONS_URL:https://raw.githubusercontent.com/SeanPrashad/leetcode-patterns/main/src/data/questions.json}
+  roadmaps-url: ${CATALOG_ROADMAPS_URL:https://raw.githubusercontent.com/SeanPrashad/leetcode-patterns/main/src/data/roadmaps.ts}
+  sync:
+    # Monday at 03:00 UTC; startup sync also catches deployments or missed schedules.
+    enabled: ${CATALOG_SYNC_ENABLED:true}
+    cron: ${CATALOG_SYNC_CRON:0 0 3 * * MON}
+    zone: ${CATALOG_SYNC_ZONE:UTC}
