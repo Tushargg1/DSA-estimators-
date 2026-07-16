@@ -49,11 +49,10 @@ function formatDate(value) {
   })
 }
 
-function PatternsCatalog({ userId }) {
+function PatternsCatalog({ userId, roadmapId = ALL, onRoadmapChange }) {
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [roadmapId, setRoadmapId] = useState(ALL)
   const [phaseFilter, setPhaseFilter] = useState(ALL)
   const [difficulty, setDifficulty] = useState(ALL)
   const [pattern, setPattern] = useState(ALL)
@@ -78,6 +77,7 @@ function PatternsCatalog({ userId }) {
   }
 
   useEffect(() => { void load() }, [])
+  useEffect(() => { setPhaseFilter(ALL) }, [roadmapId])
   useEffect(() => {
     try {
       localStorage.setItem(storageKey(userId), JSON.stringify(progress))
@@ -170,30 +170,39 @@ function PatternsCatalog({ userId }) {
     }
   }
 
+  const hasFilters = roadmapId !== ALL || phaseFilter !== ALL || difficulty !== ALL
+    || pattern !== ALL || company !== ALL || query.trim() || starredOnly
+  const clearFilters = () => {
+    onRoadmapChange?.(ALL)
+    setPhaseFilter(ALL)
+    setDifficulty(ALL)
+    setPattern(ALL)
+    setCompany(ALL)
+    setQuery('')
+    setStarredOnly(false)
+  }
+
   if (loading) return <section className="patterns-state" aria-live="polite"><span className="app-loader"><span /></span><p>Loading curated questions…</p></section>
   if (error && !catalog) return <section className="patterns-state"><span className="status-icon" aria-hidden="true">!</span><h2>Catalog unavailable</h2><p>{error}</p><button type="button" onClick={load}>Retry</button></section>
 
   return (
-    <section className="patterns-catalog">
+    <section className="patterns-catalog" aria-label="LeetCode Patterns catalog">
       <header className="patterns-hero">
         <div>
-          <span className="eyebrow">Interview preparation library</span>
-          <h2>LeetCode Patterns</h2>
-          <p>Master recurring problem-solving patterns instead of memorizing isolated answers.</p>
+          <span className="eyebrow">LeetCode Patterns</span>
+          <h2>{roadmapContext?.roadmap.name ?? 'All Questions'}</h2>
+          <p>{roadmapContext
+            ? 'Follow this structured roadmap phase by phase and turn recurring techniques into interview-ready instincts.'
+            : 'Explore every curated question and filter by difficulty, pattern, or recent company frequency.'}</p>
         </div>
         <div className="patterns-overall">
           <span><strong>{completed}</strong><small>of {questions.length} solved</small></span>
-          <div className="patterns-progress"><span style={{ width: `${questions.length ? Math.round((completed / questions.length) * 100) : 0}%` }} /></div>
+          <div className="patterns-progress" role="progressbar" aria-label="Overall catalog completion"
+            aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={completed}>
+            <span style={{ width: `${questions.length ? Math.round((completed / questions.length) * 100) : 0}%` }} />
+          </div>
         </div>
       </header>
-
-      <nav className="roadmap-tabs" aria-label="Question roadmap">
-        <button type="button" aria-pressed={roadmapId === ALL} onClick={() => { setRoadmapId(ALL); setPhaseFilter(ALL) }}>All questions <small>{questions.length}</small></button>
-        {roadmaps.map((roadmap) => {
-          const count = new Set(roadmap.phases.flatMap((phase) => phase.questionSlugs)).size
-          return <button type="button" key={roadmap.id} aria-pressed={roadmapId === roadmap.id} onClick={() => { setRoadmapId(roadmap.id); setPhaseFilter(ALL) }}>{roadmap.name} <small>{count}</small></button>
-        })}
-      </nav>
 
       <div className="patterns-summary">
         <div><span className="summary-value">{completionPercent}%</span><span><strong>{roadmapContext?.roadmap.name ?? 'Overall progress'}</strong><small>{roadmapCompleted} of {roadmapTotal} completed</small></span></div>
@@ -211,7 +220,8 @@ function PatternsCatalog({ userId }) {
         })}
       </div>}
 
-      <div className="patterns-toolbar">
+      <div className="catalog-controls">
+        <div className="patterns-toolbar">
         <label className="patterns-search">
           <span className="visually-hidden">Search questions</span>
           <span aria-hidden="true">⌕</span>
@@ -231,14 +241,17 @@ function PatternsCatalog({ userId }) {
         </select>
       </div>
 
-      <div className="patterns-actions">
-        <span><strong>{filtered.length}</strong> matching questions</span>
-        <div>
-          <button type="button" className={`button-secondary${starredOnly ? ' active' : ''}`} onClick={() => setStarredOnly((value) => !value)}>★ Starred</button>
-          <button type="button" className="button-secondary" onClick={openRandom} disabled={!filtered.length}>Random</button>
-          <button type="button" className="button-secondary" onClick={exportProgress}>Export</button>
-          <button type="button" className="button-secondary" onClick={() => importRef.current?.click()}>Import</button>
-          <input ref={importRef} className="visually-hidden" type="file" accept="application/json" onChange={importProgress} />
+        <div className="patterns-actions">
+          <span><strong>{filtered.length}</strong> matching questions</span>
+          <div>
+            <button type="button" className={`button-secondary${starredOnly ? ' active' : ''}`}
+              aria-pressed={starredOnly} onClick={() => setStarredOnly((value) => !value)}>★ Starred</button>
+            <button type="button" className="button-secondary" onClick={openRandom} disabled={!filtered.length}>Random question</button>
+            {hasFilters && <button type="button" className="button-quiet" onClick={clearFilters}>Clear filters</button>}
+            <button type="button" className="button-quiet" onClick={exportProgress}>Export</button>
+            <button type="button" className="button-quiet" onClick={() => importRef.current?.click()}>Import</button>
+            <input ref={importRef} className="visually-hidden" type="file" accept="application/json" onChange={importProgress} />
+          </div>
         </div>
       </div>
 
@@ -257,22 +270,31 @@ function PatternsCatalog({ userId }) {
             <div className="question-main">
               <div className="question-title-row">
                 <span className="question-number">{roadmapContext ? index + 1 : question.id}</span>
-                <a href={`https://leetcode.com/problems/${question.slug}/`} target="_blank" rel="noopener noreferrer">{question.title}{question.premium && <span className="premium-lock" title="LeetCode Premium">◆</span>}</a>
+                <a href={`https://leetcode.com/problems/${question.slug}/`} target="_blank" rel="noopener noreferrer">
+                  {question.title}
+                  {question.premium && <span className="premium-lock" aria-label="LeetCode Premium question">◆</span>}
+                </a>
                 <span className={`difficulty-badge difficulty-${question.difficulty.toLowerCase()}`}>{question.difficulty}</span>
               </div>
               {phase && <span className="phase-label">{phase}</span>}
               <div className="question-patterns">{question.patterns?.map((value) => <button type="button" key={value} onClick={() => setPattern(value)}>{value}</button>)}</div>
               <div className="question-companies">
-                {topCompanies.length > 0 ? topCompanies.map((entry) => <button type="button" key={entry.slug} onClick={() => setCompany(entry.name)} title={`${entry.name}: ${entry.frequency} appearances in the source's six-month window`}><strong>{entry.name}</strong><span>{entry.frequency}</span></button>) : <span>No recent company frequency data</span>}
+                {topCompanies.length > 0 ? topCompanies.map((entry) => <button type="button" key={entry.slug} onClick={() => setCompany(entry.name)}
+                  aria-label={`Filter by ${entry.name}, ${entry.frequency} appearances in the source's six-month window`}>
+                  <strong>{entry.name}</strong><span>{entry.frequency}</span>
+                </button>) : <span>No recent company frequency data</span>}
               </div>
-              {noteSlug === question.slug && <label className="question-note">
+              {noteSlug === question.slug && <label className="question-note" id={`note-${question.slug}`}>
                 <span>Personal note</span>
                 <textarea value={state.note ?? ''} maxLength={MAX_NOTE_LENGTH} onChange={(event) => updateProgress(question.slug, { note: event.target.value })} placeholder="Write your approach, complexity, or what to review next…" autoFocus />
               </label>}
             </div>
             <div className="question-actions">
-              <button type="button" className={`star-button${state.starred ? ' active' : ''}`} onClick={() => updateProgress(question.slug, { starred: !state.starred })} aria-label={`${state.starred ? 'Remove' : 'Add'} star for ${question.title}`}>★</button>
-              <button type="button" className={`note-button${state.note ? ' has-note' : ''}`} onClick={() => setNoteSlug((current) => current === question.slug ? null : question.slug)} aria-expanded={noteSlug === question.slug}>Note</button>
+              <button type="button" className={`star-button${state.starred ? ' active' : ''}`} aria-pressed={Boolean(state.starred)}
+                onClick={() => updateProgress(question.slug, { starred: !state.starred })} aria-label={`${state.starred ? 'Remove' : 'Add'} star for ${question.title}`}>★</button>
+              <button type="button" className={`note-button${state.note ? ' has-note' : ''}`}
+                onClick={() => setNoteSlug((current) => current === question.slug ? null : question.slug)}
+                aria-expanded={noteSlug === question.slug} aria-controls={`note-${question.slug}`}>Note</button>
             </div>
           </li>
         })}

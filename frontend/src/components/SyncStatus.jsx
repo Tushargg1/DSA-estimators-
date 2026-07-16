@@ -89,9 +89,9 @@ function SyncStatus({ intervalMs = 45000, refreshKey = 0 }) {
       <ul className="sync-status-list">
         {statuses.map((status) => {
           const item = describe(status, now, fetchedAt)
-          return <li key={status.platform} className={`sync-chip sync-${item.tone}`} title={item.detail}>
+          return <li key={status.platform} className={`sync-chip sync-${item.tone}`}>
             <span className="sync-dot" aria-hidden="true" />
-            <span><strong>{status.platform}</strong><small>{item.text}</small></span>
+            <span><strong>{status.platform}</strong><small>{item.text}</small>{item.detail && <span className="visually-hidden">. {item.detail}</span>}</span>
           </li>
         })}
         {!error && statuses.length === 0 && <li className="sync-chip sync-stale"><span className="sync-dot" aria-hidden="true" /><span><strong>Waiting for sync</strong><small>No platform data yet</small></span></li>}

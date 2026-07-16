@@ -132,7 +132,7 @@ export const api = {
   me: () => http.get('/auth/me').then((response) => response.data),
   logout: () => http.post('/auth/logout', null, { skipAuthReset: true }),
 
-  getUser: (id) => http.get(`/users/${id}`).then((response) => response.data),
+  getUser: (id, signal) => http.get(`/users/${id}`, { signal }).then((response) => response.data),
   updateTarget: (id, target) =>
     http.put(`/users/${id}/target`, { target }).then((response) => response.data),
   getSubmissions: (id, params, signal) =>

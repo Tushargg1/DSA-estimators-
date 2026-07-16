@@ -55,7 +55,7 @@ function GroupInvite({ onCreated, onJoined }) {
 
   return (
     <div className="group-invite">
-      <form className="card group-card" onSubmit={handleCreate}>
+      <form className="card group-card" onSubmit={handleCreate} aria-busy={creating}>
         <div className="group-card-heading">
           <span className="group-card-icon" aria-hidden="true">+</span>
           <div><h2>Create a group</h2><p>Start a fresh leaderboard for your circle.</p></div>
@@ -74,7 +74,7 @@ function GroupInvite({ onCreated, onJoined }) {
           </div>
         </div>}
       </form>
-      <form className="card group-card" onSubmit={handleJoin}>
+      <form className="card group-card" onSubmit={handleJoin} aria-busy={joining}>
         <div className="group-card-heading">
           <span className="group-card-icon join" aria-hidden="true">→</span>
           <div><h2>Join a group</h2><p>Enter an invite code from a friend.</p></div>

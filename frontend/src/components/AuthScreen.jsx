@@ -85,7 +85,7 @@ function AuthScreen({ onAuthenticated }) {
           <button type="button" onClick={() => switchMode('register')} aria-pressed={mode === 'register'}>Register</button>
           <button type="button" onClick={() => switchMode('activate')} aria-pressed={mode === 'activate'}>Activate</button>
         </nav>
-        <form className="card auth-card" onSubmit={submit} noValidate>
+        <form className="card auth-card" onSubmit={submit} noValidate aria-busy={busy}>
           <div className="auth-card-heading">
             <span className="eyebrow">{mode === 'login' ? 'Account access' : mode === 'register' ? 'Get started' : 'Legacy account'}</span>
             <h2>{copy.title}</h2>
