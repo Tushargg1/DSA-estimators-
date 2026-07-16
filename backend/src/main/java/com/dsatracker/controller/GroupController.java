@@ -1,12 +1,16 @@
 package com.dsatracker.controller;
 
+import com.dsatracker.dto.CastTargetVoteRequest;
 import com.dsatracker.dto.CreateGroupRequest;
+import com.dsatracker.dto.GroupActivityResponse;
 import com.dsatracker.dto.GroupResponse;
+import com.dsatracker.dto.GroupTargetResponse;
 import com.dsatracker.dto.HistoryResponse;
 import com.dsatracker.dto.JoinGroupRequest;
 import com.dsatracker.dto.LeaderboardResponse;
 import com.dsatracker.security.AccessService;
 import com.dsatracker.service.GroupService;
+import com.dsatracker.service.GroupTargetService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
@@ -14,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,10 +47,13 @@ import java.util.List;
 public class GroupController {
 
     private final GroupService groupService;
+    private final GroupTargetService groupTargetService;
     private final AccessService access;
 
-    public GroupController(GroupService groupService, AccessService access) {
+    public GroupController(GroupService groupService, GroupTargetService groupTargetService,
+                           AccessService access) {
         this.groupService = groupService;
+        this.groupTargetService = groupTargetService;
         this.access = access;
     }
 
@@ -109,5 +117,49 @@ public class GroupController {
             Authentication authentication) {
         access.requireGroupMember(access.userId(authentication), id);
         return ResponseEntity.ok(groupService.getHistory(id, date));
+    }
+
+    @GetMapping("/{id}/target")
+    public GroupTargetResponse target(@PathVariable Long id, Authentication authentication) {
+        Long actorId = access.userId(authentication);
+        access.requireGroupMember(actorId, id);
+        return groupTargetService.getTarget(id, actorId);
+    }
+
+    @PostMapping("/{id}/target/auto")
+    public GroupTargetResponse selectAuto(@PathVariable Long id, Authentication authentication) {
+        Long actorId = access.userId(authentication);
+        access.requireGroupMember(actorId, id);
+        return groupTargetService.selectAuto(id, actorId);
+    }
+
+    @PostMapping("/{id}/target/poll")
+    public GroupTargetResponse startTargetPoll(@PathVariable Long id,
+                                               Authentication authentication) {
+        Long actorId = access.userId(authentication);
+        access.requireGroupMember(actorId, id);
+        return groupTargetService.startPoll(id, actorId);
+    }
+
+    @PutMapping("/{id}/target/poll/vote")
+    public GroupTargetResponse castTargetVote(@PathVariable Long id,
+                                              @RequestBody CastTargetVoteRequest request,
+                                              Authentication authentication) {
+        Long actorId = access.userId(authentication);
+        access.requireGroupMember(actorId, id);
+        return groupTargetService.castVote(id, actorId,
+                request == null ? null : request.target());
+    }
+
+    @GetMapping("/{id}/members/{userId}/activity")
+    public GroupActivityResponse activity(
+            @PathVariable Long id,
+            @PathVariable Long userId,
+            @RequestParam(value = "period", defaultValue = "MONTH") String period,
+            @RequestParam(value = "anchor", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate anchor,
+            Authentication authentication) {
+        access.requireGroupMember(access.userId(authentication), id);
+        return groupTargetService.activity(id, userId, period, anchor);
     }
 }

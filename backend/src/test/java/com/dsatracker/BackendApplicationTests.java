@@ -3,6 +3,7 @@ package com.dsatracker;
 import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.GroupMemberRepository;
 import com.dsatracker.repository.GroupRepository;
+import com.dsatracker.repository.GroupTargetVoteRepository;
 import com.dsatracker.repository.PollStatusRepository;
 import com.dsatracker.repository.SubmissionRepository;
 import com.dsatracker.repository.UserRepository;
@@ -74,6 +75,10 @@ class BackendApplicationTests {
 	 */
 	@MockitoBean
 	private GroupMemberRepository groupMemberRepository;
+
+	/** Group target voting persistence is also excluded with JPA in this smoke test. */
+	@MockitoBean
+	private GroupTargetVoteRepository groupTargetVoteRepository;
 
 	/**
 	 * {@link com.dsatracker.service.PollingService} (task 9.2) now publishes live

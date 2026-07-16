@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for {@link GroupMember} (composite key
@@ -29,6 +30,10 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
     List<GroupMember> findByIdGroupId(Long groupId);
 
     boolean existsByIdGroupIdAndIdUserId(Long groupId, Long userId);
+
+    Optional<GroupMember> findByIdGroupIdAndIdUserId(Long groupId, Long userId);
+
+    long countByIdGroupIdAndJoinedAtLessThanEqual(Long groupId, Instant cutoff);
 
     @Query("""
             select (count(gm) > 0) from GroupMember gm

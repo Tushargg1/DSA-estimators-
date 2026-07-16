@@ -74,6 +74,7 @@ public class GroupService {
     private final DailyCountRepository dailyCountRepository;
     private final SubmissionRepository submissionRepository;
     private final StreakService streakService;
+    private final GroupTargetService groupTargetService;
     private final SecureRandom random = new SecureRandom();
     private final Clock clock;
 
@@ -83,15 +84,12 @@ public class GroupService {
                         UserRepository userRepository,
                         DailyCountRepository dailyCountRepository,
                         SubmissionRepository submissionRepository,
-                        StreakService streakService) {
+                        StreakService streakService,
+                        GroupTargetService groupTargetService) {
         this(groupRepository, groupMemberRepository, userRepository, dailyCountRepository,
-                submissionRepository, streakService, Clock.systemUTC());
+                submissionRepository, streakService, groupTargetService, Clock.systemUTC());
     }
 
-    /**
-     * Full constructor exposing the {@link Clock} for tests so "today in IST" can
-     * be pinned deterministically.
-     */
     GroupService(GroupRepository groupRepository,
                  GroupMemberRepository groupMemberRepository,
                  UserRepository userRepository,
@@ -99,12 +97,25 @@ public class GroupService {
                  SubmissionRepository submissionRepository,
                  StreakService streakService,
                  Clock clock) {
+        this(groupRepository, groupMemberRepository, userRepository, dailyCountRepository,
+                submissionRepository, streakService, null, clock);
+    }
+
+    GroupService(GroupRepository groupRepository,
+                 GroupMemberRepository groupMemberRepository,
+                 UserRepository userRepository,
+                 DailyCountRepository dailyCountRepository,
+                 SubmissionRepository submissionRepository,
+                 StreakService streakService,
+                 GroupTargetService groupTargetService,
+                 Clock clock) {
         this.groupRepository = groupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.userRepository = userRepository;
         this.dailyCountRepository = dailyCountRepository;
         this.submissionRepository = submissionRepository;
         this.streakService = streakService;
+        this.groupTargetService = groupTargetService;
         this.clock = clock;
     }
 
@@ -199,6 +210,8 @@ public class GroupService {
         LocalDate today = TimeUtil.toIstDate(clock.instant());
 
         List<User> members = membersOf(groupId);
+        int groupTarget = groupTargetService == null
+                ? group.getDailyTarget() : groupTargetService.currentTarget(groupId);
         List<LeaderboardResponse.MemberEntry> entries = new ArrayList<>(members.size());
         for (User user : members) {
             int todayCount = dailyCountRepository
@@ -213,7 +226,7 @@ public class GroupService {
                     user.getId(),
                     user.getName(),
                     todayCount,
-                    user.getDailyTarget(),
+                    groupTargetService == null ? user.getDailyTarget() : groupTarget,
                     streaks.current(),
                     streaks.longest(),
                     totalSolved));
@@ -239,13 +252,25 @@ public class GroupService {
     public HistoryResponse getHistory(Long groupId, LocalDate date) {
         Group group = requireGroup(groupId);
 
+        List<GroupMember> memberships = groupMemberRepository.findByIdGroupId(groupId);
+        Map<Long, LocalDate> joinedByUser = new LinkedHashMap<>();
+        for (GroupMember membership : memberships) {
+            joinedByUser.put(membership.getId().getUserId(),
+                    TimeUtil.toIstDate(membership.getJoinedAt()));
+        }
+        int groupTarget = groupTargetService == null
+                ? group.getDailyTarget() : groupTargetService.currentTarget(groupId);
         List<User> members = membersOf(groupId);
         List<HistoryResponse.HistoryEntry> entries = new ArrayList<>(members.size());
         for (User user : members) {
+            LocalDate joinedOn = joinedByUser.get(user.getId());
+            if (joinedOn != null && date.isBefore(joinedOn)) continue;
             Optional<DailyCount> row = dailyCountRepository
                     .findByIdUserIdAndIdDateIst(user.getId(), date);
             int count = row.map(DailyCount::getCount).orElse(0);
-            boolean targetHit = row.map(DailyCount::isTargetHit).orElse(false);
+            boolean targetHit = groupTargetService == null
+                    ? row.map(DailyCount::isTargetHit).orElse(false)
+                    : count >= groupTarget;
             entries.add(new HistoryResponse.HistoryEntry(
                     user.getId(), user.getName(), count, targetHit));
         }

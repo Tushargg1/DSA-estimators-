@@ -15,14 +15,17 @@ public record GroupResponse(
         Long id,
         String name,
         String inviteCode,
-        Long createdBy
+        Long createdBy,
+        int dailyTarget,
+        String targetMode
 ) {
-    /** Maps a persisted {@link Group} entity to its API representation. */
     public static GroupResponse from(Group group) {
         return new GroupResponse(
                 group.getId(),
                 group.getName(),
                 group.getInviteCode(),
-                group.getCreatedBy());
+                group.getCreatedBy(),
+                group.getDailyTarget(),
+                group.getTargetMode());
     }
 }

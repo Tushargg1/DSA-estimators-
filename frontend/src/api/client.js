@@ -147,6 +147,17 @@ export const api = {
     http.get(`/groups/${groupId}/leaderboard`).then((response) => response.data),
   getGroupHistory: (groupId, date) =>
     http.get(`/groups/${groupId}/history`, { params: { date } }).then((response) => response.data),
+  getGroupTarget: (groupId, signal) =>
+    http.get(`/groups/${groupId}/target`, { signal }).then((response) => response.data),
+  selectAutoGroupTarget: (groupId) =>
+    http.post(`/groups/${groupId}/target/auto`).then((response) => response.data),
+  startGroupTargetPoll: (groupId) =>
+    http.post(`/groups/${groupId}/target/poll`).then((response) => response.data),
+  castGroupTargetVote: (groupId, target) =>
+    http.put(`/groups/${groupId}/target/poll/vote`, { target }).then((response) => response.data),
+  getMemberActivity: (groupId, userId, params, signal) =>
+    http.get(`/groups/${groupId}/members/${userId}/activity`, { params, signal })
+      .then((response) => response.data),
   getPollStatus: () => http.get('/status/poll').then((response) => response.data),
   getPatternCatalog: () => http.get('/catalog').then((response) => response.data),
 }

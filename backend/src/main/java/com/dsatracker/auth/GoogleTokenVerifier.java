@@ -62,12 +62,19 @@ public class GoogleTokenVerifier {
                 || expiresAt == null || !expiresAt.isAfter(Instant.now())
                 || subject == null || subject.length() > 255
                 || !Boolean.TRUE.equals(emailVerified)
-                || email == null || email.length() > 150
-                || name == null || name.length() > 100) {
+                || email == null || email.length() > 150) {
             throw unauthorized();
         }
 
-        return new GoogleIdentity(email.toLowerCase(Locale.ROOT), name);
+        String normalizedEmail = email.toLowerCase(Locale.ROOT);
+        if (name == null) {
+            int at = normalizedEmail.indexOf('@');
+            name = at > 0 ? normalizedEmail.substring(0, at) : "Google user";
+        }
+        if (name.length() > 100) {
+            name = name.substring(0, 100);
+        }
+        return new GoogleIdentity(subject, normalizedEmail, name);
     }
 
     private static String trimToNull(String value) {
@@ -82,6 +89,6 @@ public class GoogleTokenVerifier {
         return new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_CREDENTIAL);
     }
 
-    public record GoogleIdentity(String email, String name) {
+    public record GoogleIdentity(String subject, String email, String name) {
     }
 }

@@ -39,43 +39,44 @@ public class Group {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "daily_target", nullable = false)
+    private int dailyTarget = 3;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(name = "target_mode", nullable = false, length = 10)
+    private String targetMode = "AUTO";
 
-    public String getName() {
-        return name;
-    }
+    @Column(name = "target_calculated_for_date")
+    private java.time.LocalDate targetCalculatedForDate;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Column(name = "poll_version", nullable = false)
+    private int pollVersion;
 
-    public String getInviteCode() {
-        return inviteCode;
-    }
+    @Column(name = "poll_active", nullable = false)
+    private boolean pollActive;
 
-    public void setInviteCode(String inviteCode) {
-        this.inviteCode = inviteCode;
-    }
+    @Column(name = "poll_started_at")
+    private Instant pollStartedAt;
 
-    public Long getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getInviteCode() { return inviteCode; }
+    public void setInviteCode(String inviteCode) { this.inviteCode = inviteCode; }
+    public Long getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public int getDailyTarget() { return dailyTarget; }
+    public void setDailyTarget(int dailyTarget) { this.dailyTarget = dailyTarget; }
+    public String getTargetMode() { return targetMode; }
+    public void setTargetMode(String targetMode) { this.targetMode = targetMode; }
+    public java.time.LocalDate getTargetCalculatedForDate() { return targetCalculatedForDate; }
+    public void setTargetCalculatedForDate(java.time.LocalDate date) { this.targetCalculatedForDate = date; }
+    public int getPollVersion() { return pollVersion; }
+    public void setPollVersion(int pollVersion) { this.pollVersion = pollVersion; }
+    public boolean isPollActive() { return pollActive; }
+    public void setPollActive(boolean pollActive) { this.pollActive = pollActive; }
+    public Instant getPollStartedAt() { return pollStartedAt; }
+    public void setPollStartedAt(Instant pollStartedAt) { this.pollStartedAt = pollStartedAt; }
 }

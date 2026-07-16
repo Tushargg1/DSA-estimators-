@@ -3,6 +3,7 @@ import AuthScreen from './components/AuthScreen.jsx'
 import GroupInvite from './components/GroupInvite.jsx'
 import Leaderboard from './components/Leaderboard.jsx'
 import MemberProfile from './components/MemberProfile.jsx'
+import GroupTargetPanel from './components/GroupTargetPanel.jsx'
 import PatternsCatalog from './components/PatternsCatalog.jsx'
 import WorkspaceBar from './components/WorkspaceBar.jsx'
 import { api, clearAuthToken, getAuthToken, onUnauthorized, setAuthToken } from './api/client.js'
@@ -187,11 +188,14 @@ function App() {
         {!user ? <AuthScreen onAuthenticated={authenticated} /> : activeView === 'patterns' ? (
           <PatternsCatalog userId={user.id} roadmapId={catalogRoadmap} onRoadmapChange={setCatalogRoadmap} />
         ) : activeView === 'profile' ? (
-          <MemberProfile userId={profileUserId ?? user.id} currentUserId={user.id} onBack={showDashboard} />
+          <MemberProfile userId={profileUserId ?? user.id} currentUserId={user.id} groupId={group?.id} onBack={showDashboard} />
         ) : <section className="dashboard">
           <WorkspaceBar groups={groups} group={group} onGroupChange={chooseGroup} />
 
-          {group ? <Leaderboard groupId={group.id} tokenVersion={tokenVersion} onOpenProfile={openProfile} /> : (
+          {group ? <>
+            <GroupTargetPanel groupId={group.id} onChanged={() => setTokenVersion((value) => value + 1)} />
+            <Leaderboard groupId={group.id} tokenVersion={tokenVersion} onOpenProfile={openProfile} />
+          </> : (
             <section className="empty-state">
               <span className="empty-state-icon" aria-hidden="true">+</span>
               <h2>Create your first group</h2>

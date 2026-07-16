@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api/client.js'
+import ActivityHeatmap from './ActivityHeatmap.jsx'
 
 const PAGE_SIZE = 50
 const platforms = [
@@ -13,7 +14,22 @@ function formatDate(value) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
-function MemberProfile({ userId, currentUserId, onBack }) {
+function istDateKey(value) {
+  if (!value) return 'unknown'
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date(value))
+  const part = (type) => parts.find((item) => item.type === type)?.value
+  return `${part('year')}-${part('month')}-${part('day')}`
+}
+
+function formatHistoryDay(date) {
+  if (date === 'unknown') return 'Date unavailable'
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'full', timeZone: 'Asia/Kolkata' })
+    .format(new Date(`${date}T00:00:00+05:30`))
+}
+
+function MemberProfile({ userId, currentUserId, groupId, onBack }) {
   const [profile, setProfile] = useState(null)
   const [submissions, setSubmissions] = useState([])
   const [page, setPage] = useState(null)
@@ -32,7 +48,7 @@ function MemberProfile({ userId, currentUserId, onBack }) {
     setPage(null)
     Promise.all([
       api.getUser(userId, controller.signal),
-      api.getSubmissions(userId, { page: 0, size: PAGE_SIZE }, controller.signal),
+      api.getSubmissions(userId, { page: 0, size: PAGE_SIZE, groupId }, controller.signal),
     ]).then(([userProfile, firstPage]) => {
       setProfile(userProfile)
       setSubmissions(firstPage.content ?? [])
@@ -43,14 +59,14 @@ function MemberProfile({ userId, currentUserId, onBack }) {
       if (!controller.signal.aborted) setLoading(false)
     })
     return () => controller.abort()
-  }, [userId])
+  }, [userId, groupId])
 
   const loadMore = async () => {
     if (!page || page.last || loadingMore) return
     setLoadingMore(true)
     setError(null)
     try {
-      const next = await api.getSubmissions(userId, { page: page.page + 1, size: PAGE_SIZE })
+      const next = await api.getSubmissions(userId, { page: page.page + 1, size: PAGE_SIZE, groupId })
       setSubmissions((current) => [...current, ...(next.content ?? [])])
       setPage(next)
     } catch (requestError) {
@@ -68,6 +84,15 @@ function MemberProfile({ userId, currentUserId, onBack }) {
     counts[item.platform] = (counts[item.platform] ?? 0) + 1
     return counts
   }, {}), [submissions])
+  const submissionsByDay = useMemo(() => {
+    const grouped = new Map()
+    for (const submission of submissions) {
+      const date = istDateKey(submission.solvedAtUtc)
+      if (!grouped.has(date)) grouped.set(date, [])
+      grouped.get(date).push(submission)
+    }
+    return [...grouped.entries()]
+  }, [submissions])
 
   if (loading) return <section className="profile-state" aria-live="polite"><span className="button-spinner" />Loading profile and solve history…</section>
   if (!profile) return <section className="profile-state"><div className="form-error" role="alert">{error || 'Profile unavailable.'}</div><button type="button" className="button-secondary" onClick={onBack}>Back to group</button></section>
@@ -80,7 +105,7 @@ function MemberProfile({ userId, currentUserId, onBack }) {
         <div className="profile-heading">
           <span className="eyebrow">{profile.id === currentUserId ? 'Your profile' : 'Member profile'}</span>
           <h2>{profile.name}</h2>
-          <p>{page?.totalElements ?? 0} recorded solutions · Daily target {profile.dailyTarget}</p>
+          <p>{page?.totalElements ?? 0} {groupId ? 'group-scoped solutions · History starts on the member’s join date' : 'recorded solutions'}</p>
         </div>
         <div className="profile-kpis">
           <span><strong>{page?.totalElements ?? 0}</strong><small>All solves</small></span>
@@ -99,6 +124,8 @@ function MemberProfile({ userId, currentUserId, onBack }) {
         </div>
       </section>
 
+      {groupId && <ActivityHeatmap groupId={groupId} userId={userId} />}
+
       <section className="submission-history" aria-labelledby="submission-history-title">
         <header>
           <div><span className="eyebrow">Complete activity</span><h3 id="submission-history-title">Solved-question history</h3></div>
@@ -108,18 +135,23 @@ function MemberProfile({ userId, currentUserId, onBack }) {
         </header>
         {error && <div className="leaderboard-error" role="alert">{error}</div>}
         {submissions.length === 0 ? <div className="leaderboard-empty"><span aria-hidden="true">◇</span><strong>No recorded solutions</strong><p>Accepted problems will appear here after platform sync.</p></div> : (
-          <ol className="submission-list">
-            {submissions.map((submission, index) => <li key={`${submission.platform}-${submission.problemId}-${submission.solvedAtUtc}-${index}`}>
-              <span className={`submission-platform platform-${submission.platform?.toLowerCase()}`}>{submission.platform ?? '?'}</span>
-              <div className="submission-main"><strong>{submission.problemName || submission.problemId || 'Untitled problem'}</strong><small>{formatDate(submission.solvedAtUtc)}</small>
-                {submission.tags?.length > 0 && <div>{submission.tags.slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div>}
-              </div>
-              <div className="submission-meta">
-                <span className={`difficulty-badge difficulty-${submission.difficulty?.toLowerCase() || 'unknown'}`}>{submission.difficulty || 'Unrated'}</span>
-                {submission.countedForTarget && <small>Counted</small>}
-              </div>
-            </li>)}
-          </ol>
+          <div className="submission-days">
+            {submissionsByDay.map(([date, daySubmissions]) => <section className="submission-day" key={date} aria-labelledby={`history-day-${date}`}>
+              <header><h4 id={`history-day-${date}`}>{formatHistoryDay(date)}</h4><span>{daySubmissions.length} solved</span></header>
+              <ol className="submission-list">
+                {daySubmissions.map((submission, index) => <li key={`${submission.platform}-${submission.problemId}-${submission.solvedAtUtc}-${index}`}>
+                  <span className={`submission-platform platform-${submission.platform?.toLowerCase()}`}>{submission.platform ?? '?'}</span>
+                  <div className="submission-main"><strong>{submission.problemName || submission.problemId || 'Untitled problem'}</strong><small>{formatDate(submission.solvedAtUtc)}</small>
+                    {submission.tags?.length > 0 && <div>{submission.tags.slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div>}
+                  </div>
+                  <div className="submission-meta">
+                    <span className={`difficulty-badge difficulty-${submission.difficulty?.toLowerCase() || 'unknown'}`}>{submission.difficulty || 'Unrated'}</span>
+                    {submission.countedForTarget && <small>Counted</small>}
+                  </div>
+                </li>)}
+              </ol>
+            </section>)}
+          </div>
         )}
         {page && !page.last && <button type="button" className="load-more button-secondary" onClick={loadMore} disabled={loadingMore}>
           {loadingMore ? 'Loading…' : `Load more (${submissions.length} of ${page.totalElements})`}

@@ -35,6 +35,9 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      */
     Page<Submission> findByUserId(Long userId, Pageable pageable);
 
+    Page<Submission> findByUserIdAndSolvedAtUtcGreaterThanEqual(
+            Long userId, Instant cutoff, Pageable pageable);
+
     /**
      * Count of submissions that counted toward a user's daily target.
      */

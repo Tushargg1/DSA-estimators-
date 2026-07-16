@@ -8,6 +8,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+
 /** Centralizes principal parsing and non-disclosing membership authorization checks. */
 @Service
 public class AccessService {
@@ -57,6 +59,14 @@ public class AccessService {
 
     public boolean isGroupMember(Long actorId, Long groupId) {
         return memberships.existsByIdGroupIdAndIdUserId(groupId, actorId);
+    }
+
+    public Instant requireGroupUser(Long actorId, Long targetId, Long groupId) {
+        requireGroupMember(actorId, groupId);
+        if (!users.existsById(targetId)) throw notFound();
+        return memberships.findByIdGroupIdAndIdUserId(groupId, targetId)
+                .orElseThrow(AccessService::notFound)
+                .getJoinedAt();
     }
 
     private static ResponseStatusException notFound() {

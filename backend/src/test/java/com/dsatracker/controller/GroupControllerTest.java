@@ -51,7 +51,9 @@ class GroupControllerTest {
         ObjectMapper mapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mockMvc = MockMvcBuilders.standaloneSetup(new GroupController(groupService, access))
+        com.dsatracker.service.GroupTargetService targets =
+                Mockito.mock(com.dsatracker.service.GroupTargetService.class);
+        mockMvc = MockMvcBuilders.standaloneSetup(new GroupController(groupService, targets, access))
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
@@ -59,7 +61,7 @@ class GroupControllerTest {
     @Test
     void createGroupReturns201WithBody() throws Exception {
         when(groupService.createGroup(any(), eq(7L)))
-                .thenReturn(new GroupResponse(100L, "Friends", "ABC234", 7L));
+                .thenReturn(new GroupResponse(100L, "Friends", "ABC234", 7L, 3, "AUTO"));
 
         mockMvc.perform(post("/api/groups")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,7 +75,7 @@ class GroupControllerTest {
     @Test
     void joinGroupReturns200() throws Exception {
         when(groupService.joinGroup(any(), eq(7L)))
-                .thenReturn(new GroupResponse(50L, "Squad", "XYZ789", 1L));
+                .thenReturn(new GroupResponse(50L, "Squad", "XYZ789", 1L, 3, "AUTO"));
 
         mockMvc.perform(post("/api/groups/join")
                         .contentType(MediaType.APPLICATION_JSON)

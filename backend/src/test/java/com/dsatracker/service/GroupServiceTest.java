@@ -279,9 +279,10 @@ class GroupServiceTest {
 
         User alice = user(1L, "Alice", 5);
         User bob = user(2L, "Bob", 5);
+        Instant joinedBeforeHistory = Instant.parse("2024-06-01T00:00:00Z");
         when(groupMemberRepository.findByIdGroupId(50L)).thenReturn(List.of(
-                new GroupMember(new GroupMemberId(50L, 1L), NOW),
-                new GroupMember(new GroupMemberId(50L, 2L), NOW)));
+                new GroupMember(new GroupMemberId(50L, 1L), joinedBeforeHistory),
+                new GroupMember(new GroupMemberId(50L, 2L), joinedBeforeHistory)));
         when(userRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(alice, bob));
 
         // Alice has a row for the date; Bob has none (zero-filled).

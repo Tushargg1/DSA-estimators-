@@ -246,6 +246,14 @@ public class UserService {
         return submissionRepository.findByUserId(id, pageable);
     }
 
+    public Page<Submission> getSubmissionsSince(Long id, Instant cutoff, Pageable pageable) {
+        if (!userRepository.existsById(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "User " + id + " not found.");
+        }
+        return submissionRepository.findByUserIdAndSolvedAtUtcGreaterThanEqual(id, cutoff, pageable);
+    }
+
     /**
      * Verifies a single platform username by a test call to its adapter, adding a
      * per-field error to {@code errors} on failure. No-op when {@code username}

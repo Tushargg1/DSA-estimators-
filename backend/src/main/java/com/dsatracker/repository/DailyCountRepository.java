@@ -30,6 +30,9 @@ public interface DailyCountRepository extends JpaRepository<DailyCount, DailyCou
      */
     Optional<DailyCount> findByIdUserIdAndIdDateIst(Long userId, LocalDate dateIst);
 
+    List<DailyCount> findByIdUserIdAndIdDateIstBetweenOrderByIdDateIst(
+            Long userId, LocalDate from, LocalDate to);
+
     /** Re-evaluates stored hit flags without changing their raw counts. */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
