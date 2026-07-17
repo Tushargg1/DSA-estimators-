@@ -52,4 +52,12 @@ npm run build
 .\backend\mvnw.cmd -f backend\pom.xml test
 ```
 
+## Stop local services
+
+Stop MySQL while retaining its Docker volume:
+
+```powershell
+docker compose down
+```
+
 See [`DEPLOYMENT.md`](DEPLOYMENT.md) for production configuration, security requirements, and deployment order.
