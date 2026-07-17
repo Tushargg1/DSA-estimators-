@@ -2,6 +2,12 @@
 
 A full-stack dashboard for tracking DSA practice across LeetCode, Codeforces, and GeeksforGeeks. It combines a React/Vite frontend, a Spring Boot API, and MySQL 8, with group leaderboards and live updates.
 
+## Architecture
+
+- `frontend/` — React and Vite web application
+- `backend/` — Spring Boot REST and WebSocket API
+- `docker-compose.yml` — local MySQL 8 service
+
 ## Prerequisites
 
 - Node.js 20
