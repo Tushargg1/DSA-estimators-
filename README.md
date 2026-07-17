@@ -37,6 +37,12 @@ A full-stack dashboard for tracking DSA practice across LeetCode, Codeforces, an
 
 4. Open `http://localhost:5173`.
 
+5. Verify the backend is healthy:
+
+   ```powershell
+   Invoke-RestMethod http://localhost:8080/api/health
+   ```
+
 The checked-in local defaults connect the API to MySQL on port `3306`. To enable Google sign-in, copy `frontend/.env.example` to `frontend/.env.local`, set `VITE_GOOGLE_CLIENT_ID`, and provide the same value as `GOOGLE_CLIENT_ID` when starting the backend. See [`backend/.env.example`](backend/.env.example) for all backend settings.
 
 ## Build
