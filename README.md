@@ -53,6 +53,13 @@ A full-stack dashboard for tracking DSA practice across LeetCode, Codeforces, an
 
 The checked-in local defaults connect the API to MySQL on port `3306`. To enable Google sign-in, copy `frontend/.env.example` to `frontend/.env.local`, set `VITE_GOOGLE_CLIENT_ID`, and provide the same value as `GOOGLE_CLIENT_ID` when starting the backend. See [`backend/.env.example`](backend/.env.example) for all backend settings.
 
+If MySQL does not become ready, inspect its status and logs:
+
+```powershell
+docker compose ps
+docker compose logs mysql
+```
+
 ## Build
 
 ```powershell
