@@ -8,6 +8,14 @@ A full-stack dashboard for tracking DSA practice across LeetCode, Codeforces, an
 - `backend/` — Spring Boot REST and WebSocket API
 - `docker-compose.yml` — local MySQL 8 service
 
+## Default ports
+
+| Service | URL or port |
+| --- | --- |
+| Frontend | `http://localhost:5173` |
+| Backend API | `http://localhost:8080/api` |
+| MySQL | `localhost:3306` |
+
 ## Prerequisites
 
 - Node.js 20
