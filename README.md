@@ -75,6 +75,12 @@ npm run build
 .\backend\mvnw.cmd -f backend\pom.xml test
 ```
 
+Preview the built frontend locally at `http://localhost:4173`:
+
+```powershell
+npm run preview
+```
+
 ## Stop local services
 
 Stop MySQL while retaining its Docker volume:
