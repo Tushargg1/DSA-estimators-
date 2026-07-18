@@ -22,6 +22,14 @@ A full-stack dashboard for tracking DSA practice across LeetCode, Codeforces, an
 - JDK 17
 - Docker with Docker Compose
 
+Verify the installed toolchain:
+
+```powershell
+node --version
+java -version
+docker compose version
+```
+
 ## Local development
 
 1. Start MySQL from the repository root:
