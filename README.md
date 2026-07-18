@@ -90,10 +90,16 @@ npm run preview
 
 ## Stop local services
 
-Stop MySQL while retaining its Docker volume:
+Stop MySQL while retaining its `dsa_tracker_mysql_data` Docker volume:
 
 ```powershell
 docker compose down
+```
+
+Inspect the retained volume with:
+
+```powershell
+docker volume inspect dsa_tracker_mysql_data
 ```
 
 See [`DEPLOYMENT.md`](DEPLOYMENT.md) for production configuration, security requirements, and deployment order.
