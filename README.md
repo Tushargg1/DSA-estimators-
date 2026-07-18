@@ -39,7 +39,7 @@ A full-stack dashboard for tracking DSA practice across LeetCode, Codeforces, an
 3. Install frontend dependencies, then start Vite:
 
    ```powershell
-   npm --prefix frontend install
+   npm --prefix frontend ci
    npm run dev
    ```
 
