@@ -59,7 +59,14 @@ docker compose version
    Invoke-RestMethod http://localhost:8080/api/health
    ```
 
-The checked-in local defaults connect the API to MySQL on port `3306`. To enable Google sign-in, copy `frontend/.env.example` to `frontend/.env.local`, set `VITE_GOOGLE_CLIENT_ID`, and provide the same value as `GOOGLE_CLIENT_ID` when starting the backend. See [`backend/.env.example`](backend/.env.example) for all backend settings.
+## Configuration
+
+The checked-in local defaults connect the API to MySQL on port `3306`.
+
+- [`frontend/.env.example`](frontend/.env.example) documents browser-visible Vite settings. Copy it to `frontend/.env.local` for local overrides.
+- [`backend/.env.example`](backend/.env.example) documents database, authentication, CORS, and server settings.
+
+To enable Google sign-in, set `VITE_GOOGLE_CLIENT_ID` in the frontend and provide the same public client ID as backend `GOOGLE_CLIENT_ID`. Never commit local environment files or secrets.
 
 If MySQL does not become ready, inspect its status and logs:
 
