@@ -18,6 +18,8 @@ Set Render's **Health Check Path** to `/api/health`. The endpoint is public and 
 
 After changing the branch, build context, or Dockerfile setting, use **Manual Deploy → Clear build cache & deploy**. Confirm the deploy log checks out the intended commit from `dsa-tracker-implementation`.
 
+Enable automatic deploys only after confirming the service tracks `dsa-tracker-implementation`; pushes to any other branch will not trigger this service.
+
 Verify a successful deployment from PowerShell:
 
 ```powershell
