@@ -114,6 +114,12 @@ The root `package.json` delegates to the frontend and pins Node 20.x. `vercel.js
 | `No open ports detected` | Find the earlier startup exception; the application stopped before binding `PORT`. |
 | Health check returns `404` | Set the path to `/api/health`, not `/`. |
 
+## Rollback
+
+If a release fails, preserve its logs and redeploy the previous known-good commit from Render. Do not delete or edit `flyway_schema_history` to force a rollback; fix the migration forward or restore a tested database backup.
+
+After rollback, call `/api/health` and verify authentication and group subscriptions before restoring normal traffic.
+
 ## Required sequence
 
 1. Configure MySQL, CORS/WebSocket origins, and a fresh `AUTH_JWT_SECRET` on the backend host.
