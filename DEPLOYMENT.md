@@ -2,6 +2,16 @@
 
 The deployment consists of MySQL 8, a Spring Boot backend, and a Vite frontend. Never place backend credentials or JWT secrets in `VITE_*` variables.
 
+## Render backend service
+
+Configure the backend as a **Docker** Web Service using the repository root:
+
+- Branch: `dsa-tracker-implementation`
+- Root Directory: leave blank
+- Dockerfile Path: `./Dockerfile`
+
+The root Dockerfile expects the complete repository as its build context, including the `backend/` directory.
+
 ## Database and migrations
 
 Point the backend at MySQL 8 using placeholders like:
