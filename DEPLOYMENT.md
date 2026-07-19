@@ -88,6 +88,16 @@ This Google Identity Services credential flow needs no client secret or redirect
 
 The root `package.json` delegates to the frontend and pins Node 20.x. `vercel.json` remains root-compatible, serves `index.html` without caching, and gives hashed `/assets/*` one-year immutable caching.
 
+## Render troubleshooting
+
+| Log symptom | Check |
+| --- | --- |
+| `COPY backend/... not found` | Root Directory must be blank when using the root Dockerfile. |
+| `Communications link failure` or `HikariPool` errors | Verify `DB_URL`, credentials, TLS mode, and database network access. |
+| `Flyway` validation or migration error | Confirm the schema history and run against the intended database. |
+| `No open ports detected` | Find the earlier startup exception; the application stopped before binding `PORT`. |
+| Health check returns `404` | Set the path to `/api/health`, not `/`. |
+
 ## Required sequence
 
 1. Configure MySQL, CORS/WebSocket origins, and a fresh `AUTH_JWT_SECRET` on the backend host.
