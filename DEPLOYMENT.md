@@ -68,6 +68,8 @@ Store the result only in Render's `AUTH_JWT_SECRET` environment variable.
 
 `AUTH_JWT_SECRET` signs stateless tokens and must be random, private, and at least 32 bytes. The source fallback is deliberately local/test-only. Changing the secret logs out all users. Expiry defaults to 12 hours and is capped at 24 hours by startup validation.
 
+Set CORS and WebSocket values to origins only, such as `https://app.example.com`—do not include `/api`, `/ws`, or a trailing slash. Separate multiple origins with commas.
+
 The browser stores the JWT in `sessionStorage`, sends it as an HTTP Bearer token, and supplies it in the STOMP CONNECT headers. This avoids unreliable cross-site third-party cookies between frontend and backend hosts. It survives refresh in the same tab but is cleared when the tab closes; like any JavaScript-accessible storage, it makes strong CSP and XSS prevention important. Tokens are never placed in URLs or application logs.
 
 ## Optional activation of existing accounts
