@@ -12,6 +12,8 @@ Configure the backend as a **Docker** Web Service using the repository root:
 
 The root Dockerfile expects the complete repository as its build context, including the `backend/` directory.
 
+Set Render's **Health Check Path** to `/api/health`. The endpoint is public and returns `{"status":"ok"}` after the application starts; `/` is not a health endpoint.
+
 ## Database and migrations
 
 Point the backend at MySQL 8 using placeholders like:
