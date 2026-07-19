@@ -26,6 +26,8 @@ DB_POOL_MAX=5
 DB_POOL_MIN_IDLE=1
 ```
 
+Do not use `localhost` in `DB_URL` on Render: it refers to the backend container, not the managed database. Use the external MySQL hostname and port supplied by the database provider.
+
 Flyway owns the schema. `V1__init_schema.sql` remains the immutable baseline. On upgrade, `V2__add_password_credentials.sql` adds nullable `password_hash` and `credentials_enabled=false`. Therefore every pre-existing account remains locked and cannot log in until explicitly activated; new registrations save a BCrypt hash and enable credentials atomically.
 
 ## Backend environment
