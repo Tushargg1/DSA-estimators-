@@ -16,6 +16,14 @@ Set Render's **Health Check Path** to `/api/health`. The endpoint is public and 
 
 After changing the branch, build context, or Dockerfile setting, use **Manual Deploy → Clear build cache & deploy**. Confirm the deploy log checks out the intended commit from `dsa-tracker-implementation`.
 
+Verify a successful deployment from PowerShell:
+
+```powershell
+Invoke-RestMethod https://<backend-host>/api/health
+```
+
+The response must contain `status: ok` before configuring the frontend to use the backend.
+
 ## Database and migrations
 
 Point the backend at MySQL 8 using placeholders like:
