@@ -12,6 +12,8 @@ Configure the backend as a **Docker** Web Service using the repository root:
 
 The root Dockerfile expects the complete repository as its build context, including the `backend/` directory.
 
+Do not hardcode a `PORT` value in Render. Render injects it at runtime, and `application.yml` binds Spring Boot to that value automatically.
+
 Set Render's **Health Check Path** to `/api/health`. The endpoint is public and returns `{"status":"ok"}` after the application starts; `/` is not a health endpoint.
 
 After changing the branch, build context, or Dockerfile setting, use **Manual Deploy → Clear build cache & deploy**. Confirm the deploy log checks out the intended commit from `dsa-tracker-implementation`.
