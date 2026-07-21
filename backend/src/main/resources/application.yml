@@ -68,3 +68,16 @@ catalog:
     enabled: ${CATALOG_SYNC_ENABLED:true}
     cron: ${CATALOG_SYNC_CRON:0 0 3 * * MON}
     zone: ${CATALOG_SYNC_ZONE:UTC}
+
+github:
+  app:
+    id: ${GITHUB_APP_ID:}
+    slug: ${GITHUB_APP_SLUG:}
+    private-key-base64: ${GITHUB_APP_PRIVATE_KEY_BASE64:}
+  api-base-url: ${GITHUB_API_BASE_URL:https://api.github.com}
+  poll:
+    fixed-delay: ${GITHUB_EXPORT_POLL_FIXED_DELAY_MS:30000}
+    batch-size: ${GITHUB_EXPORT_BATCH_SIZE:10}
+    lease-duration: ${GITHUB_EXPORT_LEASE_DURATION:PT5M}
+    retry-base: ${GITHUB_EXPORT_RETRY_BASE:PT1M}
+    retry-max: ${GITHUB_EXPORT_RETRY_MAX:PT1H}

@@ -26,6 +26,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,6 +88,11 @@ public class CatalogService {
                     "The patterns catalog is temporarily unavailable");
         }
         return current;
+    }
+
+    /** Returns only an already-loaded snapshot and never performs catalog HTTP. */
+    public Optional<CatalogModels.CatalogSnapshot> loadedSnapshot() {
+        return Optional.ofNullable(snapshot);
     }
 
     public synchronized void refresh() {

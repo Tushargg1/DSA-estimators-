@@ -160,6 +160,18 @@ export const api = {
       .then((response) => response.data),
   getPollStatus: () => http.get('/status/poll').then((response) => response.data),
   getPatternCatalog: () => http.get('/catalog').then((response) => response.data),
+
+  getGitHubStatus: () => http.get('/github/status').then((response) => response.data),
+  startGitHubConnection: () => http.post('/github/connect').then((response) => response.data),
+  completeGitHubConnection: (payload) =>
+    http.post('/github/complete', payload).then((response) => response.data),
+  getGitHubRepositories: () =>
+    http.get('/github/repositories').then((response) => response.data),
+  selectGitHubRepository: (repositoryId) =>
+    http.put('/github/repository', { repositoryId }).then((response) => response.data),
+  issueGitHubExtensionToken: () =>
+    http.post('/github/extension-token').then((response) => response.data),
+  disconnectGitHub: () => http.delete('/github'),
 }
 
 export default http

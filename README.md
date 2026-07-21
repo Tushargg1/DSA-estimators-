@@ -6,6 +6,7 @@ A full-stack dashboard for tracking DSA practice across LeetCode, Codeforces, an
 
 - `frontend/` — React and Vite web application
 - `backend/` — Spring Boot REST and WebSocket API
+- `extension/` — Chrome/Edge accepted-solution capture extension
 - `docker-compose.yml` — local MySQL 8 service
 
 ## Default ports

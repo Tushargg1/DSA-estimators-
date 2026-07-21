@@ -1662,3 +1662,120 @@ form[aria-busy='true'] { cursor: progress; }
   .activity-map > header { flex-direction: column; }
   .heatmap-toolbar > span { width: 100%; margin-left: 0; }
 }
+
+
+/* GitHub solution export */
+.integration-page {
+  display: grid;
+  gap: 1rem;
+  width: min(880px, 100%);
+  margin: 0 auto;
+}
+
+.integration-heading {
+  display: flex;
+  gap: 1.5rem;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.integration-heading h2,
+.integration-panel h3 {
+  margin: 0.2rem 0 0.45rem;
+}
+
+.integration-heading p,
+.integration-panel p {
+  color: var(--text-muted);
+}
+
+.integration-heading > p {
+  max-width: 32rem;
+  text-align: right;
+}
+
+.integration-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.35rem;
+}
+
+.integration-step {
+  width: max-content;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(111, 124, 255, 0.3);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.integration-panel select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  background: var(--surface-raised);
+}
+
+.integration-success {
+  color: #86efac !important;
+}
+
+.integration-value,
+.token-reveal > div {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.integration-value code,
+.token-reveal code {
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.token-reveal {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(134, 239, 172, 0.06);
+}
+
+.integration-danger {
+  border-color: rgba(255, 116, 133, 0.22);
+}
+
+.integration-danger button {
+  background: rgba(255, 116, 133, 0.12);
+  color: #ffb5c0;
+}
+
+@media (max-width: 720px) {
+  .integration-heading {
+    display: grid;
+    align-items: start;
+  }
+
+  .integration-heading > p {
+    text-align: left;
+  }
+
+  .integration-value,
+  .token-reveal > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

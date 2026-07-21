@@ -4,6 +4,7 @@ import GroupInvite from './components/GroupInvite.jsx'
 import Leaderboard from './components/Leaderboard.jsx'
 import MemberProfile from './components/MemberProfile.jsx'
 import GroupTargetPanel from './components/GroupTargetPanel.jsx'
+import GitHubIntegration from './components/GitHubIntegration.jsx'
 import PatternsCatalog from './components/PatternsCatalog.jsx'
 import WorkspaceBar from './components/WorkspaceBar.jsx'
 import { api, clearAuthToken, getAuthToken, onUnauthorized, setAuthToken } from './api/client.js'
@@ -23,7 +24,8 @@ function App() {
   const [user, setUser] = useState(null)
   const [groups, setGroups] = useState([])
   const [group, setGroup] = useState(null)
-  const [activeView, setActiveView] = useState('dashboard')
+  const [activeView, setActiveView] = useState(() =>
+    new URLSearchParams(window.location.search).has('installation_id') ? 'integrations' : 'dashboard')
   const [profileUserId, setProfileUserId] = useState(null)
   const [catalogRoadmap, setCatalogRoadmap] = useState('all')
   const [error, setError] = useState(null)
@@ -115,6 +117,11 @@ function App() {
     setActiveView('patterns')
   }
 
+  const showIntegrations = () => {
+    setProfileUserId(null)
+    setActiveView('integrations')
+  }
+
   const openProfile = (member) => {
     setProfileUserId(member?.userId ?? member?.id ?? user.id)
     setActiveView('profile')
@@ -170,6 +177,9 @@ function App() {
           <button type="button" aria-current={activeView === 'patterns' && catalogRoadmap === 'experienced' ? 'page' : undefined} onClick={() => showCatalog('experienced')}>
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2L7.8 15l.8-4.7L5.2 7l4.7-.7L12 2Zm-6 14h12v6l-6-3-6 3v-6Z" /></svg><span>Experienced</span>
           </button>
+          <button type="button" aria-current={activeView === 'integrations' ? 'page' : undefined} onClick={showIntegrations}>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.5 2.9 8.4 6.8 9.7.5.1.7-.2.7-.5v-2c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.7.1-.7.1-.7 1 0 1.6 1.1 1.6 1.1.9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.7-1.4-2.2-.3-4.6-1.2-4.6-5.1 0-1.1.4-2.1 1-2.8-.1-.3-.4-1.3.1-2.8 0 0 .8-.3 2.7 1.1a9 9 0 0 1 4.9 0c1.9-1.4 2.7-1.1 2.7-1.1.5 1.5.2 2.5.1 2.8.7.7 1 1.7 1 2.8 0 4-2.4 4.8-4.6 5.1.4.3.7 1 .7 2v3c0 .3.2.6.7.5A10.2 10.2 0 0 0 22 12.3C22 6.6 17.5 2 12 2Z" /></svg><span>GitHub</span>
+          </button>
         </nav>}
 
         {user && <div className="account-cluster">
@@ -187,6 +197,8 @@ function App() {
         {error && user && <div className="alert-banner" role="alert"><span aria-hidden="true">!</span>{error}</div>}
         {!user ? <AuthScreen onAuthenticated={authenticated} /> : activeView === 'patterns' ? (
           <PatternsCatalog userId={user.id} roadmapId={catalogRoadmap} onRoadmapChange={setCatalogRoadmap} />
+        ) : activeView === 'integrations' ? (
+          <GitHubIntegration />
         ) : activeView === 'profile' ? (
           <MemberProfile userId={profileUserId ?? user.id} currentUserId={user.id} groupId={group?.id} onBack={showDashboard} />
         ) : <section className="dashboard">

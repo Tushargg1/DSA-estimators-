@@ -1,5 +1,8 @@
 package com.dsatracker;
 
+import com.dsatracker.github.GitHubConnectionRepository;
+import com.dsatracker.github.GitHubExportJobRepository;
+import com.dsatracker.github.GitHubSolutionCaptureRepository;
 import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.GroupMemberRepository;
 import com.dsatracker.repository.GroupRepository;
@@ -11,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @SpringBootTest
 class BackendApplicationTests {
@@ -79,6 +83,19 @@ class BackendApplicationTests {
 	/** Group target voting persistence is also excluded with JPA in this smoke test. */
 	@MockitoBean
 	private GroupTargetVoteRepository groupTargetVoteRepository;
+
+	/** GitHub integration persistence is excluded with JPA in this smoke test. */
+	@MockitoBean
+	private GitHubConnectionRepository gitHubConnectionRepository;
+
+	@MockitoBean
+	private GitHubSolutionCaptureRepository gitHubSolutionCaptureRepository;
+
+	@MockitoBean
+	private GitHubExportJobRepository gitHubExportJobRepository;
+
+	@MockitoBean
+	private PlatformTransactionManager transactionManager;
 
 	/**
 	 * {@link com.dsatracker.service.PollingService} (task 9.2) now publishes live
