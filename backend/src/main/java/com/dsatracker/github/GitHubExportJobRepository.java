@@ -17,12 +17,16 @@ public interface GitHubExportJobRepository extends JpaRepository<GitHubExportJob
 
     @Modifying
     @Query(value = """
-            INSERT IGNORE INTO github_export_jobs
+            INSERT INTO github_export_jobs
               (capture_id, status, attempts, next_attempt_at, created_at, updated_at)
             VALUES (:captureId, 'PENDING', 0, UTC_TIMESTAMP(6),
                     UTC_TIMESTAMP(6), UTC_TIMESTAMP(6))
+            ON DUPLICATE KEY UPDATE
+              status = 'PENDING', attempts = 0, next_attempt_at = UTC_TIMESTAMP(6),
+              lease_until = NULL, claim_token = NULL, last_error = NULL,
+              exported_at = NULL, updated_at = UTC_TIMESTAMP(6)
             """, nativeQuery = true)
-    int insertIfAbsent(@Param("captureId") Long captureId);
+    int enqueue(@Param("captureId") Long captureId);
 
     @Query(value = """
             SELECT id FROM github_export_jobs

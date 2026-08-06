@@ -12,7 +12,7 @@
     "https://www.geeksforgeeks.org/problems/*",
     "https://practice.geeksforgeeks.org/problems/*",
     "http://localhost:8080/*",
-    "https://*/*"
+    "https://dsa-estimators-1.onrender.com/*"
   ],
   "background": {
     "service_worker": "background.js"

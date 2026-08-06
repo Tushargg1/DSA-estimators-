@@ -117,8 +117,23 @@ function GitHubIntegration() {
 
       {error && <div className="form-error" role="alert">{error}</div>}
       {status && !status.configured && <div className="integration-panel card">
-        <h3>GitHub App setup required</h3>
-        <p>The server administrator must configure the GitHub App credentials before accounts can connect.</p>
+        <h3>Repository workflow mode</h3>
+        <p>The GitHub App is not configured, so source is captured securely by the browser extension and the repository workflow performs the create-or-update commit.</p>
+      </div>}
+
+      {status && <div className="integration-panel card">
+        <span className="integration-step">Source capture</span>
+        <h3>Connect the browser extension</h3>
+        <p>Load this DSA repository&apos;s <code>extension/</code> directory as an unpacked Chrome or Edge extension. Enter this API URL and generate a private capture token.</p>
+        <div className="integration-value"><span>API URL</span><code>{API_BASE_URL}</code></div>
+        <button type="button" className="button-secondary" disabled={busy} onClick={issueToken}>
+          {status.extensionTokenIssued ? 'Rotate capture token' : 'Generate capture token'}
+        </button>
+        {extensionToken && <div className="token-reveal" role="status">
+          <strong>Copy this token now—it will not be shown again.</strong>
+          <div><code>{extensionToken}</code><button type="button" onClick={copyToken}>Copy</button></div>
+        </div>}
+        <p className="integration-success">New accepted code creates a topic file; another accepted submission for the same problem updates that file.</p>
       </div>}
 
       {status?.configured && !status.connected && <div className="integration-panel card">
@@ -141,20 +156,6 @@ function GitHubIntegration() {
             </select>
           </label>
           {status.repositorySelected && <p className="integration-success">Exporting to {status.repositoryFullName} on {status.defaultBranch}.</p>}
-        </div>
-
-        <div className="integration-panel card">
-          <span className="integration-step">Step 3</span>
-          <h3>Connect the browser extension</h3>
-          <p>Load the repository's <code>extension/</code> folder as an unpacked Chrome or Edge extension, then enter this API URL and a generated token.</p>
-          <div className="integration-value"><span>API URL</span><code>{API_BASE_URL}</code></div>
-          <button type="button" className="button-secondary" disabled={busy || !status.repositorySelected} onClick={issueToken}>
-            {status.extensionTokenIssued ? 'Rotate extension token' : 'Generate extension token'}
-          </button>
-          {extensionToken && <div className="token-reveal" role="status">
-            <strong>Copy this token now—it will not be shown again.</strong>
-            <div><code>{extensionToken}</code><button type="button" onClick={copyToken}>Copy</button></div>
-          </div>}
         </div>
 
         <div className="integration-panel integration-danger card">

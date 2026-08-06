@@ -144,8 +144,6 @@ public class GitHubConnectionService {
     }
 
     public GitHubDtos.ExtensionTokenResponse issueExtensionToken(Long userId) {
-        requireConfigured();
-        connected(userId);
         String token = GitHubCrypto.randomToken();
         transactions.executeWithoutResult(ignored -> {
             GitHubConnection connection = connections.findByUserIdForUpdate(userId)

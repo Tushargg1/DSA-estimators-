@@ -17,10 +17,14 @@ import java.util.List;
 @RequestMapping("/api/github")
 public class GitHubController {
     private final GitHubConnectionService service;
+    private final GitHubCaptureService captureService;
     private final AccessService access;
 
-    public GitHubController(GitHubConnectionService service, AccessService access) {
+    public GitHubController(GitHubConnectionService service,
+                            GitHubCaptureService captureService,
+                            AccessService access) {
         this.service = service;
+        this.captureService = captureService;
         this.access = access;
     }
 
@@ -55,6 +59,11 @@ public class GitHubController {
     @PostMapping("/extension-token")
     public GitHubDtos.ExtensionTokenResponse extensionToken(Authentication authentication) {
         return service.issueExtensionToken(access.userId(authentication));
+    }
+
+    @GetMapping("/captures")
+    public List<GitHubDtos.CaptureExportResponse> captures(Authentication authentication) {
+        return captureService.exports(access.userId(authentication));
     }
 
     @DeleteMapping

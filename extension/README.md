@@ -22,7 +22,7 @@ Clicking a submit-like control arms a two-minute DOM observer. If an accepted-su
 ## Security and limitations
 
 - The token and API URL are stored in `chrome.storage.local`; they are not encrypted and are accessible to the local browser profile and this extension.
-- Broad `https://*/*` host access is required so a user-configured deployed API can receive captures. Site content scripts are still limited to the supported coding sites declared in the manifest.
+- Host access is limited to the supported coding sites, the production DSA Evaluator API, and the localhost development API.
 - Requests explicitly omit credentials. The extension does not read or send cookies, session tokens, or platform credentials.
 - Source extraction and accepted-state detection depend on third-party page markup and editor internals, which may change. Extraction can fail or select the wrong editor when multiple editors exist.
 - The MAIN-world bridge exposes only a best-effort editor-source request/response over `window.postMessage`; page scripts can observe or interfere with that bridge.

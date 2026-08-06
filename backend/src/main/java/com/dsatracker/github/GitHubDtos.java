@@ -16,8 +16,14 @@ public final class GitHubDtos {
                                      boolean selected) { }
     public record SelectRepositoryRequest(Long repositoryId) { }
     public record ExtensionTokenResponse(String token) { }
-    public record CaptureResponse(Long captureId, boolean duplicate,
+    public record CaptureResponse(Long captureId, boolean created, boolean updated,
                                   GitHubExportStatus exportStatus) { }
+    public record CaptureExportResponse(Long captureId, GitHubPlatform platform,
+                                        String problemId, String problemName,
+                                        String problemUrl, String language,
+                                        String source, String difficulty,
+                                        List<String> tags, String patternSlug,
+                                        Instant solvedAtUtc) { }
     public record CaptureCommand(GitHubPlatform platform, String problemId, String problemName,
                                  String problemUrl, String language, String source,
                                  String sourceHash, String difficulty, List<String> tags,

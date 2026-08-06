@@ -171,6 +171,7 @@ export const api = {
     http.put('/github/repository', { repositoryId }).then((response) => response.data),
   issueGitHubExtensionToken: () =>
     http.post('/github/extension-token').then((response) => response.data),
+  getGitHubCaptures: () => http.get('/github/captures').then((response) => response.data),
   disconnectGitHub: () => http.delete('/github'),
 }
 

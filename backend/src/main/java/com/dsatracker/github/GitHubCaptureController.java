@@ -88,6 +88,9 @@ public class GitHubCaptureController {
         if (!sourceHash.matches("(?i)[0-9a-f]{64}")) {
             invalid("sourceHash must be a SHA-256 hex digest");
         }
+        if (!GitHubCrypto.sha256Hex(source).equalsIgnoreCase(sourceHash)) {
+            invalid("sourceHash does not match source");
+        }
         String difficulty = optionalText(payload, "difficulty");
         if (difficulty != null) {
             difficulty = difficulty.trim();
