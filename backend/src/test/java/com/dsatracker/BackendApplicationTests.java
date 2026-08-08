@@ -3,6 +3,7 @@ package com.dsatracker;
 import com.dsatracker.github.GitHubConnectionRepository;
 import com.dsatracker.github.GitHubExportJobRepository;
 import com.dsatracker.github.GitHubSolutionCaptureRepository;
+import com.dsatracker.github.GitHubWorkflowSaveRepository;
 import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.GroupMemberRepository;
 import com.dsatracker.repository.GroupRepository;
@@ -93,6 +94,9 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private GitHubExportJobRepository gitHubExportJobRepository;
+
+	@MockitoBean
+	private GitHubWorkflowSaveRepository gitHubWorkflowSaveRepository;
 
 	@MockitoBean
 	private PlatformTransactionManager transactionManager;

@@ -1,16 +1,28 @@
 import { useCallback, useEffect, useState } from 'react'
 import { API_BASE_URL, api } from '../api/client.js'
 
+const formatSavedAt = (value) => value
+  ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' })
+    .format(new Date(value))
+  : 'Never'
+
 function GitHubIntegration() {
   const [status, setStatus] = useState(null)
   const [repositories, setRepositories] = useState([])
   const [extensionToken, setExtensionToken] = useState(null)
+  const [workflowSave, setWorkflowSave] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [saveBusy, setSaveBusy] = useState(false)
   const [error, setError] = useState(null)
+  const savePending = ['QUEUED', 'RUNNING'].includes(workflowSave?.status)
 
   const load = useCallback(async () => {
-    const current = await api.getGitHubStatus()
+    const [current, currentSave] = await Promise.all([
+      api.getGitHubStatus(),
+      api.getGitHubWorkflowSaveStatus(),
+    ])
     setStatus(current)
+    setWorkflowSave(currentSave)
     if (current.connected) setRepositories(await api.getGitHubRepositories())
     else setRepositories([])
   }, [])
@@ -40,6 +52,24 @@ function GitHubIntegration() {
     void initialize()
     return () => { active = false }
   }, [load])
+
+  useEffect(() => {
+    if (!savePending) return undefined
+    let active = true
+    const refresh = async () => {
+      try {
+        const current = await api.getGitHubWorkflowSaveStatus()
+        if (active) setWorkflowSave(current)
+      } catch (requestError) {
+        if (active) setError(requestError.message)
+      }
+    }
+    const timer = window.setInterval(() => { void refresh() }, 15000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [savePending])
 
   const connect = async () => {
     setBusy(true)
@@ -91,6 +121,18 @@ function GitHubIntegration() {
     }
   }
 
+  const requestWorkflowSave = async () => {
+    setSaveBusy(true)
+    setError(null)
+    try {
+      setWorkflowSave(await api.requestGitHubWorkflowSave())
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setSaveBusy(false)
+    }
+  }
+
   const disconnect = async () => {
     if (!window.confirm('Disconnect GitHub and stop future solution exports?')) return
     setBusy(true)
@@ -116,9 +158,25 @@ function GitHubIntegration() {
       </div>
 
       {error && <div className="form-error" role="alert">{error}</div>}
-      {status && !status.configured && <div className="integration-panel card">
-        <h3>Repository workflow mode</h3>
-        <p>The GitHub App is not configured, so source is captured securely by the browser extension and the repository workflow performs the create-or-update commit.</p>
+      {status && <div className="integration-panel card">
+        <span className="integration-step">Manual repository save</span>
+        <h3>Save every accepted answer</h3>
+        <p>Queue a complete topic-wise repository save. The secure GitHub workflow will process it without exposing repository credentials in your browser.</p>
+        <div className="integration-value">
+          <span>Last saved</span>
+          <strong>{formatSavedAt(workflowSave?.lastSavedAt)}</strong>
+        </div>
+        <button type="button" disabled={saveBusy || savePending} onClick={requestWorkflowSave}>
+          {workflowSave?.status === 'RUNNING' ? 'Saving answers…'
+            : workflowSave?.status === 'QUEUED' ? 'Save queued'
+              : saveBusy ? 'Queuing…' : 'Save all answers now'}
+        </button>
+        {savePending && <p className="integration-success" role="status">
+          Request {workflowSave.status === 'RUNNING' ? 'is being saved' : 'is queued for the next workflow run'}. GitHub scheduling can take several minutes.
+        </p>}
+        {workflowSave?.status === 'FAILED' && <p className="form-error" role="alert">
+          Last save failed: {workflowSave.lastError || 'Repository workflow failed'}
+        </p>}
       </div>}
 
       {status && <div className="integration-panel card">

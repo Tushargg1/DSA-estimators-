@@ -28,4 +28,10 @@ public final class GitHubDtos {
                                  String problemUrl, String language, String source,
                                  String sourceHash, String difficulty, List<String> tags,
                                  Instant solvedAt) { }
+    public record WorkflowSaveStatusResponse(GitHubWorkflowSaveStatus status,
+                                             Instant requestedAt, Instant lastSavedAt,
+                                             String lastError) { }
+    public record WorkflowSaveClaimResponse(boolean claimed, String requestToken) { }
+    public record WorkflowSaveCompleteRequest(String requestToken) { }
+    public record WorkflowSaveFailureRequest(String requestToken, String error) { }
 }

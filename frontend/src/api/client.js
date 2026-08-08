@@ -172,6 +172,10 @@ export const api = {
   issueGitHubExtensionToken: () =>
     http.post('/github/extension-token').then((response) => response.data),
   getGitHubCaptures: () => http.get('/github/captures').then((response) => response.data),
+  getGitHubWorkflowSaveStatus: () =>
+    http.get('/github/workflow-save').then((response) => response.data),
+  requestGitHubWorkflowSave: () =>
+    http.post('/github/workflow-save').then((response) => response.data),
   disconnectGitHub: () => http.delete('/github'),
 }
 

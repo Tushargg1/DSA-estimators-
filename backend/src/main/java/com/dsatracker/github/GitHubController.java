@@ -18,13 +18,16 @@ import java.util.List;
 public class GitHubController {
     private final GitHubConnectionService service;
     private final GitHubCaptureService captureService;
+    private final GitHubWorkflowSaveService workflowSaves;
     private final AccessService access;
 
     public GitHubController(GitHubConnectionService service,
                             GitHubCaptureService captureService,
+                            GitHubWorkflowSaveService workflowSaves,
                             AccessService access) {
         this.service = service;
         this.captureService = captureService;
+        this.workflowSaves = workflowSaves;
         this.access = access;
     }
 
@@ -64,6 +67,38 @@ public class GitHubController {
     @GetMapping("/captures")
     public List<GitHubDtos.CaptureExportResponse> captures(Authentication authentication) {
         return captureService.exports(access.userId(authentication));
+    }
+
+    @GetMapping("/workflow-save")
+    public GitHubDtos.WorkflowSaveStatusResponse workflowSaveStatus(
+            Authentication authentication) {
+        return workflowSaves.status(access.userId(authentication));
+    }
+
+    @PostMapping("/workflow-save")
+    public GitHubDtos.WorkflowSaveStatusResponse requestWorkflowSave(
+            Authentication authentication) {
+        return workflowSaves.request(access.userId(authentication));
+    }
+
+    @PostMapping("/workflow-save/claim")
+    public GitHubDtos.WorkflowSaveClaimResponse claimWorkflowSave(
+            Authentication authentication) {
+        return workflowSaves.claim(access.userId(authentication));
+    }
+
+    @PostMapping("/workflow-save/complete")
+    public GitHubDtos.WorkflowSaveStatusResponse completeWorkflowSave(
+            @RequestBody GitHubDtos.WorkflowSaveCompleteRequest request,
+            Authentication authentication) {
+        return workflowSaves.complete(access.userId(authentication), request);
+    }
+
+    @PostMapping("/workflow-save/fail")
+    public GitHubDtos.WorkflowSaveStatusResponse failWorkflowSave(
+            @RequestBody GitHubDtos.WorkflowSaveFailureRequest request,
+            Authentication authentication) {
+        return workflowSaves.fail(access.userId(authentication), request);
     }
 
     @DeleteMapping
