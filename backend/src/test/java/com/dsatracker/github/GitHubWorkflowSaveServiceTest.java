@@ -20,6 +20,8 @@ import static org.mockito.Mockito.when;
 class GitHubWorkflowSaveServiceTest {
     private static final long USER_ID = 7L;
     @Mock private GitHubWorkflowSaveRepository saves;
+    @Mock private GitHubProgressPushHistoryRepository histories;
+    @Mock private GitHubProgressScheduleService schedules;
     @InjectMocks private GitHubWorkflowSaveService service;
 
     @Test

@@ -176,6 +176,12 @@ export const api = {
     http.get('/github/workflow-save').then((response) => response.data),
   requestGitHubWorkflowSave: () =>
     http.post('/github/workflow-save').then((response) => response.data),
+  getGitHubProgressPushes: () =>
+    http.get('/github/progress-pushes').then((response) => response.data),
+  getGitHubProgressSchedule: () =>
+    http.get('/github/progress-schedule').then((response) => response.data),
+  updateGitHubProgressSchedule: (payload) =>
+    http.put('/github/progress-schedule', payload).then((response) => response.data),
   disconnectGitHub: () => http.delete('/github'),
 }
 

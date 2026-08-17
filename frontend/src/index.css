@@ -1754,6 +1754,102 @@ form[aria-busy='true'] { cursor: progress; }
   background: rgba(134, 239, 172, 0.06);
 }
 
+.schedule-toggle {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  width: max-content;
+  font-weight: 650;
+}
+
+.schedule-toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+.schedule-time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.85rem;
+}
+
+.schedule-time-grid input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  background: var(--surface-raised);
+}
+
+.push-history {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.push-history li,
+.push-history-empty {
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.push-history li {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.push-history li p {
+  margin: 0;
+}
+
+.push-history li a {
+  width: max-content;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.push-history-heading,
+.push-history-heading > div {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.push-history-heading > div {
+  min-width: 0;
+  align-items: baseline;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.push-history-heading span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.push-status {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem !important;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(111, 124, 255, 0.12);
+}
+
+.push-status-succeeded { color: #86efac !important; background: rgba(134, 239, 172, 0.1); }
+.push-status-failed { color: #ffb5c0 !important; background: rgba(255, 116, 133, 0.1); }
+.push-status-running { color: #fde68a !important; background: rgba(253, 230, 138, 0.1); }
+
 .integration-danger {
   border-color: rgba(255, 116, 133, 0.22);
 }

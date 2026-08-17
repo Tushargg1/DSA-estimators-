@@ -13,11 +13,14 @@ public class GitHubProperties {
     private final GitHubApp app = new GitHubApp();
     private final GitHubPoll poll = new GitHubPoll();
     private String apiBaseUrl = "https://api.github.com";
+    private boolean directExportEnabled = false;
 
     public GitHubApp getApp() { return app; }
     public GitHubPoll getPoll() { return poll; }
     public String getApiBaseUrl() { return apiBaseUrl; }
     public void setApiBaseUrl(String value) { this.apiBaseUrl = value; }
+    public boolean isDirectExportEnabled() { return directExportEnabled; }
+    public void setDirectExportEnabled(boolean value) { this.directExportEnabled = value; }
     public boolean configured() {
         return !blank(app.id) && !blank(app.slug) && !blank(app.privateKeyBase64);
     }

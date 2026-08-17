@@ -75,6 +75,8 @@ github:
     slug: ${GITHUB_APP_SLUG:}
     private-key-base64: ${GITHUB_APP_PRIVATE_KEY_BASE64:}
   api-base-url: ${GITHUB_API_BASE_URL:https://api.github.com}
+  # Aggregate workflow pushes are controlled by each user's twice-daily schedule.
+  direct-export-enabled: ${GITHUB_DIRECT_EXPORT_ENABLED:false}
   poll:
     fixed-delay: ${GITHUB_EXPORT_POLL_FIXED_DELAY_MS:30000}
     batch-size: ${GITHUB_EXPORT_BATCH_SIZE:10}

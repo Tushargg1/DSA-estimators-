@@ -32,6 +32,22 @@ public final class GitHubDtos {
                                              Instant requestedAt, Instant lastSavedAt,
                                              String lastError) { }
     public record WorkflowSaveClaimResponse(boolean claimed, String requestToken) { }
-    public record WorkflowSaveCompleteRequest(String requestToken) { }
+    public record WorkflowSaveCompleteRequest(String requestToken, String commitSha,
+                                              String commitUrl, Integer changedFiles) {
+        public WorkflowSaveCompleteRequest(String requestToken) {
+            this(requestToken, null, null, null);
+        }
+    }
     public record WorkflowSaveFailureRequest(String requestToken, String error) { }
+    public record ProgressScheduleUpdateRequest(Boolean enabled, String firstTime,
+                                                String secondTime) { }
+    public record ProgressScheduleResponse(boolean enabled, String firstTime,
+                                           String secondTime, String timezone,
+                                           Instant nextRunAt) { }
+    public record ProgressPushResponse(Long id, GitHubProgressPushTrigger trigger,
+                                       GitHubWorkflowSaveStatus status,
+                                       Instant requestedAt, Instant startedAt,
+                                       Instant completedAt, String commitSha,
+                                       String commitUrl, Integer changedFiles,
+                                       String lastError) { }
 }

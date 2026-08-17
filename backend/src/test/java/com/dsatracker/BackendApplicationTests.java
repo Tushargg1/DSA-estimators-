@@ -2,6 +2,8 @@ package com.dsatracker;
 
 import com.dsatracker.github.GitHubConnectionRepository;
 import com.dsatracker.github.GitHubExportJobRepository;
+import com.dsatracker.github.GitHubProgressPushHistoryRepository;
+import com.dsatracker.github.GitHubProgressPushScheduleRepository;
 import com.dsatracker.github.GitHubSolutionCaptureRepository;
 import com.dsatracker.github.GitHubWorkflowSaveRepository;
 import com.dsatracker.repository.DailyCountRepository;
@@ -97,6 +99,12 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private GitHubWorkflowSaveRepository gitHubWorkflowSaveRepository;
+
+	@MockitoBean
+	private GitHubProgressPushHistoryRepository gitHubProgressPushHistoryRepository;
+
+	@MockitoBean
+	private GitHubProgressPushScheduleRepository gitHubProgressPushScheduleRepository;
 
 	@MockitoBean
 	private PlatformTransactionManager transactionManager;

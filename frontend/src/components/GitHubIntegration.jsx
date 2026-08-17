@@ -1,28 +1,48 @@
 import { useCallback, useEffect, useState } from 'react'
 import { API_BASE_URL, api } from '../api/client.js'
 
-const formatSavedAt = (value) => value
-  ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' })
-    .format(new Date(value))
+const formatDateTime = (value, timeZone) => value
+  ? new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium', timeStyle: 'short', ...(timeZone ? { timeZone } : {}),
+  }).format(new Date(value))
   : 'Never'
+
+const pushResult = (push) => {
+  if (push.status === 'FAILED') return push.lastError || 'Push failed'
+  if (push.status === 'QUEUED') return 'Waiting for the repository workflow'
+  if (push.status === 'RUNNING') return 'Repository workflow is running'
+  if (push.changedFiles === 0) return 'Completed — no repository changes'
+  if (push.changedFiles != null) {
+    return `${push.changedFiles} file${push.changedFiles === 1 ? '' : 's'} pushed`
+  }
+  return 'Push completed'
+}
 
 function GitHubIntegration() {
   const [status, setStatus] = useState(null)
   const [repositories, setRepositories] = useState([])
   const [extensionToken, setExtensionToken] = useState(null)
   const [workflowSave, setWorkflowSave] = useState(null)
+  const [pushHistory, setPushHistory] = useState([])
+  const [schedule, setSchedule] = useState(null)
   const [busy, setBusy] = useState(false)
   const [saveBusy, setSaveBusy] = useState(false)
+  const [scheduleBusy, setScheduleBusy] = useState(false)
+  const [scheduleSaved, setScheduleSaved] = useState(false)
   const [error, setError] = useState(null)
   const savePending = ['QUEUED', 'RUNNING'].includes(workflowSave?.status)
 
   const load = useCallback(async () => {
-    const [current, currentSave] = await Promise.all([
+    const [current, currentSave, currentPushes, currentSchedule] = await Promise.all([
       api.getGitHubStatus(),
       api.getGitHubWorkflowSaveStatus(),
+      api.getGitHubProgressPushes(),
+      api.getGitHubProgressSchedule(),
     ])
     setStatus(current)
     setWorkflowSave(currentSave)
+    setPushHistory(currentPushes)
+    setSchedule(currentSchedule)
     if (current.connected) setRepositories(await api.getGitHubRepositories())
     else setRepositories([])
   }, [])
@@ -58,8 +78,14 @@ function GitHubIntegration() {
     let active = true
     const refresh = async () => {
       try {
-        const current = await api.getGitHubWorkflowSaveStatus()
-        if (active) setWorkflowSave(current)
+        const [current, pushes] = await Promise.all([
+          api.getGitHubWorkflowSaveStatus(),
+          api.getGitHubProgressPushes(),
+        ])
+        if (active) {
+          setWorkflowSave(current)
+          setPushHistory(pushes)
+        }
       } catch (requestError) {
         if (active) setError(requestError.message)
       }
@@ -125,11 +151,38 @@ function GitHubIntegration() {
     setSaveBusy(true)
     setError(null)
     try {
-      setWorkflowSave(await api.requestGitHubWorkflowSave())
+      const current = await api.requestGitHubWorkflowSave()
+      setWorkflowSave(current)
+      setPushHistory(await api.getGitHubProgressPushes())
     } catch (requestError) {
       setError(requestError.message)
     } finally {
       setSaveBusy(false)
+    }
+  }
+
+  const updateSchedule = (field, value) => {
+    setScheduleSaved(false)
+    setSchedule((current) => ({ ...current, [field]: value }))
+  }
+
+  const saveSchedule = async (event) => {
+    event.preventDefault()
+    setScheduleBusy(true)
+    setScheduleSaved(false)
+    setError(null)
+    try {
+      const updated = await api.updateGitHubProgressSchedule({
+        enabled: schedule.enabled,
+        firstTime: schedule.firstTime,
+        secondTime: schedule.secondTime,
+      })
+      setSchedule(updated)
+      setScheduleSaved(true)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setScheduleBusy(false)
     }
   }
 
@@ -159,24 +212,97 @@ function GitHubIntegration() {
 
       {error && <div className="form-error" role="alert">{error}</div>}
       {status && <div className="integration-panel card">
-        <span className="integration-step">Manual repository save</span>
-        <h3>Save every accepted answer</h3>
-        <p>Queue a complete topic-wise repository save. The secure GitHub workflow will process it without exposing repository credentials in your browser.</p>
+        <span className="integration-step">Push progress</span>
+        <h3>Update your repository now</h3>
+        <p>Queue a complete topic-wise progress push. The secure workflow checks for the request within a few minutes without exposing repository credentials in your browser.</p>
         <div className="integration-value">
-          <span>Last saved</span>
-          <strong>{formatSavedAt(workflowSave?.lastSavedAt)}</strong>
+          <span>Last completed push</span>
+          <strong>{formatDateTime(workflowSave?.lastSavedAt, schedule?.timezone)}</strong>
         </div>
         <button type="button" disabled={saveBusy || savePending} onClick={requestWorkflowSave}>
-          {workflowSave?.status === 'RUNNING' ? 'Saving answers…'
-            : workflowSave?.status === 'QUEUED' ? 'Save queued'
-              : saveBusy ? 'Queuing…' : 'Save all answers now'}
+          {workflowSave?.status === 'RUNNING' ? 'Pushing progress…'
+            : workflowSave?.status === 'QUEUED' ? 'Push queued'
+              : saveBusy ? 'Queuing…' : 'Push progress now'}
         </button>
         {savePending && <p className="integration-success" role="status">
-          Request {workflowSave.status === 'RUNNING' ? 'is being saved' : 'is queued for the next workflow run'}. GitHub scheduling can take several minutes.
+          Progress {workflowSave.status === 'RUNNING' ? 'is being pushed' : 'is queued for the next workflow check'}.
         </p>}
         {workflowSave?.status === 'FAILED' && <p className="form-error" role="alert">
-          Last save failed: {workflowSave.lastError || 'Repository workflow failed'}
+          Last push failed: {workflowSave.lastError || 'Repository workflow failed'}
         </p>}
+      </div>}
+
+      {status && schedule && <form className="integration-panel card" onSubmit={saveSchedule}>
+        <span className="integration-step">Twice daily</span>
+        <h3>Automatic progress schedule</h3>
+        <p>Choose two times for automatic repository pushes. Times are saved and evaluated in India Standard Time.</p>
+        <label className="schedule-toggle">
+          <input
+            type="checkbox"
+            checked={schedule.enabled}
+            onChange={(event) => updateSchedule('enabled', event.target.checked)}
+          />
+          <span>Enable automatic pushes</span>
+        </label>
+        <div className="schedule-time-grid">
+          <label className="field" htmlFor="github-first-push-time">
+            <span>First push (IST)</span>
+            <input
+              id="github-first-push-time"
+              type="time"
+              value={schedule.firstTime}
+              disabled={!schedule.enabled || scheduleBusy}
+              required
+              onChange={(event) => updateSchedule('firstTime', event.target.value)}
+            />
+          </label>
+          <label className="field" htmlFor="github-second-push-time">
+            <span>Second push (IST)</span>
+            <input
+              id="github-second-push-time"
+              type="time"
+              value={schedule.secondTime}
+              disabled={!schedule.enabled || scheduleBusy}
+              required
+              onChange={(event) => updateSchedule('secondTime', event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="integration-value">
+          <span>Next automatic push</span>
+          <strong>{schedule.enabled
+            ? formatDateTime(schedule.nextRunAt, schedule.timezone)
+            : 'Automatic pushes are paused'}</strong>
+        </div>
+        <button type="submit" disabled={scheduleBusy}>
+          {scheduleBusy ? 'Saving schedule…' : 'Save push times'}
+        </button>
+        {scheduleSaved && <p className="integration-success" role="status">Push schedule saved.</p>}
+      </form>}
+
+      {status && <div className="integration-panel card">
+        <span className="integration-step">Recent activity</span>
+        <h3>Recent progress pushes</h3>
+        <p>Your latest manual and scheduled repository workflow runs.</p>
+        {pushHistory.length === 0
+          ? <p className="push-history-empty">No progress pushes yet.</p>
+          : <ol className="push-history">
+            {pushHistory.map((push) => <li key={push.id}>
+              <div className="push-history-heading">
+                <div>
+                  <strong>{push.trigger === 'MANUAL' ? 'Manual push' : 'Scheduled push'}</strong>
+                  <span>{formatDateTime(push.completedAt || push.startedAt || push.requestedAt, schedule?.timezone)}</span>
+                </div>
+                <span className={`push-status push-status-${push.status.toLowerCase()}`}>
+                  {push.status.toLowerCase()}
+                </span>
+              </div>
+              <p className={push.status === 'FAILED' ? 'form-error' : ''}>{pushResult(push)}</p>
+              {push.commitUrl && <a href={push.commitUrl} target="_blank" rel="noreferrer">
+                View commit {push.commitSha?.slice(0, 7)}
+              </a>}
+            </li>)}
+          </ol>}
       </div>}
 
       {status && <div className="integration-panel card">
@@ -191,7 +317,7 @@ function GitHubIntegration() {
           <strong>Copy this token now—it will not be shown again.</strong>
           <div><code>{extensionToken}</code><button type="button" onClick={copyToken}>Copy</button></div>
         </div>}
-        <p className="integration-success">New accepted code creates a topic file; another accepted submission for the same problem updates that file.</p>
+        <p className="integration-success">Accepted code is captured securely and included in the next manual or scheduled progress push.</p>
       </div>}
 
       {status?.configured && !status.connected && <div className="integration-panel card">

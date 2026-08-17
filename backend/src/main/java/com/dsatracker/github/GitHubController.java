@@ -19,15 +19,21 @@ public class GitHubController {
     private final GitHubConnectionService service;
     private final GitHubCaptureService captureService;
     private final GitHubWorkflowSaveService workflowSaves;
+    private final GitHubProgressScheduleService progressSchedules;
+    private final GitHubProgressHistoryService progressHistory;
     private final AccessService access;
 
     public GitHubController(GitHubConnectionService service,
                             GitHubCaptureService captureService,
                             GitHubWorkflowSaveService workflowSaves,
+                            GitHubProgressScheduleService progressSchedules,
+                            GitHubProgressHistoryService progressHistory,
                             AccessService access) {
         this.service = service;
         this.captureService = captureService;
         this.workflowSaves = workflowSaves;
+        this.progressSchedules = progressSchedules;
+        this.progressHistory = progressHistory;
         this.access = access;
     }
 
@@ -67,6 +73,25 @@ public class GitHubController {
     @GetMapping("/captures")
     public List<GitHubDtos.CaptureExportResponse> captures(Authentication authentication) {
         return captureService.exports(access.userId(authentication));
+    }
+
+    @GetMapping("/progress-pushes")
+    public List<GitHubDtos.ProgressPushResponse> progressPushes(
+            Authentication authentication) {
+        return progressHistory.newest(access.userId(authentication));
+    }
+
+    @GetMapping("/progress-schedule")
+    public GitHubDtos.ProgressScheduleResponse progressSchedule(
+            Authentication authentication) {
+        return progressSchedules.get(access.userId(authentication));
+    }
+
+    @PutMapping("/progress-schedule")
+    public GitHubDtos.ProgressScheduleResponse updateProgressSchedule(
+            @RequestBody GitHubDtos.ProgressScheduleUpdateRequest request,
+            Authentication authentication) {
+        return progressSchedules.update(access.userId(authentication), request);
     }
 
     @GetMapping("/workflow-save")

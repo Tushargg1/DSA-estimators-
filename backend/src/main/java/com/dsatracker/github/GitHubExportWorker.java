@@ -23,7 +23,7 @@ public class GitHubExportWorker {
 
     @Scheduled(fixedDelayString = "${github.poll.fixed-delay:30000}")
     public void exportDueSolutions() {
-        if (!properties.configured()) return;
+        if (!properties.configured() || !properties.isDirectExportEnabled()) return;
         for (GitHubExportPersistenceService.GitHubClaim claim : persistence.claimDue()) {
             GitHubExportPersistenceService.GitHubWork work = persistence.prepare(claim)
                     .orElse(null);
