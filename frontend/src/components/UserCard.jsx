@@ -16,14 +16,18 @@ function UserCard({ member, rank, profile }) {
     profile?.gfgUsername && ['GFG', profile.gfgUsername],
   ].filter(Boolean)
 
+  const rankIcon = rank === 1 ? '\u{1F947}' : rank === 2 ? '\u{1F948}' : rank === 3 ? '\u{1F949}' : null
+
   return (
     <article className={`user-card${hitTarget ? ' hit' : ''}`}>
-      <div className={`rank-badge rank-${Math.min(rank, 3)}`} aria-label={`Rank ${rank}`}>{rank}</div>
+      <div className={`rank-badge rank-${Math.min(rank, 3)}`} aria-label={`Rank ${rank}`}>
+        {rankIcon || rank}
+      </div>
       <div className="user-card-content">
         <div className="user-card-header">
           <div>
             <span className="user-name">{userName}</span>
-            <small>{hitTarget ? 'Daily target complete' : 'Today’s progress'}</small>
+            <small>{hitTarget ? '\u2713 Daily target complete' : 'Today\u2019s progress'}</small>
             <span className="member-platforms" aria-label={`${userName}'s linked platforms`}>
               {linked.map(([name, username]) => <span key={name} title={`${name}: ${username}`}>{name}<em>@{username}</em></span>)}
               {profile && linked.length === 0 && <span className="no-platforms">No linked platforms</span>}
@@ -36,12 +40,12 @@ function UserCard({ member, rank, profile }) {
           <div className="progress-bar" style={{ width: `${pct}%` }} />
         </div>
         <div className="user-card-stats">
-          <span><small>Current streak</small><strong>{currentStreak} days</strong></span>
-          <span><small>Personal best</small><strong>{longestStreak} days</strong></span>
-          <span><small>Total solved</small><strong>{totalSolved}</strong></span>
+          <span><small>{'\u{1F525}'} Streak</small><strong>{currentStreak}d</strong></span>
+          <span><small>{'\u{1F3C6}'} Best</small><strong>{longestStreak}d</strong></span>
+          <span><small>{'\u{1F4CA}'} Total</small><strong>{totalSolved}</strong></span>
         </div>
       </div>
-      <span className="card-arrow" aria-hidden="true">→</span>
+      <span className="card-arrow" aria-hidden="true">{'\u2192'}</span>
       <span className="visually-hidden">View {userName}&apos;s profile and complete solve history</span>
     </article>
   )

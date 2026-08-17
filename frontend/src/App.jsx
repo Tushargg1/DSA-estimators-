@@ -7,6 +7,7 @@ import GroupTargetPanel from './components/GroupTargetPanel.jsx'
 import GitHubIntegration from './components/GitHubIntegration.jsx'
 import PatternsCatalog from './components/PatternsCatalog.jsx'
 import WorkspaceBar from './components/WorkspaceBar.jsx'
+import DashboardStats from './components/DashboardStats.jsx'
 import { api, clearAuthToken, getAuthToken, onUnauthorized, setAuthToken } from './api/client.js'
 
 const groupStorageKey = (userId) => `dsaTracker.lastGroup.${userId}`
@@ -31,6 +32,7 @@ function App() {
   const [error, setError] = useState(null)
   const [restoreAttempt, setRestoreAttempt] = useState(0)
   const [tokenVersion, setTokenVersion] = useState(0)
+  const [dashboardMembers, setDashboardMembers] = useState([])
 
   const clearSession = useCallback(() => {
     clearAuthToken()
@@ -205,8 +207,9 @@ function App() {
           <WorkspaceBar groups={groups} group={group} onGroupChange={chooseGroup} />
 
           {group ? <>
+            <DashboardStats members={dashboardMembers} groupName={group.name} />
             <GroupTargetPanel groupId={group.id} onChanged={() => setTokenVersion((value) => value + 1)} />
-            <Leaderboard groupId={group.id} tokenVersion={tokenVersion} onOpenProfile={openProfile} />
+            <Leaderboard groupId={group.id} tokenVersion={tokenVersion} onOpenProfile={openProfile} onMembersChange={setDashboardMembers} />
           </> : (
             <section className="empty-state">
               <span className="empty-state-icon" aria-hidden="true">+</span>

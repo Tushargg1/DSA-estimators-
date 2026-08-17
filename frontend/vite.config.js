@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 function requireDeploymentUrl(name, value, expectedPath) {
   if (!value) throw new Error(`${name} is required for Vercel builds`)
@@ -17,7 +18,7 @@ export default defineConfig(({ mode }) => {
     requireDeploymentUrl('VITE_WS_URL', env.VITE_WS_URL, '/ws')
   }
   return {
-    plugins: [react()],
+    plugins: [tailwindcss(), react()],
     define: { global: 'globalThis' },
     server: { port: 5173 },
   }

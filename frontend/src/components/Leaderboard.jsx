@@ -4,7 +4,7 @@ import useGroupSocket from '../hooks/useGroupSocket.js'
 import UserCard from './UserCard.jsx'
 import SyncStatus from './SyncStatus.jsx'
 
-function Leaderboard({ groupId, tokenVersion, onOpenProfile }) {
+function Leaderboard({ groupId, tokenVersion, onOpenProfile, onMembersChange }) {
   const [profiles, setProfiles] = useState({})
   const [refreshKey, setRefreshKey] = useState(0)
   const knownIdsRef = useRef(new Set())
@@ -29,6 +29,7 @@ function Leaderboard({ groupId, tokenVersion, onOpenProfile }) {
   const members = useMemo(() => leaderboard?.members ?? [], [leaderboard])
   const memberIds = useMemo(() => members.map((member) => member.userId).join(','), [members])
   useEffect(() => { knownIdsRef.current = new Set(members.map((member) => member.userId)) }, [members])
+  useEffect(() => { onMembersChange?.(members) }, [members, onMembersChange])
   const sortedMembers = useMemo(
     () => [...members].sort((a, b) => (b.todayCount ?? 0) - (a.todayCount ?? 0)),
     [members],
