@@ -2371,3 +2371,287 @@ html {
   color: var(--text-muted);
   font-size: 0.72rem;
 }
+
+
+/* === Profile Quick Stats === */
+.profile-quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.profile-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(18, 23, 34, 0.6);
+}
+
+.profile-stat-card strong {
+  display: block;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.profile-stat-card small {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  background: rgba(139, 124, 255, 0.08);
+  border: 1px solid rgba(139, 124, 255, 0.15);
+}
+
+/* Streak Flame */
+.streak-flame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.streak-active {
+  background: rgba(255, 69, 0, 0.08);
+  animation: flame-dance 2s ease-in-out infinite;
+}
+
+.streak-dead {
+  background: rgba(58, 63, 75, 0.2);
+}
+
+.streak-flame-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 140, 0, 0.4), transparent 70%);
+  pointer-events: none;
+  animation: flame-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes flame-dance {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.04) rotate(-1deg); }
+  75% { transform: scale(0.97) rotate(1deg); }
+}
+
+@keyframes flame-glow {
+  from { opacity: 0.2; transform: scale(0.9); }
+  to { opacity: 0.5; transform: scale(1.15); }
+}
+
+/* Platform Badges */
+.platform-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.platform-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.platform-badge strong {
+  font-size: 0.68rem;
+  opacity: 0.8;
+}
+
+/* Difficulty Donut */
+.difficulty-donut {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(13, 17, 28, 0.6);
+}
+
+.donut-chart {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.donut-legend {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.donut-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.donut-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.donut-label {
+  color: var(--text-secondary);
+  min-width: 55px;
+}
+
+.donut-legend-item strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.donut-legend-item small {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+/* Weekly Chart */
+.weekly-chart {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(13, 17, 28, 0.6);
+}
+
+.weekly-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.weekly-chart-header strong {
+  font-size: 0.82rem;
+  display: block;
+}
+
+.weekly-chart-header small {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.weekly-chart-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: right;
+}
+
+.weekly-total {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.weekly-change {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.weekly-change.positive {
+  color: #45d49a;
+  background: rgba(69, 212, 154, 0.1);
+}
+
+.weekly-change.negative {
+  color: #ff7485;
+  background: rgba(255, 116, 133, 0.1);
+}
+
+/* Solve Time Chart */
+.solve-time-chart {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(13, 17, 28, 0.6);
+}
+
+.solve-time-header {
+  margin-bottom: 0.6rem;
+}
+
+.solve-time-header strong {
+  display: block;
+  font-size: 0.82rem;
+}
+
+.solve-time-header small {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+/* Profile Charts Grid */
+.profile-charts-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+}
+
+.profile-charts-grid > .difficulty-donut {
+  grid-row: span 2;
+}
+
+@media (max-width: 760px) {
+  .profile-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .profile-charts-grid > .difficulty-donut {
+    grid-row: auto;
+  }
+}
+
+/* Toast icon */
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.toast-success .toast-icon { background: rgba(69, 212, 154, 0.2); color: #45d49a; }
+.toast-error .toast-icon { background: rgba(255, 116, 133, 0.2); color: #ff7485; }
+.toast-info .toast-icon { background: rgba(139, 124, 255, 0.2); color: #8b7cff; }

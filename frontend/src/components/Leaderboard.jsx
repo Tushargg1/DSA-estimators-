@@ -3,12 +3,16 @@ import { api, getAuthToken } from '../api/client.js'
 import useGroupSocket from '../hooks/useGroupSocket.js'
 import UserCard from './UserCard.jsx'
 import SyncStatus from './SyncStatus.jsx'
+import Confetti from './ui/Confetti.jsx'
+import { useToast } from './ui/Toast.jsx'
 
 function Leaderboard({ groupId, tokenVersion, onOpenProfile, onMembersChange }) {
   const [profiles, setProfiles] = useState({})
   const [refreshKey, setRefreshKey] = useState(0)
+  const [showConfetti, setShowConfetti] = useState(false)
   const knownIdsRef = useRef(new Set())
   const resyncRef = useRef(null)
+  const { addToast } = useToast()
 
   const onDelta = useCallback((delta) => {
     setRefreshKey((value) => value + 1)
@@ -16,7 +20,17 @@ function Leaderboard({ groupId, tokenVersion, onOpenProfile, onMembersChange }) 
     if (id != null && !knownIdsRef.current.has(id)) {
       void resyncRef.current?.().catch(() => {})
     }
-  }, [])
+    // Celebrate when someone hits their target
+    if (delta && delta.target > 0 && delta.newDailyCount >= delta.target) {
+      const name = delta.userName || 'A member'
+      addToast(`${name} hit their daily target! \u{1F389}`, { type: 'success', duration: 5000 })
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 3500)
+    } else if (delta && delta.newDailyCount > 0) {
+      const name = delta.userName || 'Someone'
+      addToast(`${name} solved a problem \u{1F4AA}`, { type: 'info', duration: 3000 })
+    }
+  }, [addToast])
 
   const { connected, connectionGeneration, leaderboard, resync, error: socketError } =
     useGroupSocket(groupId, getAuthToken(), onDelta, tokenVersion)
@@ -64,6 +78,7 @@ function Leaderboard({ groupId, tokenVersion, onOpenProfile, onMembersChange }) 
 
   return (
     <section className="leaderboard" aria-busy={!leaderboard && !socketError}>
+      <Confetti active={showConfetti} />
       <header className="leaderboard-header">
         <div>
           <span className="eyebrow">Today’s standings</span>

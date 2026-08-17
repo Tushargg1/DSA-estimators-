@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client.js'
 import ContributionGraph from './ui/ContributionGraph.jsx'
+import DifficultyDonut from './ui/DifficultyDonut.jsx'
+import WeeklyChart from './ui/WeeklyChart.jsx'
+import PlatformBadges from './ui/PlatformBadges.jsx'
+import SolveTimeChart from './ui/SolveTimeChart.jsx'
+import StreakFlame from './ui/StreakFlame.jsx'
+import AnimatedCounter from './ui/AnimatedCounter.jsx'
 
 function istDateKey(value) {
   if (!value) return null
@@ -11,7 +17,7 @@ function istDateKey(value) {
   return `${part('year')}-${part('month')}-${part('day')}`
 }
 
-function ProfileProgress({ userId, groupId }) {
+function ProfileProgress({ userId, groupId, currentStreak = 0 }) {
   const [submissions, setSubmissions] = useState([])
   const [pushHistory, setPushHistory] = useState([])
   const [dsaYear, setDsaYear] = useState(new Date().getFullYear())
@@ -24,7 +30,6 @@ function ProfileProgress({ userId, groupId }) {
 
     const fetchAll = async () => {
       try {
-        // Fetch all submissions (paginated)
         let allSubmissions = []
         let page = 0
         let last = false
@@ -33,26 +38,20 @@ function ProfileProgress({ userId, groupId }) {
           allSubmissions = [...allSubmissions, ...(result.content || [])]
           last = result.last
           page++
-          if (page > 50) break // safety
+          if (page > 50) break
         }
 
-        // Fetch push history
         let pushes = []
         try {
           pushes = await api.getGitHubProgressPushes()
-        } catch {
-          // Not fatal - user may not have GitHub connected
-        }
+        } catch { /* Not fatal */ }
 
         if (active) {
           setSubmissions(allSubmissions)
           setPushHistory(pushes)
         }
-      } catch {
-        // Silently fail - graphs just won't show data
-      } finally {
-        if (active) setLoading(false)
-      }
+      } catch { /* Silently fail */ }
+      finally { if (active) setLoading(false) }
     }
 
     void fetchAll()
@@ -110,8 +109,43 @@ function ProfileProgress({ userId, groupId }) {
     <section className="profile-progress-section" aria-label="Progress activity">
       <span className="eyebrow">Activity overview</span>
 
+      {/* Quick Stats Row */}
+      <div className="profile-quick-stats">
+        <div className="profile-stat-card">
+          <StreakFlame streak={currentStreak} size="lg" />
+          <div>
+            <strong><AnimatedCounter value={currentStreak} suffix="d" /></strong>
+            <small>Current streak</small>
+          </div>
+        </div>
+        <div className="profile-stat-card">
+          <span className="stat-icon">{'\u{1F4CA}'}</span>
+          <div>
+            <strong><AnimatedCounter value={submissions.length} /></strong>
+            <small>Total solved</small>
+          </div>
+        </div>
+        <div className="profile-stat-card">
+          <span className="stat-icon">{'\u{1F4C5}'}</span>
+          <div>
+            <strong><AnimatedCounter value={dsaData.length} /></strong>
+            <small>Active days</small>
+          </div>
+        </div>
+      </div>
+
+      {/* Platform breakdown */}
+      <PlatformBadges submissions={submissions} />
+
+      {/* Charts Row */}
+      <div className="profile-charts-grid">
+        <DifficultyDonut submissions={submissions} />
+        <WeeklyChart submissions={submissions} />
+        <SolveTimeChart submissions={submissions} />
+      </div>
+
+      {/* DSA Contribution Graph */}
       <div className="progress-graphs">
-        {/* DSA Solve Activity */}
         <div>
           <div className="progress-graph-label">
             <span className="graph-icon dsa" aria-hidden="true">{'\u{1F4CA}'}</span>

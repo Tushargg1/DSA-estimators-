@@ -127,7 +127,7 @@ function MemberProfile({ userId, currentUserId, groupId, onBack }) {
 
       {groupId && <ActivityHeatmap groupId={groupId} userId={userId} />}
 
-      <ProfileProgress userId={userId} groupId={groupId} />
+      <ProfileProgress userId={userId} groupId={groupId} currentStreak={profile?.currentStreak ?? 0} />
 
       <section className="submission-history" aria-labelledby="submission-history-title">
         <header>
