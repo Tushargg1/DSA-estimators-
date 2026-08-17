@@ -2201,3 +2201,173 @@ html {
   @keyframes modal-in { from, to { opacity: 1; transform: none; } }
   @keyframes content-enter { from, to { opacity: 1; transform: none; } }
 }
+
+
+/* === GitHub-style Contribution Graph === */
+.contribution-graph {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(13, 17, 28, 0.6);
+}
+
+.contribution-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.contribution-header h4 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.contribution-year-select {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.contribution-year-btn {
+  min-height: 30px !important;
+  padding: 0.3rem 0.6rem !important;
+  font-size: 0.7rem !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.contribution-year-btn.active {
+  color: #58a6ff !important;
+  border-color: rgba(88, 166, 255, 0.35) !important;
+  background: rgba(88, 166, 255, 0.08) !important;
+}
+
+.contribution-chart-wrapper {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  padding: 0.5rem 0;
+}
+
+.contribution-svg {
+  display: block;
+  min-width: 100%;
+}
+
+.contribution-month-label {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-family: inherit;
+}
+
+.contribution-day-label {
+  fill: var(--text-muted);
+  font-size: 9px;
+  font-family: inherit;
+}
+
+.contribution-cell {
+  transition: opacity 120ms ease;
+  outline: 1px solid rgba(255, 255, 255, 0.02);
+  outline-offset: -1px;
+}
+
+.contribution-cell:hover {
+  opacity: 0.8;
+  outline-color: rgba(255, 255, 255, 0.2);
+}
+
+.contribution-tooltip {
+  position: fixed;
+  z-index: 1000;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  background: rgba(20, 25, 35, 0.96);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.contribution-tooltip strong {
+  color: #fff;
+}
+
+.contribution-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: flex-end;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+}
+
+.contribution-legend-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* DSA Progress Section in Profile */
+.profile-progress-section {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.profile-progress-section > .eyebrow {
+  margin-bottom: -0.5rem;
+}
+
+.progress-graphs {
+  display: grid;
+  gap: 1rem;
+}
+
+.progress-graph-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.progress-graph-label .graph-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.progress-graph-label .graph-icon.dsa {
+  background: rgba(139, 124, 255, 0.12);
+  border: 1px solid rgba(139, 124, 255, 0.2);
+}
+
+.progress-graph-label .graph-icon.github {
+  background: rgba(69, 212, 154, 0.12);
+  border: 1px solid rgba(69, 212, 154, 0.2);
+}
+
+.progress-graph-label strong {
+  font-size: 0.82rem;
+}
+
+.progress-graph-label small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}

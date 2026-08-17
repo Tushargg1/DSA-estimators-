@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api/client.js'
 import ActivityHeatmap from './ActivityHeatmap.jsx'
+import ProfileProgress from './ProfileProgress.jsx'
 
 const PAGE_SIZE = 50
 const platforms = [
@@ -125,6 +126,8 @@ function MemberProfile({ userId, currentUserId, groupId, onBack }) {
       </section>
 
       {groupId && <ActivityHeatmap groupId={groupId} userId={userId} />}
+
+      <ProfileProgress userId={userId} groupId={groupId} />
 
       <section className="submission-history" aria-labelledby="submission-history-title">
         <header>
