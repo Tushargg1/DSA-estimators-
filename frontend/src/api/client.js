@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { cachedFetch, invalidateCache, clearCache, CACHE_KEYS, TTL } from './cache.js'
 
 const localApi = 'http://localhost:8080/api'
 const configuredApi = import.meta.env.VITE_API_BASE_URL
@@ -33,6 +34,7 @@ export function setAuthToken(token) {
 export function clearAuthToken() {
   memoryToken = null
   try { sessionStorage.removeItem(TOKEN_KEY) } catch { /* Already cleared in memory. */ }
+  clearCache() // Wipe all cached responses on logout
 }
 
 export function onUnauthorized(handler) {
@@ -131,61 +133,138 @@ export const api = {
   googleLogin: (credential) =>
     http.post('/auth/google', { credential }, { skipAuthReset: true }).then((response) => response.data),
   activateLegacy: (payload) => http.post('/auth/legacy-activate', payload).then((response) => response.data),
-  me: () => http.get('/auth/me').then((response) => response.data),
+  me: () => cachedFetch(CACHE_KEYS.ME,
+    () => http.get('/auth/me').then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
   logout: () => http.post('/auth/logout', null, { skipAuthReset: true }),
 
-  getUser: (id, signal) => http.get(`/users/${id}`, { signal }).then((response) => response.data),
+  getUser: (id, signal) => cachedFetch(CACHE_KEYS.USER(id),
+    () => http.get(`/users/${id}`, { signal }).then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
   updateTarget: (id, target) =>
-    http.put(`/users/${id}/target`, { target }).then((response) => response.data),
+    http.put(`/users/${id}/target`, { target }).then((response) => {
+      invalidateCache(CACHE_KEYS.USER(id))
+      return response.data
+    }),
   getSubmissions: (id, params, signal) =>
     http.get(`/users/${id}/submissions`, { params, signal }).then((response) => response.data),
 
-  getGroups: () => http.get('/groups').then((response) => response.data),
-  createGroup: (payload) => http.post('/groups', payload).then((response) => response.data),
-  joinGroup: (payload) => http.post('/groups/join', payload).then((response) => response.data),
-  getLeaderboard: (groupId) =>
-    http.get(`/groups/${groupId}/leaderboard`).then((response) => response.data),
+  getGroups: () => cachedFetch(CACHE_KEYS.GROUPS,
+    () => http.get('/groups').then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
+  createGroup: (payload) => http.post('/groups', payload).then((response) => {
+    invalidateCache(CACHE_KEYS.GROUPS)
+    return response.data
+  }),
+  joinGroup: (payload) => http.post('/groups/join', payload).then((response) => {
+    invalidateCache(CACHE_KEYS.GROUPS)
+    return response.data
+  }),
+  getLeaderboard: (groupId) => cachedFetch(CACHE_KEYS.LEADERBOARD(groupId),
+    () => http.get(`/groups/${groupId}/leaderboard`).then((r) => r.data),
+    { maxAge: TTL.SHORT, staleAge: TTL.MEDIUM }
+  ).then((result) => result.data),
   getGroupHistory: (groupId, date) =>
     http.get(`/groups/${groupId}/history`, { params: { date } }).then((response) => response.data),
-  getGroupTarget: (groupId, signal) =>
-    http.get(`/groups/${groupId}/target`, { signal }).then((response) => response.data),
+  getGroupTarget: (groupId, signal) => cachedFetch(CACHE_KEYS.GROUP_TARGET(groupId),
+    () => http.get(`/groups/${groupId}/target`, { signal }).then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
   selectAutoGroupTarget: (groupId) =>
-    http.post(`/groups/${groupId}/target/auto`).then((response) => response.data),
+    http.post(`/groups/${groupId}/target/auto`).then((response) => {
+      invalidateCache(CACHE_KEYS.GROUP_TARGET(groupId))
+      return response.data
+    }),
   startGroupTargetPoll: (groupId) =>
-    http.post(`/groups/${groupId}/target/poll`).then((response) => response.data),
+    http.post(`/groups/${groupId}/target/poll`).then((response) => {
+      invalidateCache(CACHE_KEYS.GROUP_TARGET(groupId))
+      return response.data
+    }),
   castGroupTargetVote: (groupId, target) =>
-    http.put(`/groups/${groupId}/target/poll/vote`, { target }).then((response) => response.data),
+    http.put(`/groups/${groupId}/target/poll/vote`, { target }).then((response) => {
+      invalidateCache(CACHE_KEYS.GROUP_TARGET(groupId))
+      return response.data
+    }),
   getMemberActivity: (groupId, userId, params, signal) =>
     http.get(`/groups/${groupId}/members/${userId}/activity`, { params, signal })
       .then((response) => response.data),
-  getPollStatus: () => http.get('/status/poll').then((response) => response.data),
-  getPatternCatalog: () => http.get('/catalog').then((response) => response.data),
+  getPollStatus: () => cachedFetch(CACHE_KEYS.POLL_STATUS,
+    () => http.get('/status/poll').then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
+  getPatternCatalog: () => cachedFetch(CACHE_KEYS.CATALOG,
+    () => http.get('/catalog').then((r) => r.data),
+    { maxAge: TTL.LONG, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
 
   getJobs: (params, signal) =>
     http.get('/jobs', { params, signal }).then((response) => response.data),
-  createJob: (payload) => http.post('/jobs', payload).then((response) => response.data),
+  createJob: (payload) => http.post('/jobs', payload).then((response) => {
+    invalidateCache(CACHE_KEYS.JOB_PROFILES)
+    return response.data
+  }),
   markJobApplied: (id) =>
-    http.put(`/jobs/${id}/applied`).then((response) => response.data),
+    http.put(`/jobs/${id}/applied`).then((response) => {
+      invalidateCache(CACHE_KEYS.JOB_PROFILES)
+      return response.data
+    }),
   unmarkJobApplied: (id) =>
-    http.delete(`/jobs/${id}/applied`).then((response) => response.data),
+    http.delete(`/jobs/${id}/applied`).then((response) => {
+      invalidateCache(CACHE_KEYS.JOB_PROFILES)
+      return response.data
+    }),
 
-  getJobProfiles: () => http.get('/jobs/profiles').then((response) => response.data),
-  createJobProfile: (payload) => http.post('/jobs/profiles', payload).then((response) => response.data),
-  deleteJobProfile: (id) => http.delete(`/jobs/profiles/${id}`),
+  getJobProfiles: () => cachedFetch(CACHE_KEYS.JOB_PROFILES,
+    () => http.get('/jobs/profiles').then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
+  createJobProfile: (payload) => http.post('/jobs/profiles', payload).then((response) => {
+    invalidateCache(CACHE_KEYS.JOB_PROFILES)
+    return response.data
+  }),
+  deleteJobProfile: (id) => http.delete(`/jobs/profiles/${id}`).then(() => {
+    invalidateCache(CACHE_KEYS.JOB_PROFILES)
+  }),
 
-  getJobSources: () => http.get('/jobs/sources').then((response) => response.data),
-  addJobSource: (payload) => http.post('/jobs/sources', payload).then((response) => response.data),
-  scrapeJobSource: (id) => http.post(`/jobs/sources/${id}/scrape`).then((response) => response.data),
-  deleteJobSource: (id) => http.delete(`/jobs/sources/${id}`),
+  getJobSources: () => cachedFetch(CACHE_KEYS.JOB_SOURCES,
+    () => http.get('/jobs/sources').then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
+  addJobSource: (payload) => http.post('/jobs/sources', payload).then((response) => {
+    invalidateCache(CACHE_KEYS.JOB_SOURCES)
+    return response.data
+  }),
+  scrapeJobSource: (id) => http.post(`/jobs/sources/${id}/scrape`).then((response) => {
+    invalidateCache(CACHE_KEYS.JOB_SOURCES, CACHE_KEYS.JOB_PROFILES)
+    return response.data
+  }),
+  deleteJobSource: (id) => http.delete(`/jobs/sources/${id}`).then(() => {
+    invalidateCache(CACHE_KEYS.JOB_SOURCES)
+  }),
 
-  getGitHubStatus: () => http.get('/github/status').then((response) => response.data),
-  startGitHubConnection: () => http.post('/github/connect').then((response) => response.data),
+  getGitHubStatus: () => cachedFetch(CACHE_KEYS.GITHUB_STATUS,
+    () => http.get('/github/status').then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
+  startGitHubConnection: () => http.post('/github/connect').then((response) => {
+    invalidateCache(CACHE_KEYS.GITHUB_STATUS)
+    return response.data
+  }),
   completeGitHubConnection: (payload) =>
-    http.post('/github/complete', payload).then((response) => response.data),
+    http.post('/github/complete', payload).then((response) => {
+      invalidateCache(CACHE_KEYS.GITHUB_STATUS)
+      return response.data
+    }),
   getGitHubRepositories: () =>
     http.get('/github/repositories').then((response) => response.data),
   selectGitHubRepository: (repositoryId) =>
-    http.put('/github/repository', { repositoryId }).then((response) => response.data),
+    http.put('/github/repository', { repositoryId }).then((response) => {
+      invalidateCache(CACHE_KEYS.GITHUB_STATUS)
+      return response.data
+    }),
   issueGitHubExtensionToken: () =>
     http.post('/github/extension-token').then((response) => response.data),
   getGitHubCaptures: () => http.get('/github/captures').then((response) => response.data),
@@ -193,13 +272,22 @@ export const api = {
     http.get('/github/workflow-save').then((response) => response.data),
   requestGitHubWorkflowSave: () =>
     http.post('/github/workflow-save').then((response) => response.data),
-  getGitHubProgressPushes: () =>
-    http.get('/github/progress-pushes').then((response) => response.data),
-  getGitHubProgressSchedule: () =>
-    http.get('/github/progress-schedule').then((response) => response.data),
+  getGitHubProgressPushes: () => cachedFetch(CACHE_KEYS.GITHUB_PUSHES,
+    () => http.get('/github/progress-pushes').then((r) => r.data),
+    { maxAge: TTL.SHORT, staleAge: TTL.MEDIUM }
+  ).then((result) => result.data),
+  getGitHubProgressSchedule: () => cachedFetch(CACHE_KEYS.GITHUB_SCHEDULE,
+    () => http.get('/github/progress-schedule').then((r) => r.data),
+    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
+  ).then((result) => result.data),
   updateGitHubProgressSchedule: (payload) =>
-    http.put('/github/progress-schedule', payload).then((response) => response.data),
-  disconnectGitHub: () => http.delete('/github'),
+    http.put('/github/progress-schedule', payload).then((response) => {
+      invalidateCache(CACHE_KEYS.GITHUB_SCHEDULE)
+      return response.data
+    }),
+  disconnectGitHub: () => http.delete('/github').then(() => {
+    invalidateCache(CACHE_KEYS.GITHUB_STATUS, CACHE_KEYS.GITHUB_SCHEDULE, CACHE_KEYS.GITHUB_PUSHES)
+  }),
 }
 
 export default http
