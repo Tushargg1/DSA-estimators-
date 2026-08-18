@@ -161,6 +161,14 @@ export const api = {
   getPollStatus: () => http.get('/status/poll').then((response) => response.data),
   getPatternCatalog: () => http.get('/catalog').then((response) => response.data),
 
+  getJobs: (params, signal) =>
+    http.get('/jobs', { params, signal }).then((response) => response.data),
+  createJob: (payload) => http.post('/jobs', payload).then((response) => response.data),
+  markJobApplied: (id) =>
+    http.put(`/jobs/${id}/applied`).then((response) => response.data),
+  unmarkJobApplied: (id) =>
+    http.delete(`/jobs/${id}/applied`).then((response) => response.data),
+
   getGitHubStatus: () => http.get('/github/status').then((response) => response.data),
   startGitHubConnection: () => http.post('/github/connect').then((response) => response.data),
   completeGitHubConnection: (payload) =>

@@ -6,6 +6,8 @@ import com.dsatracker.github.GitHubProgressPushHistoryRepository;
 import com.dsatracker.github.GitHubProgressPushScheduleRepository;
 import com.dsatracker.github.GitHubSolutionCaptureRepository;
 import com.dsatracker.github.GitHubWorkflowSaveRepository;
+import com.dsatracker.jobs.JobApplicationRepository;
+import com.dsatracker.jobs.JobListingRepository;
 import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.GroupMemberRepository;
 import com.dsatracker.repository.GroupRepository;
@@ -105,6 +107,13 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private GitHubProgressPushScheduleRepository gitHubProgressPushScheduleRepository;
+
+	/** Job board persistence is excluded with JPA in this smoke test. */
+	@MockitoBean
+	private JobListingRepository jobListingRepository;
+
+	@MockitoBean
+	private JobApplicationRepository jobApplicationRepository;
 
 	@MockitoBean
 	private PlatformTransactionManager transactionManager;
