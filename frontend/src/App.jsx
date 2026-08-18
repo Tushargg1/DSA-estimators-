@@ -172,26 +172,29 @@ function App() {
         </div>
 
 
-        {user && <nav className="workspace-nav" aria-label="Primary navigation">
-          <button type="button" aria-current={activeView === 'dashboard' ? 'page' : undefined} onClick={showDashboard}>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z" /></svg><span>Dashboard</span>
-          </button>
-          <button type="button" aria-current={activeView === 'patterns' && catalogRoadmap === 'all' ? 'page' : undefined} onClick={() => showCatalog('all')}>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h2v2H4V5Zm4 0h12v2H8V5ZM4 11h2v2H4v-2Zm4 0h12v2H8v-2ZM4 17h2v2H4v-2Zm4 0h12v2H8v-2Z" /></svg><span>All Questions</span>
-          </button>
-          <button type="button" aria-current={activeView === 'patterns' && catalogRoadmap === 'beginner' ? 'page' : undefined} onClick={() => showCatalog('beginner')}>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6c0 2.2 1.2 4.1 3 5.2V17h6v-2.8A6 6 0 0 0 12 3Zm-2 16h4v2h-4v-2Zm1-4.7-.7-.4A4 4 0 1 1 16 10.3c-.4.7-1 1.3-1.7 1.7l-1.3.8V15h-2v-.7Z" /></svg><span>Beginner</span>
-          </button>
-          <button type="button" aria-current={activeView === 'patterns' && catalogRoadmap === 'experienced' ? 'page' : undefined} onClick={() => showCatalog('experienced')}>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2L7.8 15l.8-4.7L5.2 7l4.7-.7L12 2Zm-6 14h12v6l-6-3-6 3v-6Z" /></svg><span>Experienced</span>
-          </button>
-          <button type="button" aria-current={activeView === 'jobs' ? 'page' : undefined} onClick={showJobs}>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 4V2h6v2h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4Zm2 0h2V3h-2v1Zm-6 8v6h14v-6a22 22 0 0 1-6 1.8V15h-2v-1.2A22 22 0 0 1 5 12Zm14-2V6H5v4a20 20 0 0 0 14 0Z" /></svg><span>Jobs</span>
-          </button>
-          <button type="button" aria-current={activeView === 'integrations' ? 'page' : undefined} onClick={showIntegrations}>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.5 2.9 8.4 6.8 9.7.5.1.7-.2.7-.5v-2c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.7.1-.7.1-.7 1 0 1.6 1.1 1.6 1.1.9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.7-1.4-2.2-.3-4.6-1.2-4.6-5.1 0-1.1.4-2.1 1-2.8-.1-.3-.4-1.3.1-2.8 0 0 .8-.3 2.7 1.1a9 9 0 0 1 4.9 0c1.9-1.4 2.7-1.1 2.7-1.1.5 1.5.2 2.5.1 2.8.7.7 1 1.7 1 2.8 0 4-2.4 4.8-4.6 5.1.4.3.7 1 .7 2v3c0 .3.2.6.7.5A10.2 10.2 0 0 0 22 12.3C22 6.6 17.5 2 12 2Z" /></svg><span>GitHub</span>
-          </button>
-        </nav>}
+        {user && <div className="navigation-stack">
+          <nav className="workspace-nav" aria-label="Primary navigation">
+            <button type="button" aria-current={activeView === 'jobs' ? 'page' : undefined} onClick={showJobs}>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 4V2h6v2h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4Zm2 0h2V3h-2v1Zm-6 8v6h14v-6a22 22 0 0 1-6 1.8V15h-2v-1.2A22 22 0 0 1 5 12Zm14-2V6H5v4a20 20 0 0 0 14 0Z" /></svg><span>JOB</span>
+            </button>
+            <button type="button" aria-current={activeView === 'dashboard' ? 'page' : undefined} onClick={showDashboard}>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z" /></svg><span>DSA</span>
+            </button>
+            <button type="button" aria-current={activeView === 'patterns' ? 'page' : undefined}
+              aria-expanded={activeView === 'patterns'} onClick={() => showCatalog(catalogRoadmap)}>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h2v2H4V5Zm4 0h12v2H8V5ZM4 11h2v2H4v-2Zm4 0h12v2H8v-2ZM4 17h2v2H4v-2Zm4 0h12v2H8v-2Z" /></svg><span>MAANG DSA QUES</span>
+            </button>
+            <button type="button" aria-current={activeView === 'integrations' ? 'page' : undefined} onClick={showIntegrations}>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.5 2.9 8.4 6.8 9.7.5.1.7-.2.7-.5v-2c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.7.1-.7.1-.7 1 0 1.6 1.1 1.6 1.1.9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.7-1.4-2.2-.3-4.6-1.2-4.6-5.1 0-1.1.4-2.1 1-2.8-.1-.3-.4-1.3.1-2.8 0 0 .8-.3 2.7 1.1a9 9 0 0 1 4.9 0c1.9-1.4 2.7-1.1 2.7-1.1.5 1.5.2 2.5.1 2.8.7.7 1 1.7 1 2.8 0 4-2.4 4.8-4.6 5.1.4.3.7 1 .7 2v3c0 .3.2.6.7.5A10.2 10.2 0 0 0 22 12.3C22 6.6 17.5 2 12 2Z" /></svg><span>GITHUB</span>
+            </button>
+          </nav>
+
+          {activeView === 'patterns' && <nav className="workspace-subnav" aria-label="MAANG DSA question levels">
+            <button type="button" aria-current={catalogRoadmap === 'all' ? 'page' : undefined} onClick={() => showCatalog('all')}>All Questions</button>
+            <button type="button" aria-current={catalogRoadmap === 'beginner' ? 'page' : undefined} onClick={() => showCatalog('beginner')}>Beginner</button>
+            <button type="button" aria-current={catalogRoadmap === 'experienced' ? 'page' : undefined} onClick={() => showCatalog('experienced')}>Experienced</button>
+          </nav>}
+        </div>}
 
         {user && <div className="account-cluster">
           <button type="button" className="account-profile" aria-current={activeView === 'profile' && profileUserId === user.id ? 'page' : undefined} onClick={() => openProfile(user)} aria-label="Open your profile">
