@@ -8,6 +8,8 @@ import com.dsatracker.github.GitHubSolutionCaptureRepository;
 import com.dsatracker.github.GitHubWorkflowSaveRepository;
 import com.dsatracker.jobs.JobApplicationRepository;
 import com.dsatracker.jobs.JobListingRepository;
+import com.dsatracker.jobs.JobProfileRepository;
+import com.dsatracker.jobs.JobSourceRepository;
 import com.dsatracker.repository.DailyCountRepository;
 import com.dsatracker.repository.GroupMemberRepository;
 import com.dsatracker.repository.GroupRepository;
@@ -114,6 +116,12 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private JobApplicationRepository jobApplicationRepository;
+
+	@MockitoBean
+	private JobProfileRepository jobProfileRepository;
+
+	@MockitoBean
+	private JobSourceRepository jobSourceRepository;
 
 	@MockitoBean
 	private PlatformTransactionManager transactionManager;

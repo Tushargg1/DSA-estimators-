@@ -28,6 +28,9 @@ public class JobListing {
     @Column(name = "posted_by", nullable = false)
     private Long postedBy;
 
+    @Column(name = "source_id")
+    private Long sourceId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -41,6 +44,8 @@ public class JobListing {
     public void setJobUrl(String jobUrl) { this.jobUrl = jobUrl; }
     public Long getPostedBy() { return postedBy; }
     public void setPostedBy(Long postedBy) { this.postedBy = postedBy; }
+    public Long getSourceId() { return sourceId; }
+    public void setSourceId(Long sourceId) { this.sourceId = sourceId; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

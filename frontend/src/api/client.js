@@ -169,6 +169,15 @@ export const api = {
   unmarkJobApplied: (id) =>
     http.delete(`/jobs/${id}/applied`).then((response) => response.data),
 
+  getJobProfiles: () => http.get('/jobs/profiles').then((response) => response.data),
+  createJobProfile: (payload) => http.post('/jobs/profiles', payload).then((response) => response.data),
+  deleteJobProfile: (id) => http.delete(`/jobs/profiles/${id}`),
+
+  getJobSources: () => http.get('/jobs/sources').then((response) => response.data),
+  addJobSource: (payload) => http.post('/jobs/sources', payload).then((response) => response.data),
+  scrapeJobSource: (id) => http.post(`/jobs/sources/${id}/scrape`).then((response) => response.data),
+  deleteJobSource: (id) => http.delete(`/jobs/sources/${id}`),
+
   getGitHubStatus: () => http.get('/github/status').then((response) => response.data),
   startGitHubConnection: () => http.post('/github/connect').then((response) => response.data),
   completeGitHubConnection: (payload) =>
