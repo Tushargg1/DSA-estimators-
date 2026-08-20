@@ -1,11 +1,14 @@
 package com.dsatracker.jobs;
 
+import com.dsatracker.config.AsyncConfig;
 import com.dsatracker.model.User;
 import com.dsatracker.repository.UserRepository;
 import com.dsatracker.web.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -63,25 +66,77 @@ public class JobSourceService {
      */
     private static final int INTERACTIVE_CHUNKS = 1;
 
+    /**
+     * Upper bound on chunks in one background sweep, guarding against a portal that keeps
+     * returning full pages forever. At {@link #CHUNK_SIZE} per chunk this covers boards far
+     * larger than any we target.
+     */
+    private static final int MAX_CHUNKS_PER_SWEEP = 300;
+    /** Brief pause between chunks so a full sweep doesn't hammer the portal. */
+    private static final long CHUNK_PAUSE_MILLIS = 400L;
+
     private final JobSourceRepository sources;
     private final JobListingRepository listings;
     private final JobApplicationRepository applications;
     private final UserRepository users;
     private final List<JobPortalAdapter> adapters;
     private final JobIngestWriter writer;
+    /**
+     * Self-reference used to invoke {@link #ingestRemainderInBackground(Long)} through the
+     * Spring proxy. Calling an {@code @Async} method directly on {@code this} would run it
+     * inline on the caller's thread, defeating the point.
+     */
+    private final ObjectProvider<JobSourceService> self;
 
     public JobSourceService(JobSourceRepository sources,
                             JobListingRepository listings,
                             JobApplicationRepository applications,
                             UserRepository users,
                             List<JobPortalAdapter> adapters,
-                            JobIngestWriter writer) {
+                            JobIngestWriter writer,
+                            ObjectProvider<JobSourceService> self) {
         this.sources = sources;
         this.listings = listings;
         this.applications = applications;
         this.users = users;
         this.adapters = adapters;
         this.writer = writer;
+        this.self = self;
+    }
+
+    /**
+     * Keep pulling a board until the portal reports no more results.
+     *
+     * <p>Runs after the triggering request has already responded, which is what makes a
+     * multi-thousand-posting board possible: the work is no longer bounded by how long a
+     * client will wait. Progress is checkpointed per chunk, so if the process stops midway
+     * the scheduled sweep resumes from the stored cursor rather than starting over.
+     */
+    @Async(AsyncConfig.JOB_INGEST_EXECUTOR)
+    public void ingestRemainderInBackground(Long sourceId) {
+        for (int chunk = 0; chunk < MAX_CHUNKS_PER_SWEEP; chunk++) {
+            JobSource source = sources.findById(sourceId).orElse(null);
+            // Stop if the source was removed, or if the cursor reset means it finished.
+            if (source == null || source.getSyncCursor() <= 0) return;
+
+            JobPortalAdapter adapter = findAdapter(source.getUrl());
+            if (adapter == null) return; // Generic scrapes complete in a single pass.
+
+            JobDtos.ScrapeResult result = syncViaAdapter(source, adapter, 1);
+            if (result.error() != null) {
+                log.warn("[BackgroundSweep] Stopping source {} after error: {}",
+                        sourceId, result.error());
+                return;
+            }
+            try {
+                Thread.sleep(CHUNK_PAUSE_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        log.warn("[BackgroundSweep] Source {} hit the {}-chunk ceiling; the scheduled sweep "
+                + "will continue it", sourceId, MAX_CHUNKS_PER_SWEEP);
     }
 
     @Transactional(readOnly = true)
@@ -140,6 +195,9 @@ public class JobSourceService {
                     JobIngestWriter.STATUS_ERROR);
         }
 
+        // Anything beyond the first chunk continues without the user asking again.
+        continueInBackground(source.getId());
+
         // Re-read so the response carries the status the extraction just produced.
         JobSource saved = sources.findById(source.getId()).orElse(source);
         String userName = users.findById(userId).map(User::getName).orElse("Member");
@@ -169,7 +227,18 @@ public class JobSourceService {
     public JobDtos.ScrapeResult scrapeSource(Long userId, Long sourceId) {
         JobSource source = sources.findById(sourceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source not found"));
-        return ingest(source, INTERACTIVE_CHUNKS);
+        // Fetch one chunk now so the caller gets a real count back, then let the rest of the
+        // board finish on a background thread instead of requiring repeated clicks.
+        JobDtos.ScrapeResult result = ingest(source, INTERACTIVE_CHUNKS);
+        continueInBackground(sourceId);
+        return result;
+    }
+
+    /** Hand the remainder of a board to the background executor, if any is left. */
+    private void continueInBackground(Long sourceId) {
+        sources.findById(sourceId)
+                .filter(source -> source.getSyncCursor() > 0)
+                .ifPresent(source -> self.getObject().ingestRemainderInBackground(sourceId));
     }
 
     /** Entry point for the daily scheduler, which may work through several chunks. */

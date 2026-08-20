@@ -46,7 +46,9 @@ class JobSourceServiceDeleteTest {
                 mock(JobApplicationRepository.class),
                 mock(UserRepository.class),
                 List.of(),
-                mock(JobIngestWriter.class));
+                mock(JobIngestWriter.class),
+                // Self-reference for the async background sweep; unused by these tests.
+                mock(org.springframework.beans.factory.ObjectProvider.class));
     }
 
     private JobSource source(long id, long owner) {

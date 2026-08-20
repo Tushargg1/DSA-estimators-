@@ -32,6 +32,28 @@ public class AsyncConfig {
     /** Bean name used by {@code @Async("backfillExecutor")}. */
     public static final String BACKFILL_EXECUTOR = "backfillExecutor";
     public static final String CATALOG_EXECUTOR = "catalogExecutor";
+    public static final String JOB_INGEST_EXECUTOR = "jobIngestExecutor";
+
+    /**
+     * Runs a job board's full ingestion after the request that triggered it has returned.
+     *
+     * <p>Single-threaded on purpose: a sweep is a long series of calls to one portal, and
+     * running several concurrently would multiply request rate against third parties for no
+     * gain. Queueing them instead means boards ingest one after another.
+     */
+    @Bean(name = JOB_INGEST_EXECUTOR)
+    public Executor jobIngestExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(20);
+        executor.setThreadNamePrefix("job-ingest-");
+        // Drop rather than block a request thread if the queue is somehow saturated; the
+        // scheduled sweep will pick the source up again from its stored cursor.
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+        executor.initialize();
+        return executor;
+    }
 
     @Bean(name = CATALOG_EXECUTOR)
     public Executor catalogExecutor() {
