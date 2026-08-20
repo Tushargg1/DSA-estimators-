@@ -18,15 +18,18 @@ public class JobProfileService {
     private final JobProfileRepository profiles;
     private final JobListingRepository listings;
     private final JobApplicationRepository applications;
+    private final JobSourceRepository sources;
     private final com.dsatracker.repository.UserRepository users;
 
     public JobProfileService(JobProfileRepository profiles,
                              JobListingRepository listings,
                              JobApplicationRepository applications,
+                             JobSourceRepository sources,
                              com.dsatracker.repository.UserRepository users) {
         this.profiles = profiles;
         this.listings = listings;
         this.applications = applications;
+        this.sources = sources;
         this.users = users;
     }
 
@@ -40,6 +43,7 @@ public class JobProfileService {
         List<JobProfile> userProfiles = profiles.findByUserIdOrderByCreatedAtDesc(userId);
         List<JobListing> allJobs = listings.findAllByOrderByCreatedAtDescIdDesc(
                 org.springframework.data.domain.PageRequest.of(0, 500)).getContent();
+        List<JobSource> allSources = sources.findAllByOrderByCreatedAtDesc();
         Map<Long, Instant> appliedMap = loadAppliedMap(userId, allJobs);
         Map<Long, String> posterNames = loadPosterNames(allJobs);
 
@@ -58,16 +62,31 @@ public class JobProfileService {
                             LinkedHashMap::new,
                             java.util.stream.Collectors.toList()));
 
-            List<JobDtos.CompanyGroup> companyGroups = byCompany.entrySet().stream()
-                    .map(entry -> {
-                        List<JobDtos.JobResponse> jobs = entry.getValue();
-                        // Find the sourceId from the first listing that matches this company
-                        Long sourceId = allJobs.stream()
-                                .filter(j -> j.getCompany().equals(entry.getKey()) && j.getSourceId() != null)
-                                .map(JobListing::getSourceId)
-                                .findFirst().orElse(null);
-                        return new JobDtos.CompanyGroup(entry.getKey(), sourceId, jobs.size(), jobs);
-                    })
+            // Build company groups: start with all registered sources, then add any
+            // other companies that have matched jobs but aren't a source
+            Map<String, JobDtos.CompanyGroup> groupMap = new LinkedHashMap<>();
+
+            // Add all sources as companies (even with 0 matched jobs)
+            for (JobSource source : allSources) {
+                String companyName = source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl());
+                List<JobDtos.JobResponse> jobs = byCompany.getOrDefault(companyName, List.of());
+                groupMap.put(companyName, new JobDtos.CompanyGroup(companyName, source.getId(), jobs.size(), jobs));
+            }
+
+            // Add companies from matched jobs that aren't already a source
+            for (Map.Entry<String, List<JobDtos.JobResponse>> entry : byCompany.entrySet()) {
+                if (!groupMap.containsKey(entry.getKey())) {
+                    Long sourceId = allJobs.stream()
+                            .filter(j -> j.getCompany().equals(entry.getKey()) && j.getSourceId() != null)
+                            .map(JobListing::getSourceId)
+                            .findFirst().orElse(null);
+                    groupMap.put(entry.getKey(), new JobDtos.CompanyGroup(
+                            entry.getKey(), sourceId, entry.getValue().size(), entry.getValue()));
+                }
+            }
+
+            // Sort: companies with jobs first (desc by count), then empty ones
+            List<JobDtos.CompanyGroup> companyGroups = groupMap.values().stream()
                     .sorted((a, b) -> Integer.compare(b.totalJobs(), a.totalJobs()))
                     .toList();
 
@@ -225,5 +244,10 @@ public class JobProfileService {
             return null;
         }
         return normalized;
+    }
+
+    private static String hostFromUrl(String url) {
+        try { return new java.net.URI(url).getHost().replaceFirst("^www\\.", ""); }
+        catch (Exception e) { return "External"; }
     }
 }
