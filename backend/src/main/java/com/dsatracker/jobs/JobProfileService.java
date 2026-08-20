@@ -176,7 +176,8 @@ public class JobProfileService {
         Instant applied = appliedMap.get(job.getId());
         return new JobDtos.JobResponse(job.getId(), job.getTitle(), job.getCompany(), job.getJobUrl(),
                 posterNames.getOrDefault(job.getPostedBy(), "Community member"),
-                job.getCreatedAt(), job.getExperienceRequired(), applied != null, applied);
+                job.getCreatedAt(), job.getExperienceRequired(), job.getDescription(),
+                applied != null, applied);
     }
 
     static Set<String> parseKeywords(String csv) {
@@ -190,7 +191,8 @@ public class JobProfileService {
 
     private boolean matchesKeywords(JobListing job, Set<String> keywords) {
         if (keywords.isEmpty()) return false;
-        String haystack = (job.getTitle() + " " + job.getCompany()).toLowerCase();
+        String haystack = (job.getTitle() + " " + job.getCompany() + " "
+                + (job.getDescription() != null ? job.getDescription() : "")).toLowerCase();
         return keywords.stream().anyMatch(haystack::contains);
     }
 

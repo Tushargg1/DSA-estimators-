@@ -25,6 +25,9 @@ public class JobListing {
     @Column(name = "job_url", nullable = false, length = 2048)
     private String jobUrl;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Column(name = "posted_by", nullable = false)
     private Long postedBy;
 
@@ -45,6 +48,8 @@ public class JobListing {
     public void setCompany(String company) { this.company = company; }
     public String getJobUrl() { return jobUrl; }
     public void setJobUrl(String jobUrl) { this.jobUrl = jobUrl; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     public Long getPostedBy() { return postedBy; }
     public void setPostedBy(Long postedBy) { this.postedBy = postedBy; }
     public Long getSourceId() { return sourceId; }

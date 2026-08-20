@@ -143,9 +143,14 @@ public class JobSourceService {
                 listing.setTitle(link.title() != null ? link.title() : "Job opportunity");
                 listing.setCompany(source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl()));
                 listing.setJobUrl(link.url());
+                listing.setDescription(link.description());
                 listing.setPostedBy(source.getAddedBy());
                 listing.setSourceId(source.getId());
-                listing.setExperienceRequired(extractExperience(link.title()));
+                // Look for an explicit experience requirement in the title first,
+                // then fall back to scanning the surrounding description text.
+                Integer experience = extractExperience(link.title());
+                if (experience == null) experience = extractExperience(link.description());
+                listing.setExperienceRequired(experience);
                 listing.setCreatedAt(Instant.now());
                 listings.save(listing);
                 created++;
@@ -193,7 +198,8 @@ public class JobSourceService {
             java.time.Instant applied = appliedMap.get(job.getId());
             return new JobDtos.JobResponse(job.getId(), job.getTitle(), job.getCompany(), job.getJobUrl(),
                     posterNames.getOrDefault(job.getPostedBy(), "Community member"),
-                    job.getCreatedAt(), job.getExperienceRequired(), applied != null, applied);
+                    job.getCreatedAt(), job.getExperienceRequired(), job.getDescription(),
+                    applied != null, applied);
         }).toList();
     }
 
@@ -222,6 +228,12 @@ public class JobSourceService {
         return body;
     }
 
+    // How much surrounding HTML (before and after the link) to scan for descriptive
+    // text like tech stack keywords ("Java", "Spring", "AWS", etc.) that often sit
+    // in a sibling <p>/<span>/<li> near the job link rather than inside the anchor text.
+    private static final int DESCRIPTION_CONTEXT_CHARS = 1500;
+    private static final int DESCRIPTION_MAX_CHARS = 2000;
+
     List<ScrapedLink> extractJobLinks(String html, String baseUrl) {
         List<ScrapedLink> results = new ArrayList<>();
         Matcher hrefMatcher = HREF_PATTERN.matcher(html);
@@ -245,9 +257,33 @@ public class JobSourceService {
                     if (title.length() < 3 || title.length() > 200) title = null;
                 }
             }
-            results.add(new ScrapedLink(resolved, title));
+
+            String description = extractDescriptionContext(html, hrefMatcher.start());
+            results.add(new ScrapedLink(resolved, title, description));
         }
         return results;
+    }
+
+    /**
+     * Grab a window of plain text surrounding the link's position in the HTML
+     * (e.g. sibling text describing the role/tech stack) so keyword matching
+     * against a candidate's resume skills isn't limited to just the anchor title.
+     */
+    private String extractDescriptionContext(String html, int linkPosition) {
+        int start = Math.max(0, linkPosition - DESCRIPTION_CONTEXT_CHARS);
+        int end = Math.min(html.length(), linkPosition + DESCRIPTION_CONTEXT_CHARS);
+        String window = html.substring(start, end);
+        // Strip tags, scripts/styles content, and collapse whitespace
+        String text = window
+                .replaceAll("(?is)<script[^>]*>.*?</script>", " ")
+                .replaceAll("(?is)<style[^>]*>.*?</style>", " ")
+                .replaceAll("<[^>]+>", " ")
+                .replaceAll("&nbsp;", " ")
+                .replaceAll("&amp;", "&")
+                .replaceAll("\\s+", " ")
+                .trim();
+        if (text.isBlank()) return null;
+        return text.length() > DESCRIPTION_MAX_CHARS ? text.substring(0, DESCRIPTION_MAX_CHARS) : text;
     }
 
     private String resolveUrl(String href, String baseUrl) {
@@ -308,7 +344,7 @@ public class JobSourceService {
         return value.length() <= max ? value : value.substring(0, max);
     }
 
-    record ScrapedLink(String url, String title) { }
+    record ScrapedLink(String url, String title, String description) { }
 
     /**
      * Extract minimum years of experience from a job title/text.

@@ -17,6 +17,7 @@ public final class JobDtos {
             String postedByName,
             Instant createdAt,
             Integer experienceRequired,
+            String description,
             boolean applied,
             Instant appliedAt
     ) { }
