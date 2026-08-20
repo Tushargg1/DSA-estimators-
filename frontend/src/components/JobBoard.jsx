@@ -312,7 +312,7 @@ function JobBoard() {
       } else {
         setSourceSuccess(outcome?.tone === 'warn'
           ? 'Added. Only basic job links could be read from this site.'
-          : 'Added and jobs extracted. This source now refreshes daily at 9 AM.')
+          : 'Added and jobs are loading. The rest of this board fills in automatically.')
       }
       void loadJobs(0)
     } catch (e) {
@@ -331,7 +331,7 @@ function JobBoard() {
         setSourceSuccess('No new jobs in this batch — everything fetched is already on the board.')
       } else {
         setSourceSuccess(`Added ${result.newListings} new job${result.newListings !== 1 ? 's' : ''}. `
-          + 'Large boards are fetched a batch at a time; the daily 9 AM sync continues from here.')
+          + 'The rest of this board keeps loading automatically in the background.')
       }
       void loadSources()
       void loadJobs(0)
@@ -642,8 +642,8 @@ function JobBoard() {
           <span className="eyebrow">Add a career site</span>
           <h3>Fetch jobs from a company</h3>
           <p>Paste a careers URL and we'll tell you straight away whether it can be extracted.
-            Boards on Greenhouse, Lever, Ashby and Accenture are fully supported; jobs then
-            refresh automatically every day at 9 AM.</p>
+            Boards on Greenhouse, Lever, Ashby and Accenture are fully supported. Large boards
+            keep loading in the background until every job is stored, then refresh daily.</p>
           <form onSubmit={addSource} aria-busy={sourceAdding}>
             <label className="field"><span>Career page URL</span>
               <input type="url" value={sourceForm.url} onChange={updateSourceForm('url')} required maxLength="2048" placeholder="https://company.com/careers" aria-invalid={Boolean(sourceFieldErrors.url)} />
@@ -721,7 +721,10 @@ function JobBoard() {
                           <span>Added by {source.addedByName}</span>
                           {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
                           {source.adapter && <span className="source-adapter-tag">API sync</span>}
-                          {source.syncCursor > 0 && <span>Resuming at #{source.syncCursor}</span>}
+                          {source.syncCursor > 0 &&
+                            <span title="Continues automatically every few minutes">
+                              Loading more… ({source.syncCursor} fetched)
+                            </span>}
                           {source.sweepCompletedAt && source.syncCursor === 0 &&
                             <span>Full sweep done: {formatPostedAt(source.sweepCompletedAt)}</span>}
                           {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}

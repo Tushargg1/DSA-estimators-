@@ -8,8 +8,15 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Scheduled task that auto-scrapes all job sources daily at 9:00 AM IST.
- * Deduplication is handled inside JobSourceService.scrapeSource().
+ * Keeps job sources ingested without anyone pressing a button.
+ *
+ * <p>Two schedules cooperate. A daily pass starts a fresh sweep of every source, and a
+ * frequent pass carries any half-finished sweep forward until the whole board is stored.
+ * The second one exists because a board can hold thousands of postings: a single run only
+ * fetches a bounded number of chunks so it cannot outlive a request or hosting timeout,
+ * and the persisted cursor is what lets the next run resume instead of restarting.
+ *
+ * <p>Deduplication lives in {@link JobIngestWriter}, so overlapping runs are harmless.
  */
 @Component
 public class JobScrapeScheduler {
@@ -55,5 +62,36 @@ public class JobScrapeScheduler {
 
         log.info("[DailyScrape] Completed: {} sources, {} new listings, {} errors",
                 allSources.size(), totalNew, errors);
+    }
+
+    /**
+     * Carries partially-ingested sources forward so a board finishes on its own.
+     *
+     * <p>A non-zero sync cursor means a sweep stopped mid-board; it is reset to zero once
+     * the portal reports no further results. Only those sources are touched, so completed
+     * ones are left alone until the next daily pass.
+     *
+     * <p>{@code fixedDelay} rather than {@code fixedRate}: the gap is measured after a run
+     * finishes, which stops slow runs from overlapping each other.
+     */
+    @Scheduled(fixedDelay = 10 * 60 * 1000, initialDelay = 2 * 60 * 1000)
+    public void continueIncompleteSweeps() {
+        List<JobSource> pending = sources.findAllByOrderByCreatedAtDesc().stream()
+                .filter(source -> source.getSyncCursor() > 0)
+                .toList();
+        if (pending.isEmpty()) return;
+
+        log.info("[ContinueSweep] Resuming {} partially ingested source(s)", pending.size());
+        for (JobSource source : pending) {
+            try {
+                JobDtos.ScrapeResult result = sourceService.scrapeSourceInternal(source);
+                log.info("[ContinueSweep] Source {} added {} listing(s){}",
+                        source.getId(), result.newListings(),
+                        result.error() != null ? " (error: " + result.error() + ")" : "");
+            } catch (Exception e) {
+                log.warn("[ContinueSweep] Unexpected error on source {}: {}",
+                        source.getId(), e.getMessage());
+            }
+        }
     }
 }
