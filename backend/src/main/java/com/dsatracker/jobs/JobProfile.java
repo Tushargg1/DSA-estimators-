@@ -28,6 +28,9 @@ public class JobProfile {
     @Column(name = "resume_text", columnDefinition = "MEDIUMTEXT")
     private String resumeText;
 
+    @Column(name = "resume_file_name", length = 500)
+    private String resumeFileName;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -41,6 +44,8 @@ public class JobProfile {
     public void setKeywords(String keywords) { this.keywords = keywords; }
     public String getResumeText() { return resumeText; }
     public void setResumeText(String resumeText) { this.resumeText = resumeText; }
+    public String getResumeFileName() { return resumeFileName; }
+    public void setResumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

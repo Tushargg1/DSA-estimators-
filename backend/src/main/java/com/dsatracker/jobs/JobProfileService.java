@@ -46,7 +46,8 @@ public class JobProfileService {
                     .toList();
             return new JobDtos.ProfileResponse(
                     profile.getId(), profile.getRoleTitle(), profile.getKeywords(),
-                    profile.getResumeText(), profile.getCreatedAt(), matched);
+                    profile.getResumeText(), profile.getResumeFileName(),
+                    profile.getCreatedAt(), matched);
         }).toList();
     }
 
@@ -66,8 +67,12 @@ public class JobProfileService {
 
         // If resume text is provided, extract additional keywords from it
         String resumeText = request != null ? request.resumeText() : null;
+        String resumeFileName = request != null ? request.resumeFileName() : null;
         if (resumeText != null && resumeText.length() > 50000) {
             resumeText = resumeText.substring(0, 50000);
+        }
+        if (resumeFileName != null && resumeFileName.length() > 500) {
+            resumeFileName = resumeFileName.substring(0, 500);
         }
         String finalKeywords = keywords;
         if (resumeText != null && !resumeText.isBlank()) {
@@ -86,11 +91,13 @@ public class JobProfileService {
         profile.setRoleTitle(roleTitle);
         profile.setKeywords(finalKeywords);
         profile.setResumeText(resumeText);
+        profile.setResumeFileName(resumeFileName);
         profile.setCreatedAt(Instant.now());
         profiles.save(profile);
 
         return new JobDtos.ProfileResponse(profile.getId(), profile.getRoleTitle(),
-                profile.getKeywords(), profile.getResumeText(), profile.getCreatedAt(), List.of());
+                profile.getKeywords(), profile.getResumeText(), profile.getResumeFileName(),
+                profile.getCreatedAt(), List.of());
     }
 
     @Transactional

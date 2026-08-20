@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client.js'
 
 const emptyForm = { title: '', company: '', jobUrl: '' }
-const emptyProfileForm = { roleTitle: '', keywords: '', resumeText: '' }
+const emptyProfileForm = { roleTitle: '', keywords: '', resumeText: '', resumeFileName: '' }
 const emptySourceForm = { url: '', label: '' }
 
 function formatPostedAt(value) {
@@ -39,6 +39,9 @@ function JobBoard() {
   const [profileError, setProfileError] = useState(null)
   const [profileSuccess, setProfileSuccess] = useState(null)
   const [activeProfile, setActiveProfile] = useState(null)
+  const [resumeUploading, setResumeUploading] = useState(false)
+  const [resumeDragOver, setResumeDragOver] = useState(false)
+  const [resumeParseResult, setResumeParseResult] = useState(null)
 
   // --- Sources state ---
   const [sources, setSources] = useState([])
@@ -145,8 +148,10 @@ function JobBoard() {
         roleTitle: profileForm.roleTitle.trim(),
         keywords: profileForm.keywords.trim(),
         resumeText: profileForm.resumeText.trim() || null,
+        resumeFileName: profileForm.resumeFileName || null,
       })
       setProfileForm(emptyProfileForm)
+      setResumeParseResult(null)
       setProfileSuccess(`Profile "${created.roleTitle}" created.`)
       setProfiles((c) => [created, ...c])
       setActiveProfile(created.id)
@@ -156,6 +161,50 @@ function JobBoard() {
       if (e.fieldErrors) setProfileFieldErrors(e.fieldErrors)
       else setProfileError(e.message || 'Could not create profile.')
     } finally { setProfileCreating(false) }
+  }
+
+  const handleResumeUpload = async (file) => {
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      setProfileError('Only PDF files are supported. Please upload a .pdf file.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileError('File too large. Maximum size is 5 MB.')
+      return
+    }
+    setResumeUploading(true); setProfileError(null); setProfileSuccess(null)
+    try {
+      const result = await api.uploadResume(file)
+      if (result.suggestedRole) {
+        setProfileForm((c) => ({
+          ...c,
+          roleTitle: result.suggestedRole,
+          keywords: result.detectedKeywords || c.keywords,
+          resumeText: result.extractedText || c.resumeText,
+          resumeFileName: result.fileName || file.name,
+        }))
+        setResumeParseResult(result)
+        setProfileSuccess(`Resume parsed! Detected profile: ${result.suggestedRole}. Review and create.`)
+      } else {
+        setProfileError('Could not extract meaningful content from the PDF. Try pasting your resume text instead.')
+      }
+    } catch (e) {
+      setProfileError(e.message || 'Failed to parse resume. Try pasting the text instead.')
+    } finally { setResumeUploading(false) }
+  }
+
+  const onResumeDrop = (e) => {
+    e.preventDefault()
+    setResumeDragOver(false)
+    const file = e.dataTransfer?.files?.[0]
+    if (file) void handleResumeUpload(file)
+  }
+
+  const onResumeFileSelect = (e) => {
+    const file = e.target?.files?.[0]
+    if (file) void handleResumeUpload(file)
+    e.target.value = '' // Reset so the same file can be re-selected
   }
 
   const deleteProfile = async (id) => {
@@ -298,7 +347,55 @@ function JobBoard() {
         <aside className="job-share-card card">
           <span className="eyebrow">Create a role profile</span>
           <h3>Auto-match jobs to your skills</h3>
-          <p>Add a target role and keywords (or paste your resume). Jobs matching your keywords will appear under this profile.</p>
+          <p>Upload your resume (PDF) or enter details manually. We'll detect your skills and auto-match jobs.</p>
+
+          {/* Resume upload drop zone */}
+          <div
+            className={`resume-upload-zone${resumeDragOver ? ' drag-over' : ''}${resumeUploading ? ' uploading' : ''}${resumeParseResult ? ' has-file' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); setResumeDragOver(true) }}
+            onDragLeave={() => setResumeDragOver(false)}
+            onDrop={onResumeDrop}
+            aria-label="Resume upload area"
+          >
+            {resumeUploading ? (
+              <div className="resume-upload-status"><span className="button-spinner" />Parsing your resume…</div>
+            ) : resumeParseResult ? (
+              <div className="resume-upload-status resume-parsed">
+                <span className="resume-file-icon" aria-hidden="true">📄</span>
+                <span>{profileForm.resumeFileName}</span>
+                <button type="button" className="button-quiet" onClick={() => {
+                  setResumeParseResult(null)
+                  setProfileForm(emptyProfileForm)
+                }}>Remove</button>
+              </div>
+            ) : (
+              <>
+                <span className="resume-upload-icon" aria-hidden="true">⬆</span>
+                <span>Drag & drop your resume PDF here</span>
+                <span className="resume-upload-or">or</span>
+                <label className="resume-upload-btn">
+                  <span>Browse file</span>
+                  <input type="file" accept=".pdf,application/pdf" onChange={onResumeFileSelect} hidden />
+                </label>
+              </>
+            )}
+          </div>
+
+          {resumeParseResult?.categoryScores && Object.keys(resumeParseResult.categoryScores).length > 0 && (
+            <div className="resume-categories">
+              <span className="field-label">Detected skills</span>
+              <div className="resume-category-chips">
+                {Object.entries(resumeParseResult.categoryScores)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([cat, score]) => (
+                    <span key={cat} className="resume-category-chip" title={`${score} keyword matches`}>
+                      {cat} <small>({score})</small>
+                    </span>
+                  ))}
+              </div>
+            </div>
+          )}
+
           <form onSubmit={createProfile} aria-busy={profileCreating}>
             <label className="field"><span>Role title</span>
               <input value={profileForm.roleTitle} onChange={updateProfileForm('roleTitle')} required maxLength="200" placeholder="e.g. Java Developer, ML Engineer" aria-invalid={Boolean(profileFieldErrors.roleTitle)} />

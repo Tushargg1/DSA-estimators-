@@ -66,6 +66,16 @@
 		</dependency>
 
 		<!--
+		  Apache PDFBox: parse uploaded PDF resumes to extract plain text for
+		  keyword extraction and automatic profile classification.
+		-->
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+
+		<!--
 		  Flyway owns the schema (application.yml uses ddl-auto=validate). The core
 		  module runs migrations; flyway-mysql adds MySQL 8 support. Spring Boot
 		  3.4.1 dependency management pins Flyway and Connector/J versions.

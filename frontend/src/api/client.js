@@ -225,6 +225,14 @@ export const api = {
     invalidateCache(CACHE_KEYS.JOB_PROFILES)
     return response.data
   }),
+  uploadResume: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return http.post('/jobs/profiles/upload-resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
+    }).then((response) => response.data)
+  },
   deleteJobProfile: (id) => http.delete(`/jobs/profiles/${id}`).then(() => {
     invalidateCache(CACHE_KEYS.JOB_PROFILES)
   }),

@@ -2,6 +2,7 @@ package com.dsatracker.jobs;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 public final class JobDtos {
     private JobDtos() { }
@@ -20,11 +21,11 @@ public final class JobDtos {
     ) { }
 
     // --- Profiles ---
-    public record CreateProfileRequest(String roleTitle, String keywords, String resumeText) { }
+    public record CreateProfileRequest(String roleTitle, String keywords, String resumeText, String resumeFileName) { }
 
     public record ProfileResponse(
             Long id, String roleTitle, String keywords, String resumeText,
-            Instant createdAt, List<JobResponse> matchedJobs
+            String resumeFileName, Instant createdAt, List<JobResponse> matchedJobs
     ) { }
 
     // --- Sources ---
@@ -36,4 +37,13 @@ public final class JobDtos {
     ) { }
 
     public record ScrapeResult(int newListings, String error) { }
+
+    // --- Resume upload ---
+    public record ResumeParseResponse(
+            String suggestedRole,
+            String detectedKeywords,
+            String extractedText,
+            Map<String, Integer> categoryScores,
+            String fileName
+    ) { }
 }

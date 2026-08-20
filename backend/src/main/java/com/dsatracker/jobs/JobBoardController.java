@@ -5,6 +5,7 @@ import com.dsatracker.web.ErrorResponse;
 import com.dsatracker.web.PageResponse;
 import com.dsatracker.web.ValidationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,8 +18,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -26,15 +30,18 @@ public class JobBoardController {
     private final JobBoardService jobs;
     private final JobProfileService profileService;
     private final JobSourceService sourceService;
+    private final ResumeParserService resumeParser;
     private final AccessService access;
 
     public JobBoardController(JobBoardService jobs,
                               JobProfileService profileService,
                               JobSourceService sourceService,
+                              ResumeParserService resumeParser,
                               AccessService access) {
         this.jobs = jobs;
         this.profileService = profileService;
         this.sourceService = sourceService;
+        this.resumeParser = resumeParser;
         this.access = access;
     }
 
@@ -81,6 +88,26 @@ public class JobBoardController {
             Authentication authentication) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(profileService.createProfile(access.userId(authentication), request));
+    }
+
+    @PostMapping(value = "/profiles/upload-resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<JobDtos.ResumeParseResponse> uploadResume(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
+        access.userId(authentication); // Ensure authenticated
+        try {
+            ResumeParserService.ParseResult result = resumeParser.parseResume(file);
+            return ResponseEntity.ok(new JobDtos.ResumeParseResponse(
+                    result.suggestedRole(),
+                    result.detectedKeywords(),
+                    result.extractedText(),
+                    result.categoryScores(),
+                    file.getOriginalFilename()
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.unprocessableEntity()
+                    .body(new JobDtos.ResumeParseResponse(null, null, null, Map.of(), null));
+        }
     }
 
     @DeleteMapping("/profiles/{id}")
