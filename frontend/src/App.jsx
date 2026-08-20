@@ -10,6 +10,7 @@ import PatternsCatalog from './components/PatternsCatalog.jsx'
 import WorkspaceBar from './components/WorkspaceBar.jsx'
 import DashboardStats from './components/DashboardStats.jsx'
 import { api, clearAuthToken, getAuthToken, onUnauthorized, setAuthToken } from './api/client.js'
+import { useTheme } from './hooks/useTheme.js'
 
 const groupStorageKey = (userId) => `dsaTracker.lastGroup.${userId}`
 const VIEW_STORAGE_KEY = 'dsaTracker.activeView'
@@ -56,7 +57,24 @@ function clearStoredView() {
   } catch { /* Nothing to clear. */ }
 }
 
+/** Sun/moon switch showing the theme you'd get by clicking, not the current one. */
+function ThemeToggle({ theme, onToggle }) {
+  const goingDark = theme === 'light'
+  return (
+    <button type="button" className="theme-toggle" onClick={onToggle}
+      title={goingDark ? 'Switch to dark theme' : 'Switch to light theme'}
+      aria-label={goingDark ? 'Switch to dark theme' : 'Switch to light theme'}>
+      {goingDark ? (
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A7 7 0 0 1 12.6 3.1c-.2-.06-.4-.1-.6-.1Z" /></svg>
+      ) : (
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-13.5a1 1 0 0 1-1-1V1a1 1 0 0 1 2 0v1.5a1 1 0 0 1-1 1Zm0 19a1 1 0 0 1-1-1V20a1 1 0 0 1 2 0v1.5a1 1 0 0 1-1 1ZM4.2 5.6a1 1 0 0 1-.7-.3l-1-1a1 1 0 0 1 1.4-1.4l1 1a1 1 0 0 1-.7 1.7Zm15.6 15.6a1 1 0 0 1-.7-.3l-1-1a1 1 0 0 1 1.4-1.4l1 1a1 1 0 0 1-.7 1.7ZM2.5 13H1a1 1 0 0 1 0-2h1.5a1 1 0 0 1 0 2Zm20.5 0h-1.5a1 1 0 0 1 0-2H23a1 1 0 0 1 0 2ZM3.2 21.2a1 1 0 0 1-.7-1.7l1-1a1 1 0 0 1 1.4 1.4l-1 1a1 1 0 0 1-.7.3ZM18.8 5.6a1 1 0 0 1-.7-1.7l1-1a1 1 0 0 1 1.4 1.4l-1 1a1 1 0 0 1-.7.3Z" /></svg>
+      )}
+    </button>
+  )
+}
+
 function App() {
+  const { theme, toggleTheme } = useTheme()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
   const [groups, setGroups] = useState([])
@@ -239,15 +257,18 @@ function App() {
           </nav>}
         </div>}
 
-        {user && <div className="account-cluster">
-          <button type="button" className="account-profile" aria-current={activeView === 'profile' && profileUserId === user.id ? 'page' : undefined} onClick={() => openProfile(user)} aria-label="Open your profile">
-            <span className="account-avatar" aria-hidden="true">{user.name?.trim()?.charAt(0).toUpperCase() || 'U'}</span>
-            <span className="account-copy"><strong>{user.name}</strong><small>View profile</small></span>
-          </button>
-          <button type="button" className="logout-button" onClick={logout} aria-label="Log out">
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M10 17v2H5V5h5V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5v2l5-3-5-3Zm3-9 1.4 1.4L12.8 11H21v2h-8.2l1.6 1.6L13 16l-4-4 4-4Z" /></svg><span>Log out</span>
-          </button>
-        </div>}
+        <div className="account-cluster">
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          {user && <>
+            <button type="button" className="account-profile" aria-current={activeView === 'profile' && profileUserId === user.id ? 'page' : undefined} onClick={() => openProfile(user)} aria-label="Open your profile">
+              <span className="account-avatar" aria-hidden="true">{user.name?.trim()?.charAt(0).toUpperCase() || 'U'}</span>
+              <span className="account-copy"><strong>{user.name}</strong><small>View profile</small></span>
+            </button>
+            <button type="button" className="logout-button" onClick={logout} aria-label="Log out">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M10 17v2H5V5h5V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5v2l5-3-5-3Zm3-9 1.4 1.4L12.8 11H21v2h-8.2l1.6 1.6L13 16l-4-4 4-4Z" /></svg><span>Log out</span>
+            </button>
+          </>}
+        </div>
       </header>
 
       <div className="app-content">
