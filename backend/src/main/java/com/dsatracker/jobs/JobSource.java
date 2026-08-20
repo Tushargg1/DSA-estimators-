@@ -31,6 +31,18 @@ public class JobSource {
     @Column(name = "last_error", length = 500)
     private String lastError;
 
+    /** Resumable sweep position: index of the next record to fetch from the portal. */
+    @Column(name = "sync_cursor", nullable = false)
+    private int syncCursor;
+
+    /** When the most recent full sweep finished (cursor wrapped back to 0). */
+    @Column(name = "sweep_completed_at")
+    private Instant sweepCompletedAt;
+
+    /** Which adapter handles this source, e.g. "accenture". Null means generic HTML scrape. */
+    @Column(length = 40)
+    private String adapter;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -46,6 +58,12 @@ public class JobSource {
     public void setLastScrapedAt(Instant lastScrapedAt) { this.lastScrapedAt = lastScrapedAt; }
     public String getLastError() { return lastError; }
     public void setLastError(String lastError) { this.lastError = lastError; }
+    public int getSyncCursor() { return syncCursor; }
+    public void setSyncCursor(int syncCursor) { this.syncCursor = syncCursor; }
+    public Instant getSweepCompletedAt() { return sweepCompletedAt; }
+    public void setSweepCompletedAt(Instant sweepCompletedAt) { this.sweepCompletedAt = sweepCompletedAt; }
+    public String getAdapter() { return adapter; }
+    public void setAdapter(String adapter) { this.adapter = adapter; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

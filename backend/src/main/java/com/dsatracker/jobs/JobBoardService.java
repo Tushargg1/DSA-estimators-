@@ -147,12 +147,9 @@ public class JobBoardService {
                                   Map<Long, Instant> appliedAt) {
         JobDtos.JobResponse response(JobListing listing) {
             Instant applied = appliedAt.get(listing.getId());
-            return new JobDtos.JobResponse(
-                    listing.getId(), listing.getTitle(), listing.getCompany(),
-                    listing.getJobUrl(),
+            return JobDtos.JobResponse.from(listing,
                     posterNames.getOrDefault(listing.getPostedBy(), "Community member"),
-                    listing.getCreatedAt(), listing.getExperienceRequired(), listing.getDescription(),
-                    applied != null, applied);
+                    applied);
         }
     }
 }

@@ -50,19 +50,30 @@ public class JobSourceService {
     private static final Pattern TITLE_PATTERN = Pattern.compile(
             ">([^<]{3,200})</a>", Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Per-chunk request size, and how many chunks one run may fetch. Together these
+     * bound a single run's work (600 postings) so a large portal is ingested across
+     * several scheduled runs rather than one long request that a free-tier host kills.
+     */
+    private static final int CHUNK_SIZE = 100;
+    private static final int MAX_CHUNKS_PER_RUN = 6;
+
     private final JobSourceRepository sources;
     private final JobListingRepository listings;
     private final JobApplicationRepository applications;
     private final UserRepository users;
+    private final List<JobPortalAdapter> adapters;
 
     public JobSourceService(JobSourceRepository sources,
                             JobListingRepository listings,
                             JobApplicationRepository applications,
-                            UserRepository users) {
+                            UserRepository users,
+                            List<JobPortalAdapter> adapters) {
         this.sources = sources;
         this.listings = listings;
         this.applications = applications;
         this.users = users;
+        this.adapters = adapters;
     }
 
     @Transactional(readOnly = true)
@@ -75,7 +86,8 @@ public class JobSourceService {
         return allSources.stream().map(source -> new JobDtos.SourceResponse(
                 source.getId(), source.getUrl(), source.getLabel(),
                 source.getLastScrapedAt(), source.getLastError(),
-                source.getCreatedAt(), names.getOrDefault(source.getAddedBy(), "Member")
+                source.getCreatedAt(), names.getOrDefault(source.getAddedBy(), "Member"),
+                source.getAdapter(), source.getSyncCursor(), source.getSweepCompletedAt()
         )).toList();
     }
 
@@ -122,6 +134,137 @@ public class JobSourceService {
      */
     @Transactional
     public JobDtos.ScrapeResult scrapeSourceInternal(JobSource source) {
+        JobPortalAdapter adapter = adapters.stream()
+                .filter(candidate -> candidate.supports(source.getUrl()))
+                .findFirst()
+                .orElse(null);
+
+        return adapter != null
+                ? syncViaAdapter(source, adapter)
+                : scrapeGenericHtml(source);
+    }
+
+    /**
+     * Ingest a portal through its API in resumable chunks.
+     *
+     * <p>The cursor is persisted after every chunk, so a run cut short by a timeout
+     * resumes from the same offset instead of restarting. Dedup is on the portal's own
+     * job id, which makes re-fetching an overlapping window harmless — necessary
+     * because these result sets are relevance-ordered and shift between requests.
+     * A sweep ends only when the portal returns a short chunk; the cursor then resets
+     * so the next cycle picks up newly posted jobs.
+     */
+    private JobDtos.ScrapeResult syncViaAdapter(JobSource source, JobPortalAdapter adapter) {
+        source.setAdapter(adapter.name());
+        String company = source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl());
+
+        int cursor = Math.max(0, source.getSyncCursor());
+        int created = 0;
+        boolean exhausted = false;
+
+        for (int chunk = 0; chunk < MAX_CHUNKS_PER_RUN; chunk++) {
+            JobPortalAdapter.Chunk result;
+            try {
+                result = adapter.fetchChunk(source, cursor, CHUNK_SIZE);
+            } catch (Exception ex) {
+                // Preserve the cursor so the next run retries this same window.
+                String errorMsg = "Sync failed at offset " + cursor + ": " + truncate(ex.getMessage(), 300);
+                source.setLastError(errorMsg);
+                source.setLastScrapedAt(Instant.now());
+                source.setSyncCursor(cursor);
+                sources.save(source);
+                log.warn("Adapter {} failed for source {} at offset {}: {}",
+                        adapter.name(), source.getId(), cursor, ex.getMessage());
+                return new JobDtos.ScrapeResult(created, errorMsg);
+            }
+
+            created += persistNewJobs(source, company, result.jobs());
+            cursor += CHUNK_SIZE;
+
+            if (result.exhausted()) {
+                exhausted = true;
+                break;
+            }
+
+            // Checkpoint mid-sweep so progress survives an interrupted run.
+            source.setSyncCursor(cursor);
+            sources.save(source);
+        }
+
+        if (exhausted) {
+            source.setSyncCursor(0);
+            source.setSweepCompletedAt(Instant.now());
+        } else {
+            source.setSyncCursor(cursor);
+        }
+        source.setLastScrapedAt(Instant.now());
+        source.setLastError(null);
+        sources.save(source);
+
+        log.info("Adapter {} synced source {}: {} new listings, cursor now {}{}",
+                adapter.name(), source.getId(), created, source.getSyncCursor(),
+                exhausted ? " (full sweep complete)" : "");
+        return new JobDtos.ScrapeResult(created, null);
+    }
+
+    /**
+     * Insert postings not already stored for this source.
+     *
+     * <p>Adapter results dedup on the portal job id; generic scrape results have no
+     * such id and fall back to matching on URL.
+     */
+    private int persistNewJobs(JobSource source, String company, List<ScrapedJob> jobs) {
+        if (jobs.isEmpty()) return 0;
+
+        Set<String> externalIds = jobs.stream()
+                .map(ScrapedJob::externalId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+        // Mutable: also tracks ids inserted earlier in this same chunk.
+        Set<String> known = externalIds.isEmpty()
+                ? new java.util.HashSet<>()
+                : new java.util.HashSet<>(listings.findExistingExternalIds(source.getId(), externalIds));
+
+        int created = 0;
+        for (ScrapedJob job : jobs) {
+            if (job.externalId() != null) {
+                if (known.contains(job.externalId())) continue;
+            } else if (listings.existsByJobUrlIgnoreCase(job.url())) {
+                continue;
+            }
+
+            JobListing listing = new JobListing();
+            listing.setTitle(job.title() != null ? job.title() : "Job opportunity");
+            listing.setCompany(company);
+            listing.setJobUrl(job.url());
+            listing.setDescription(job.description());
+            listing.setExternalId(job.externalId());
+            listing.setLocation(truncateOrNull(job.location(), 300));
+            listing.setEmploymentType(truncateOrNull(job.employmentType(), 100));
+            listing.setCareerLevel(truncateOrNull(job.careerLevel(), 100));
+            listing.setQualification(truncateOrNull(job.qualification(), 500));
+            listing.setPostedText(truncateOrNull(job.postedText(), 120));
+            listing.setPostedBy(source.getAddedBy());
+            listing.setSourceId(source.getId());
+
+            // Prefer the portal's stated experience, else infer it from the text.
+            Integer experience = job.yearsExperience();
+            if (experience == null) experience = extractExperience(job.title());
+            if (experience == null) experience = extractExperience(job.description());
+            if (experience == null) experience = experienceFromCareerLevel(job.careerLevel());
+            listing.setExperienceRequired(experience);
+
+            listing.setCreatedAt(Instant.now());
+            listings.save(listing);
+            created++;
+            // Guard against duplicates inside a single chunk.
+            if (job.externalId() != null) known.add(job.externalId());
+        }
+        return created;
+    }
+
+    /** Original regex-over-HTML path, used for sources without a dedicated adapter. */
+    private JobDtos.ScrapeResult scrapeGenericHtml(JobSource source) {
         String html;
         try {
             html = fetchPage(source.getUrl());
@@ -133,35 +276,18 @@ public class JobSourceService {
             return new JobDtos.ScrapeResult(0, errorMsg);
         }
 
-        List<ScrapedLink> links = extractJobLinks(html, source.getUrl());
-        int created = 0;
-        for (ScrapedLink link : links) {
-            // Avoid duplicates: check if same URL already exists
-            boolean exists = listings.existsByJobUrlIgnoreCase(link.url());
-            if (!exists) {
-                JobListing listing = new JobListing();
-                listing.setTitle(link.title() != null ? link.title() : "Job opportunity");
-                listing.setCompany(source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl()));
-                listing.setJobUrl(link.url());
-                listing.setDescription(link.description());
-                listing.setPostedBy(source.getAddedBy());
-                listing.setSourceId(source.getId());
-                // Look for an explicit experience requirement in the title first,
-                // then fall back to scanning the surrounding description text.
-                Integer experience = extractExperience(link.title());
-                if (experience == null) experience = extractExperience(link.description());
-                listing.setExperienceRequired(experience);
-                listing.setCreatedAt(Instant.now());
-                listings.save(listing);
-                created++;
-            }
-        }
+        String company = source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl());
+        List<ScrapedJob> jobs = extractJobLinks(html, source.getUrl()).stream()
+                .map(link -> ScrapedJob.basic(link.url(), link.title(), link.description(), null))
+                .toList();
+
+        int created = persistNewJobs(source, company, jobs);
 
         source.setLastScrapedAt(Instant.now());
         source.setLastError(null);
         sources.save(source);
         log.info("Scraped source {} ({}): found {} links, created {} new listings",
-                source.getId(), source.getUrl(), links.size(), created);
+                source.getId(), source.getUrl(), jobs.size(), created);
         return new JobDtos.ScrapeResult(created, null);
     }
 
@@ -194,13 +320,9 @@ public class JobSourceService {
         Map<Long, String> posterNames = users.findAllById(posterIds).stream()
                 .collect(Collectors.toMap(User::getId, User::getName));
 
-        return jobs.stream().map(job -> {
-            java.time.Instant applied = appliedMap.get(job.getId());
-            return new JobDtos.JobResponse(job.getId(), job.getTitle(), job.getCompany(), job.getJobUrl(),
-                    posterNames.getOrDefault(job.getPostedBy(), "Community member"),
-                    job.getCreatedAt(), job.getExperienceRequired(), job.getDescription(),
-                    applied != null, applied);
-        }).toList();
+        return jobs.stream().map(job -> JobDtos.JobResponse.from(job,
+                posterNames.getOrDefault(job.getPostedBy(), "Community member"),
+                appliedMap.get(job.getId()))).toList();
     }
 
     // --- Internal helpers ---
@@ -342,6 +464,29 @@ public class JobSourceService {
     private static String truncate(String value, int max) {
         if (value == null) return "";
         return value.length() <= max ? value : value.substring(0, max);
+    }
+
+    private static String truncateOrNull(String value, int max) {
+        if (value == null || value.isBlank()) return null;
+        String trimmed = value.trim();
+        return trimmed.length() <= max ? trimmed : trimmed.substring(0, max);
+    }
+
+    /**
+     * Approximate a minimum years-of-experience from a portal's career level label,
+     * so experience filtering still works when no explicit number is published.
+     */
+    static Integer experienceFromCareerLevel(String careerLevel) {
+        if (careerLevel == null) return null;
+        String level = careerLevel.toLowerCase();
+        if (level.contains("intern") || level.contains("student")) return 0;
+        if (level.contains("entry") || level.contains("early") || level.contains("graduate")
+                || level.contains("associate") || level.contains("junior")) return 0;
+        if (level.contains("mid")) return 2;
+        if (level.contains("senior")) return 5;
+        if (level.contains("manager") || level.contains("lead") || level.contains("principal")) return 8;
+        if (level.contains("director") || level.contains("executive")) return 10;
+        return null;
     }
 
     record ScrapedLink(String url, String title, String description) { }

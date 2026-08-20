@@ -174,10 +174,9 @@ public class JobProfileService {
     private JobDtos.JobResponse toResponse(JobListing job, Map<Long, Instant> appliedMap,
                                            Map<Long, String> posterNames) {
         Instant applied = appliedMap.get(job.getId());
-        return new JobDtos.JobResponse(job.getId(), job.getTitle(), job.getCompany(), job.getJobUrl(),
+        return JobDtos.JobResponse.from(job,
                 posterNames.getOrDefault(job.getPostedBy(), "Community member"),
-                job.getCreatedAt(), job.getExperienceRequired(), job.getDescription(),
-                applied != null, applied);
+                applied);
     }
 
     static Set<String> parseKeywords(String csv) {

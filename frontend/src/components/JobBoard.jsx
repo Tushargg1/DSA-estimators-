@@ -607,7 +607,11 @@ function JobBoard() {
                         <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-url-link" onClick={(e) => e.stopPropagation()}>{source.url}</a>
                         <div className="source-meta">
                           <span>Added by {source.addedByName}</span>
-                          {source.lastScrapedAt && <span>Last scraped: {formatPostedAt(source.lastScrapedAt)}</span>}
+                          {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
+                          {source.adapter && <span className="source-adapter-tag">API sync</span>}
+                          {source.syncCursor > 0 && <span>Resuming at #{source.syncCursor}</span>}
+                          {source.sweepCompletedAt && source.syncCursor === 0 &&
+                            <span>Full sweep done: {formatPostedAt(source.sweepCompletedAt)}</span>}
                           {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}
                         </div>
                       </div>
@@ -650,7 +654,20 @@ function JobBoard() {
   )
 }
 
+// Portals can list a role across dozens of cities; show a few and summarise the rest.
+function summarizeLocation(location, max = 3) {
+  if (!location) return null
+  const cities = location.split(',').map((c) => c.trim()).filter(Boolean)
+  if (cities.length <= max) return cities.join(' · ')
+  return `${cities.slice(0, max).join(' · ')} +${cities.length - max} more`
+}
+
 function JobCard({ job, updatingId, onToggle }) {
+  const locationLabel = summarizeLocation(job.location)
+  // Structured portal metadata when available, otherwise fall back to who shared it.
+  const facts = [locationLabel, job.employmentType, job.careerLevel].filter(Boolean)
+  const hasPortalMeta = facts.length > 0
+
   return (
     <li className={job.applied ? 'is-applied' : ''}>
       <article className="job-card">
@@ -660,16 +677,32 @@ function JobCard({ job, updatingId, onToggle }) {
             <div><span>{job.company}</span><h3>{job.title}</h3></div>
             <div className="job-badges">
               {job.experienceRequired != null && (
-                <span className="job-exp-badge" title={`Requires ${job.experienceRequired}+ years experience`}>
+                <span className="job-exp-badge" title={`Requires about ${job.experienceRequired}+ years experience`}>
                   {job.experienceRequired}+ yrs
                 </span>
               )}
               {job.applied && <span className="job-applied-badge">Applied</span>}
             </div>
           </div>
+
+          {hasPortalMeta && (
+            <div className="job-facts" title={job.location || undefined}>
+              {facts.map((fact) => <span key={fact}>{fact}</span>)}
+            </div>
+          )}
+
+          {job.qualification && (
+            <div className="job-qualification">
+              <span className="job-qualification-label">Qualification</span>
+              {job.qualification}
+            </div>
+          )}
+
           <div className="job-meta">
-            <span>Shared by {job.postedByName}</span>
-            <span>{formatPostedAt(job.createdAt)}</span>
+            {job.postedText
+              ? <span>{job.postedText}</span>
+              : <span>{formatPostedAt(job.createdAt)}</span>}
+            {!hasPortalMeta && <span>Shared by {job.postedByName}</span>}
             <span>{hostName(job.jobUrl)}</span>
           </div>
         </div>

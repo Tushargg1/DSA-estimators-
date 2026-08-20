@@ -34,6 +34,25 @@ public class JobListing {
     @Column(name = "source_id")
     private Long sourceId;
 
+    /** Portal's stable job id (Accenture: requisitionId). Dedup key together with sourceId. */
+    @Column(name = "external_id", length = 120)
+    private String externalId;
+
+    @Column(length = 300)
+    private String location;
+
+    @Column(name = "employment_type", length = 100)
+    private String employmentType;
+
+    @Column(name = "career_level", length = 100)
+    private String careerLevel;
+
+    @Column(length = 500)
+    private String qualification;
+
+    @Column(name = "posted_text", length = 120)
+    private String postedText;
+
     @Column(name = "experience_required")
     private Integer experienceRequired;
 
@@ -54,6 +73,18 @@ public class JobListing {
     public void setPostedBy(Long postedBy) { this.postedBy = postedBy; }
     public Long getSourceId() { return sourceId; }
     public void setSourceId(Long sourceId) { this.sourceId = sourceId; }
+    public String getExternalId() { return externalId; }
+    public void setExternalId(String externalId) { this.externalId = externalId; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+    public String getEmploymentType() { return employmentType; }
+    public void setEmploymentType(String employmentType) { this.employmentType = employmentType; }
+    public String getCareerLevel() { return careerLevel; }
+    public void setCareerLevel(String careerLevel) { this.careerLevel = careerLevel; }
+    public String getQualification() { return qualification; }
+    public void setQualification(String qualification) { this.qualification = qualification; }
+    public String getPostedText() { return postedText; }
+    public void setPostedText(String postedText) { this.postedText = postedText; }
     public Integer getExperienceRequired() { return experienceRequired; }
     public void setExperienceRequired(Integer experienceRequired) { this.experienceRequired = experienceRequired; }
     public Instant getCreatedAt() { return createdAt; }
