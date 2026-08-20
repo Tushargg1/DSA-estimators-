@@ -73,6 +73,8 @@ function JobBoard() {
   const [expandedSource, setExpandedSource] = useState(null)
   const [sourceJobs, setSourceJobs] = useState({})
   const [sourceJobsLoading, setSourceJobsLoading] = useState(null)
+  const [supportCheck, setSupportCheck] = useState(null)
+  const [supportChecking, setSupportChecking] = useState(false)
 
   // --- Load jobs ---
   const loadJobs = useCallback(async (requestedPage = pageNumber) => {
@@ -124,6 +126,34 @@ function JobBoard() {
   }, [])
 
   useEffect(() => { if (tab === 'sources') void loadSources() }, [tab])
+
+  // Probe a pasted career URL so the user learns whether it can be extracted
+  // before saving it, rather than discovering empty results after the fact.
+  useEffect(() => {
+    const url = sourceForm.url.trim()
+    if (!/^https?:\/\/.+\..+/i.test(url)) {
+      setSupportCheck(null)
+      setSupportChecking(false)
+      return
+    }
+    const controller = new AbortController()
+    const timer = setTimeout(async () => {
+      setSupportChecking(true)
+      try {
+        const result = await api.checkJobSource(url, controller.signal)
+        setSupportCheck(result)
+        // Offer the detected company as the label when the user hasn't typed one.
+        if (result?.detectedCompany) {
+          setSourceForm((c) => c.label.trim() ? c : { ...c, label: result.detectedCompany })
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') setSupportCheck(null)
+      } finally {
+        setSupportChecking(false)
+      }
+    }, 700)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [sourceForm.url])
 
   // --- Job form handlers ---
   const updateForm = (field) => (event) => {
@@ -263,8 +293,9 @@ function JobBoard() {
     try {
       const added = await api.addJobSource({ url: sourceForm.url.trim(), label: sourceForm.label.trim() || null })
       setSourceForm(emptySourceForm)
+      setSupportCheck(null)
       setSources((c) => [added, ...c])
-      setSourceSuccess('Source added. Click "Scrape" to find jobs.')
+      setSourceSuccess('Source added. Click "Scrape now" to fetch jobs, or wait for the 9 AM daily sync.')
     } catch (e) {
       if (e.fieldErrors) setSourceFieldErrors(e.fieldErrors)
       else setSourceError(e.message || 'Could not add source.')
@@ -570,16 +601,49 @@ function JobBoard() {
       {tab === 'sources' && <div className="jobs-sources-layout">
         <aside className="job-share-card card">
           <span className="eyebrow">Add a career site</span>
-          <h3>Scrape jobs from a website</h3>
-          <p>Paste a careers page URL. We'll scan for job links and add matching positions to the board for everyone.</p>
+          <h3>Fetch jobs from a company</h3>
+          <p>Paste a careers URL and we'll tell you straight away whether it can be extracted.
+            Boards on Greenhouse, Lever, Ashby and Accenture are fully supported; jobs then
+            refresh automatically every day at 9 AM.</p>
           <form onSubmit={addSource} aria-busy={sourceAdding}>
             <label className="field"><span>Career page URL</span>
               <input type="url" value={sourceForm.url} onChange={updateSourceForm('url')} required maxLength="2048" placeholder="https://company.com/careers" aria-invalid={Boolean(sourceFieldErrors.url)} />
               {sourceFieldErrors.url && <small className="field-error">{sourceFieldErrors.url}</small>}
             </label>
-            <label className="field"><span>Label (optional)</span>
+            <label className="field"><span>Company name / label</span>
               <input value={sourceForm.label} onChange={updateSourceForm('label')} maxLength="200" placeholder="e.g. Google Careers" />
             </label>
+
+            {/* Extraction verdict for the pasted URL */}
+            {supportChecking && (
+              <div className="support-check checking">
+                <span className="button-spinner" />Checking whether this portal can be extracted…
+              </div>
+            )}
+            {!supportChecking && supportCheck && (
+              <div className={`support-check level-${supportCheck.level.toLowerCase()}`} role="status">
+                <div className="support-check-head">
+                  <span className="support-check-icon" aria-hidden="true">
+                    {supportCheck.level === 'FULL' ? '✓'
+                      : supportCheck.level === 'LIMITED' ? '!'
+                        : supportCheck.level === 'ERROR' ? '×' : '×'}
+                  </span>
+                  <strong>
+                    {supportCheck.level === 'FULL' ? 'Fully supported'
+                      : supportCheck.level === 'LIMITED' ? 'Partly supported'
+                        : supportCheck.level === 'ERROR' ? 'Could not verify' : 'Not supported'}
+                  </strong>
+                  {supportCheck.adapter && <span className="support-check-tag">{supportCheck.adapter}</span>}
+                </div>
+                <p>{supportCheck.message}</p>
+                {supportCheck.sampleTitles?.length > 0 && (
+                  <ul className="support-check-samples">
+                    {supportCheck.sampleTitles.map((t) => <li key={t}>{t}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
+
             <button type="submit" className="job-share-submit" disabled={sourceAdding}>
               {sourceAdding ? <><span className="button-spinner" />Adding…</> : 'Add source'}
             </button>

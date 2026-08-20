@@ -134,14 +134,87 @@ public class JobSourceService {
      */
     @Transactional
     public JobDtos.ScrapeResult scrapeSourceInternal(JobSource source) {
-        JobPortalAdapter adapter = adapters.stream()
-                .filter(candidate -> candidate.supports(source.getUrl()))
-                .findFirst()
-                .orElse(null);
-
+        JobPortalAdapter adapter = findAdapter(source.getUrl());
         return adapter != null
                 ? syncViaAdapter(source, adapter)
                 : scrapeGenericHtml(source);
+    }
+
+    /** The first adapter claiming this URL, or null to fall back to HTML scraping. */
+    private JobPortalAdapter findAdapter(String url) {
+        return adapters.stream()
+                .filter(candidate -> candidate.supports(url))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Report whether a career URL can actually be extracted, before the user saves it.
+     *
+     * <p>This performs a real probe rather than pattern-matching alone: a supported ATS
+     * host still fails if the company slug is wrong, and that is exactly the mistake
+     * worth catching up front.
+     */
+    public JobDtos.SupportCheck checkSupport(String rawUrl) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        String url = validateUrl(rawUrl, errors);
+        if (!errors.isEmpty()) {
+            return new JobDtos.SupportCheck("NONE", null, null, null, List.of(),
+                    errors.values().iterator().next());
+        }
+
+        JobPortalAdapter adapter = findAdapter(url);
+        JobSource probe = new JobSource();
+        probe.setUrl(url);
+
+        if (adapter != null) {
+            try {
+                JobPortalAdapter.Chunk chunk = adapter.fetchChunk(probe, 0, 5);
+                List<String> titles = chunk.jobs().stream()
+                        .map(ScrapedJob::title)
+                        .filter(java.util.Objects::nonNull)
+                        .limit(3)
+                        .toList();
+                if (chunk.jobs().isEmpty()) {
+                    return new JobDtos.SupportCheck("FULL", adapter.name(), companyFrom(url), 0, List.of(),
+                            "Recognised as a " + adapter.name() + " board, but it has no open roles right now.");
+                }
+                return new JobDtos.SupportCheck("FULL", adapter.name(), companyFrom(url),
+                        chunk.jobs().size(), titles,
+                        "Supported via the " + adapter.name() + " API — full role details will be extracted.");
+            } catch (Exception ex) {
+                return new JobDtos.SupportCheck("ERROR", adapter.name(), companyFrom(url), null, List.of(),
+                        "Looks like a " + adapter.name() + " board, but fetching it failed: "
+                                + truncate(ex.getMessage(), 200));
+            }
+        }
+
+        // No adapter: see whether the raw HTML exposes anything at all.
+        try {
+            String html = fetchPage(url);
+            int found = extractJobLinks(html, url).size();
+            if (found == 0) {
+                return new JobDtos.SupportCheck("NONE", null, companyFrom(url), 0, List.of(),
+                        "This page loads its jobs with JavaScript, so nothing can be extracted from it. "
+                                + "A dedicated adapter would be needed for this portal.");
+            }
+            return new JobDtos.SupportCheck("LIMITED", null, companyFrom(url), found, List.of(),
+                    "Partly supported: " + found + " job link(s) found in the page HTML, but role details "
+                            + "like level and location may be missing.");
+        } catch (Exception ex) {
+            return new JobDtos.SupportCheck("ERROR", null, companyFrom(url), null, List.of(),
+                    "Could not reach this page: " + truncate(ex.getMessage(), 200));
+        }
+    }
+
+    /** Best-effort company name for prefilling the label: adapter slug, else hostname. */
+    private String companyFrom(String url) {
+        JobPortalAdapter adapter = findAdapter(url);
+        if (adapter instanceof AbstractJsonJobAdapter jsonAdapter) {
+            String slug = jsonAdapter.slugFrom(url);
+            if (slug != null) return slug;
+        }
+        return hostFromUrl(url);
     }
 
     /**

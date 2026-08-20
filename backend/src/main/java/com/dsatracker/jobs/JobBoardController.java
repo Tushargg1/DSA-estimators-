@@ -134,6 +134,17 @@ public class JobBoardController {
                 .body(sourceService.addSource(access.userId(authentication), request));
     }
 
+    /**
+     * Tell the user up front whether a career URL can be extracted, so they aren't
+     * left guessing why a source produced no usable jobs.
+     */
+    @GetMapping("/sources/check")
+    public JobDtos.SupportCheck checkSource(@RequestParam String url,
+                                           Authentication authentication) {
+        access.userId(authentication); // Authenticated users only.
+        return sourceService.checkSupport(url);
+    }
+
     @PostMapping("/sources/{id}/scrape")
     public JobDtos.ScrapeResult scrapeSource(@PathVariable Long id,
                                              Authentication authentication) {

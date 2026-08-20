@@ -249,6 +249,9 @@ export const api = {
   }),
   getSourceListings: (id) =>
     http.get(`/jobs/sources/${id}/listings`).then((response) => response.data),
+  checkJobSource: (url, signal) =>
+    http.get('/jobs/sources/check', { params: { url }, signal, timeout: 45000 })
+      .then((response) => response.data),
   deleteJobSource: (id) => http.delete(`/jobs/sources/${id}`).then(() => {
     invalidateCache(CACHE_KEYS.JOB_SOURCES)
   }),

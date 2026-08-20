@@ -77,6 +77,27 @@ public final class JobDtos {
 
     public record ScrapeResult(int newListings, String error) { }
 
+    /**
+     * Verdict on whether a career URL can be extracted, shown before the user commits
+     * to adding it.
+     *
+     * @param level           FULL when a portal API adapter handles it, LIMITED when only
+     *                        generic HTML scraping applies, NONE when nothing can be read,
+     *                        ERROR when the check itself failed
+     * @param adapter         adapter that claimed the URL, or null
+     * @param detectedCompany company slug parsed out of the URL, useful as a label default
+     * @param sampleJobCount  postings seen during the probe, or null when unknown
+     * @param sampleTitles    a few real titles, so the user can see it actually works
+     */
+    public record SupportCheck(
+            String level,
+            String adapter,
+            String detectedCompany,
+            Integer sampleJobCount,
+            List<String> sampleTitles,
+            String message
+    ) { }
+
     // --- Resume upload ---
     public record ResumeParseResponse(
             String suggestedRole,

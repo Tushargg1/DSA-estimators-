@@ -3044,6 +3044,84 @@ html {
   font-weight: 600;
 }
 
+/* Extraction-support verdict for a pasted career URL */
+.support-check {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.support-check.checking {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+}
+.support-check p { margin: 0; color: var(--text-muted); line-height: 1.5; }
+.support-check-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.support-check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.support-check-tag {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 100px;
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--primary);
+  font-weight: 700;
+}
+.support-check-samples {
+  margin: 0.15rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+  display: grid;
+  gap: 0.15rem;
+}
+.support-check-samples li { font-size: 0.74rem; }
+
+.support-check.level-full {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.06);
+}
+.support-check.level-full .support-check-icon { background: #22c55e; color: #04120a; }
+.support-check.level-full strong { color: #22c55e; }
+
+.support-check.level-limited {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.06);
+}
+.support-check.level-limited .support-check-icon { background: #fbbf24; color: #1a1204; }
+.support-check.level-limited strong { color: #fbbf24; }
+
+.support-check.level-none,
+.support-check.level-error {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.06);
+}
+.support-check.level-none .support-check-icon,
+.support-check.level-error .support-check-icon { background: #f87171; color: #180505; }
+.support-check.level-none strong,
+.support-check.level-error strong { color: #f87171; }
+
 /* Structured portal metadata on a job card */
 .job-facts {
   display: flex;
