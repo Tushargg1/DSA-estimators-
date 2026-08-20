@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Scheduled task that auto-scrapes all job sources daily at 11:00 AM IST.
+ * Scheduled task that auto-scrapes all job sources daily at 9:00 AM IST.
  * Deduplication is handled inside JobSourceService.scrapeSource().
  */
 @Component
@@ -24,10 +24,10 @@ public class JobScrapeScheduler {
     }
 
     /**
-     * Runs daily at 11:00 AM IST (05:30 UTC).
+     * Runs daily at 9:00 AM IST (03:30 UTC).
      * Scrapes all registered sources sequentially.
      */
-    @Scheduled(cron = "0 0 11 * * *", zone = "Asia/Kolkata")
+    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Kolkata")
     public void dailyScrapeAll() {
         List<JobSource> allSources = sources.findAllByOrderByCreatedAtDesc();
         if (allSources.isEmpty()) {
