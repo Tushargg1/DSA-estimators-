@@ -12,6 +12,8 @@ import DashboardStats from './components/DashboardStats.jsx'
 import { api, clearAuthToken, getAuthToken, onUnauthorized, setAuthToken } from './api/client.js'
 
 const groupStorageKey = (userId) => `dsaTracker.lastGroup.${userId}`
+const VIEW_STORAGE_KEY = 'dsaTracker.activeView'
+const ROADMAP_STORAGE_KEY = 'dsaTracker.catalogRoadmap'
 
 function readStoredGroup(userId) {
   try { return localStorage.getItem(groupStorageKey(userId)) } catch { return null }
@@ -21,15 +23,48 @@ function storeGroup(userId, groupId) {
   try { localStorage.setItem(groupStorageKey(userId), String(groupId)) } catch { /* Selection still works in memory. */ }
 }
 
+const VALID_VIEWS = new Set(['dashboard', 'jobs', 'patterns', 'integrations', 'profile'])
+const VALID_ROADMAPS = new Set(['all', 'beginner', 'experienced'])
+
+function readStoredView() {
+  try {
+    const value = localStorage.getItem(VIEW_STORAGE_KEY)
+    // 'profile' requires a profileUserId we don't persist, so don't restore into it directly.
+    return VALID_VIEWS.has(value) && value !== 'profile' ? value : null
+  } catch { return null }
+}
+
+function storeView(view) {
+  try { localStorage.setItem(VIEW_STORAGE_KEY, view) } catch { /* View still works in memory. */ }
+}
+
+function readStoredRoadmap() {
+  try {
+    const value = localStorage.getItem(ROADMAP_STORAGE_KEY)
+    return VALID_ROADMAPS.has(value) ? value : 'all'
+  } catch { return 'all' }
+}
+
+function storeRoadmap(roadmap) {
+  try { localStorage.setItem(ROADMAP_STORAGE_KEY, roadmap) } catch { /* Selection still works in memory. */ }
+}
+
+function clearStoredView() {
+  try {
+    localStorage.removeItem(VIEW_STORAGE_KEY)
+    localStorage.removeItem(ROADMAP_STORAGE_KEY)
+  } catch { /* Nothing to clear. */ }
+}
+
 function App() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
   const [groups, setGroups] = useState([])
   const [group, setGroup] = useState(null)
   const [activeView, setActiveView] = useState(() =>
-    new URLSearchParams(window.location.search).has('installation_id') ? 'integrations' : 'dashboard')
+    new URLSearchParams(window.location.search).has('installation_id') ? 'integrations' : (readStoredView() ?? 'dashboard'))
   const [profileUserId, setProfileUserId] = useState(null)
-  const [catalogRoadmap, setCatalogRoadmap] = useState('all')
+  const [catalogRoadmap, setCatalogRoadmap] = useState(() => readStoredRoadmap())
   const [error, setError] = useState(null)
   const [restoreAttempt, setRestoreAttempt] = useState(0)
   const [tokenVersion, setTokenVersion] = useState(0)
@@ -45,6 +80,7 @@ function App() {
     setCatalogRoadmap('all')
     setError(null)
     setTokenVersion((value) => value + 1)
+    clearStoredView()
   }, [])
 
   useEffect(() => onUnauthorized(clearSession), [clearSession])
@@ -112,27 +148,34 @@ function App() {
   const showDashboard = () => {
     setProfileUserId(null)
     setActiveView('dashboard')
+    storeView('dashboard')
   }
 
   const showCatalog = (roadmap) => {
     setCatalogRoadmap(roadmap)
     setProfileUserId(null)
     setActiveView('patterns')
+    storeView('patterns')
+    storeRoadmap(roadmap)
   }
 
   const showIntegrations = () => {
     setProfileUserId(null)
     setActiveView('integrations')
+    storeView('integrations')
   }
 
   const showJobs = () => {
     setProfileUserId(null)
     setActiveView('jobs')
+    storeView('jobs')
   }
 
   const openProfile = (member) => {
     setProfileUserId(member?.userId ?? member?.id ?? user.id)
     setActiveView('profile')
+    // 'profile' view is intentionally not persisted (requires a profileUserId we don't store);
+    // a refresh from the profile page will fall back to the last non-profile view.
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 

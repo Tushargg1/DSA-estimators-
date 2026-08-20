@@ -14,8 +14,23 @@ function hostName(value) {
   try { return new URL(value).hostname.replace(/^www\./, '') } catch { return 'External site' }
 }
 
+const JOB_TAB_STORAGE_KEY = 'dsaTracker.jobBoard.tab'
+const VALID_JOB_TABS = new Set(['all', 'roles', 'sources'])
+
+function readStoredJobTab() {
+  try {
+    const value = localStorage.getItem(JOB_TAB_STORAGE_KEY)
+    return VALID_JOB_TABS.has(value) ? value : 'all'
+  } catch { return 'all' }
+}
+
+function storeJobTab(tab) {
+  try { localStorage.setItem(JOB_TAB_STORAGE_KEY, tab) } catch { /* Tab still works in memory. */ }
+}
+
 function JobBoard() {
-  const [tab, setTab] = useState('all') // 'all' | 'roles' | 'sources'
+  const [tab, setTabState] = useState(() => readStoredJobTab()) // 'all' | 'roles' | 'sources'
+  const setTab = (value) => { setTabState(value); storeJobTab(value) }
 
   // --- All jobs state ---
   const [page, setPage] = useState(null)
