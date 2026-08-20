@@ -78,8 +78,10 @@ public class JobBoardController {
     // --- Profiles ---
 
     @GetMapping("/profiles")
-    public List<JobDtos.ProfileResponse> listProfiles(Authentication authentication) {
-        return profileService.listProfiles(access.userId(authentication));
+    public List<JobDtos.ProfileResponse> listProfiles(
+            @RequestParam(required = false) Integer experience,
+            Authentication authentication) {
+        return profileService.listProfiles(access.userId(authentication), experience);
     }
 
     @PostMapping("/profiles")

@@ -110,7 +110,15 @@ public class JobSourceService {
     public JobDtos.ScrapeResult scrapeSource(Long userId, Long sourceId) {
         JobSource source = sources.findById(sourceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source not found"));
+        return scrapeSourceInternal(source);
+    }
 
+    /**
+     * Internal scrape method usable by the scheduler (no userId needed for lookup).
+     * Creates listings with postedBy = source.addedBy.
+     */
+    @Transactional
+    public JobDtos.ScrapeResult scrapeSourceInternal(JobSource source) {
         String html;
         try {
             html = fetchPage(source.getUrl());
@@ -126,17 +134,15 @@ public class JobSourceService {
         int created = 0;
         for (ScrapedLink link : links) {
             // Avoid duplicates: check if same URL already exists
-            boolean exists = listings.findAllByOrderByCreatedAtDescIdDesc(
-                    org.springframework.data.domain.PageRequest.of(0, 1000))
-                    .getContent().stream()
-                    .anyMatch(l -> l.getJobUrl().equalsIgnoreCase(link.url()));
+            boolean exists = listings.existsByJobUrlIgnoreCase(link.url());
             if (!exists) {
                 JobListing listing = new JobListing();
                 listing.setTitle(link.title() != null ? link.title() : "Job opportunity");
                 listing.setCompany(source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl()));
                 listing.setJobUrl(link.url());
-                listing.setPostedBy(userId);
+                listing.setPostedBy(source.getAddedBy());
                 listing.setSourceId(source.getId());
+                listing.setExperienceRequired(extractExperience(link.title()));
                 listing.setCreatedAt(Instant.now());
                 listings.save(listing);
                 created++;
@@ -147,7 +153,7 @@ public class JobSourceService {
         source.setLastError(null);
         sources.save(source);
         log.info("Scraped source {} ({}): found {} links, created {} new listings",
-                sourceId, source.getUrl(), links.size(), created);
+                source.getId(), source.getUrl(), links.size(), created);
         return new JobDtos.ScrapeResult(created, null);
     }
 
@@ -272,4 +278,31 @@ public class JobSourceService {
     }
 
     record ScrapedLink(String url, String title) { }
+
+    /**
+     * Extract minimum years of experience from a job title/text.
+     * Returns null if no explicit experience requirement is mentioned.
+     * Looks for patterns like "1+ years", "2-4 years experience", "3 yrs", etc.
+     */
+    static Integer extractExperience(String text) {
+        if (text == null || text.isBlank()) return null;
+        String lower = text.toLowerCase();
+        // Pattern: "X+ years" or "X+ yrs" or "X years" or "minimum X years"
+        Pattern expPattern = Pattern.compile(
+                "(\\d{1,2})\\s*\\+?\\s*(?:years?|yrs?)\\s*(?:of\\s+)?(?:experience|exp)?|" +
+                "(?:minimum|min|at least)\\s*(\\d{1,2})\\s*(?:years?|yrs?)|" +
+                "(\\d{1,2})\\s*[-–]\\s*\\d{1,2}\\s*(?:years?|yrs?)",
+                Pattern.CASE_INSENSITIVE);
+        Matcher m = expPattern.matcher(lower);
+        if (m.find()) {
+            String num = m.group(1) != null ? m.group(1) : m.group(2) != null ? m.group(2) : m.group(3);
+            if (num != null) {
+                try {
+                    int val = Integer.parseInt(num);
+                    if (val >= 0 && val <= 30) return val;
+                } catch (NumberFormatException ignored) { }
+            }
+        }
+        return null;
+    }
 }

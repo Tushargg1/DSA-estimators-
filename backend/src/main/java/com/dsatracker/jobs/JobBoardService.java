@@ -151,7 +151,8 @@ public class JobBoardService {
                     listing.getId(), listing.getTitle(), listing.getCompany(),
                     listing.getJobUrl(),
                     posterNames.getOrDefault(listing.getPostedBy(), "Community member"),
-                    listing.getCreatedAt(), applied != null, applied);
+                    listing.getCreatedAt(), listing.getExperienceRequired(),
+                    applied != null, applied);
         }
     }
 }

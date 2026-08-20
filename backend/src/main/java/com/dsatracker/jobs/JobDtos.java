@@ -16,6 +16,7 @@ public final class JobDtos {
             String jobUrl,
             String postedByName,
             Instant createdAt,
+            Integer experienceRequired,
             boolean applied,
             Instant appliedAt
     ) { }
@@ -25,7 +26,22 @@ public final class JobDtos {
 
     public record ProfileResponse(
             Long id, String roleTitle, String keywords, String resumeText,
-            String resumeFileName, Instant createdAt, List<JobResponse> matchedJobs
+            String resumeFileName, Instant createdAt, List<JobResponse> matchedJobs,
+            List<CompanyGroup> companyGroups
+    ) {
+        /** Backward-compatible constructor without companyGroups. */
+        public ProfileResponse(Long id, String roleTitle, String keywords, String resumeText,
+                               String resumeFileName, Instant createdAt, List<JobResponse> matchedJobs) {
+            this(id, roleTitle, keywords, resumeText, resumeFileName, createdAt, matchedJobs, List.of());
+        }
+    }
+
+    /** Jobs grouped by company for the My Roles view. */
+    public record CompanyGroup(
+            String company,
+            Long sourceId,
+            int totalJobs,
+            List<JobResponse> jobs
     ) { }
 
     // --- Sources ---

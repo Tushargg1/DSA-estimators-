@@ -32,9 +32,14 @@ public class JobProfileService {
 
     @Transactional(readOnly = true)
     public List<JobDtos.ProfileResponse> listProfiles(Long userId) {
+        return listProfiles(userId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<JobDtos.ProfileResponse> listProfiles(Long userId, Integer maxExperience) {
         List<JobProfile> userProfiles = profiles.findByUserIdOrderByCreatedAtDesc(userId);
         List<JobListing> allJobs = listings.findAllByOrderByCreatedAtDescIdDesc(
-                org.springframework.data.domain.PageRequest.of(0, 200)).getContent();
+                org.springframework.data.domain.PageRequest.of(0, 500)).getContent();
         Map<Long, Instant> appliedMap = loadAppliedMap(userId, allJobs);
         Map<Long, String> posterNames = loadPosterNames(allJobs);
 
@@ -42,12 +47,34 @@ public class JobProfileService {
             Set<String> keys = parseKeywords(profile.getKeywords());
             List<JobDtos.JobResponse> matched = allJobs.stream()
                     .filter(job -> matchesKeywords(job, keys))
+                    .filter(job -> filterByExperience(job, maxExperience))
                     .map(job -> toResponse(job, appliedMap, posterNames))
                     .toList();
+
+            // Group matched jobs by company
+            Map<String, List<JobDtos.JobResponse>> byCompany = matched.stream()
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            JobDtos.JobResponse::company,
+                            LinkedHashMap::new,
+                            java.util.stream.Collectors.toList()));
+
+            List<JobDtos.CompanyGroup> companyGroups = byCompany.entrySet().stream()
+                    .map(entry -> {
+                        List<JobDtos.JobResponse> jobs = entry.getValue();
+                        // Find the sourceId from the first listing that matches this company
+                        Long sourceId = allJobs.stream()
+                                .filter(j -> j.getCompany().equals(entry.getKey()) && j.getSourceId() != null)
+                                .map(JobListing::getSourceId)
+                                .findFirst().orElse(null);
+                        return new JobDtos.CompanyGroup(entry.getKey(), sourceId, jobs.size(), jobs);
+                    })
+                    .sorted((a, b) -> Integer.compare(b.totalJobs(), a.totalJobs()))
+                    .toList();
+
             return new JobDtos.ProfileResponse(
                     profile.getId(), profile.getRoleTitle(), profile.getKeywords(),
                     profile.getResumeText(), profile.getResumeFileName(),
-                    profile.getCreatedAt(), matched);
+                    profile.getCreatedAt(), matched, companyGroups);
         }).toList();
     }
 
@@ -130,7 +157,7 @@ public class JobProfileService {
         Instant applied = appliedMap.get(job.getId());
         return new JobDtos.JobResponse(job.getId(), job.getTitle(), job.getCompany(), job.getJobUrl(),
                 posterNames.getOrDefault(job.getPostedBy(), "Community member"),
-                job.getCreatedAt(), applied != null, applied);
+                job.getCreatedAt(), job.getExperienceRequired(), applied != null, applied);
     }
 
     static Set<String> parseKeywords(String csv) {
@@ -146,6 +173,19 @@ public class JobProfileService {
         if (keywords.isEmpty()) return false;
         String haystack = (job.getTitle() + " " + job.getCompany()).toLowerCase();
         return keywords.stream().anyMatch(haystack::contains);
+    }
+
+    /**
+     * Filter by experience level.
+     * If maxExperience is null, no filtering is applied.
+     * If a job has no explicit experience_required (null), it's visible to everyone.
+     * If a job has experience_required set, only show it if user's experience >= that value.
+     */
+    private boolean filterByExperience(JobListing job, Integer maxExperience) {
+        if (maxExperience == null) return true; // No filter applied
+        Integer required = job.getExperienceRequired();
+        if (required == null) return true; // No requirement = show to all
+        return maxExperience >= required;
     }
 
     /** Extracts tech-related keywords from resume text. */

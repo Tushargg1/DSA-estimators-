@@ -42,6 +42,9 @@ function JobBoard() {
   const [resumeUploading, setResumeUploading] = useState(false)
   const [resumeDragOver, setResumeDragOver] = useState(false)
   const [resumeParseResult, setResumeParseResult] = useState(null)
+  const [experienceFilter, setExperienceFilter] = useState('')
+  const [expandedCompany, setExpandedCompany] = useState(null)
+  const [companyScraping, setCompanyScraping] = useState(null)
 
   // --- Sources state ---
   const [sources, setSources] = useState([])
@@ -75,7 +78,9 @@ function JobBoard() {
     setProfileLoading(true)
     setProfileError(null)
     try {
-      const result = await api.getJobProfiles()
+      const params = {}
+      if (experienceFilter !== '') params.experience = parseInt(experienceFilter, 10)
+      const result = await api.getJobProfiles(params)
       setProfiles(result)
       if (result.length && !activeProfile) setActiveProfile(result[0].id)
     } catch (e) {
@@ -83,9 +88,9 @@ function JobBoard() {
     } finally {
       setProfileLoading(false)
     }
-  }, [activeProfile])
+  }, [activeProfile, experienceFilter])
 
-  useEffect(() => { if (tab === 'roles') void loadProfiles() }, [tab])
+  useEffect(() => { if (tab === 'roles') void loadProfiles() }, [tab, experienceFilter])
 
   // --- Load sources ---
   const loadSources = useCallback(async () => {
@@ -205,6 +210,18 @@ function JobBoard() {
     const file = e.target?.files?.[0]
     if (file) void handleResumeUpload(file)
     e.target.value = '' // Reset so the same file can be re-selected
+  }
+
+  const scrapeCompanySource = async (sourceId) => {
+    if (!sourceId) return
+    setCompanyScraping(sourceId); setProfileError(null); setProfileSuccess(null)
+    try {
+      const result = await api.scrapeJobSource(sourceId)
+      if (result.error) setProfileError(result.error)
+      else setProfileSuccess(`Found ${result.newListings} new job listing${result.newListings !== 1 ? 's' : ''}.`)
+      void loadProfiles()
+    } catch (e) { setProfileError(e.message || 'Scrape failed.') }
+    finally { setCompanyScraping(null) }
   }
 
   const deleteProfile = async (id) => {
@@ -417,12 +434,43 @@ function JobBoard() {
         <div className="jobs-feed">
           {profileError && <div className="form-error" role="alert"><span>!</span>{profileError}</div>}
           {profileSuccess && <p className="job-success" role="status">{profileSuccess}</p>}
+
+          {/* Filters */}
+          {profiles.length > 0 && (
+            <div className="jobs-toolbar roles-toolbar">
+              <div className="roles-filter-group">
+                <label className="roles-filter-label">
+                  <span>Experience (years)</span>
+                  <select value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)}>
+                    <option value="">All levels</option>
+                    <option value="0">Fresher (0 yrs)</option>
+                    <option value="1">1+ year</option>
+                    <option value="2">2+ years</option>
+                    <option value="3">3+ years</option>
+                    <option value="5">5+ years</option>
+                    <option value="7">7+ years</option>
+                    <option value="10">10+ years</option>
+                  </select>
+                </label>
+              </div>
+              <div className="roles-filter-group">
+                <label className="roles-filter-label">
+                  <span>Profile</span>
+                  <select value={activeProfile || ''} onChange={(e) => setActiveProfile(Number(e.target.value) || null)}>
+                    {profiles.map((p) => <option key={p.id} value={p.id}>{p.roleTitle}</option>)}
+                  </select>
+                </label>
+              </div>
+            </div>
+          )}
+
           {profileLoading ? <div className="jobs-loading"><span className="button-spinner" />Loading profiles…</div>
             : profiles.length === 0 ? <div className="empty-state jobs-empty">
               <span className="empty-state-icon" aria-hidden="true">👤</span>
               <h3>No role profiles yet</h3>
               <p>Create a profile on the left to see auto-matched jobs from the community board.</p>
             </div> : <>
+              {/* Profile tabs */}
               <div className="profile-tabs" role="tablist" aria-label="Your role profiles">
                 {profiles.map((p) => <button key={p.id} role="tab" type="button"
                   className="button-secondary" aria-selected={activeProfile === p.id}
@@ -431,6 +479,7 @@ function JobBoard() {
                   <span className="profile-match-count">{p.matchedJobs?.length || 0}</span>
                 </button>)}
               </div>
+
               {currentProfile && <div className="profile-detail" role="tabpanel">
                 <div className="profile-detail-header">
                   <div>
@@ -439,9 +488,40 @@ function JobBoard() {
                   </div>
                   <button type="button" className="button-quiet profile-delete" onClick={() => deleteProfile(currentProfile.id)}>Delete</button>
                 </div>
-                {currentProfile.matchedJobs?.length === 0
-                  ? <div className="empty-state jobs-empty"><span className="empty-state-icon" aria-hidden="true">⌕</span><h3>No matching jobs yet</h3><p>Jobs with titles containing your keywords will appear here automatically.</p></div>
-                  : <ol className="job-list">{currentProfile.matchedJobs.map((job) => <JobCard key={job.id} job={job} updatingId={updatingId} onToggle={toggleApplied} />)}</ol>}
+
+                {/* Company-grouped jobs */}
+                {(!currentProfile.companyGroups || currentProfile.companyGroups.length === 0)
+                  ? <div className="empty-state jobs-empty"><span className="empty-state-icon" aria-hidden="true">⌕</span><h3>No matching jobs yet</h3><p>Jobs with titles containing your keywords will appear here automatically. Daily scraping runs at 11 AM.</p></div>
+                  : <div className="company-groups">
+                    {currentProfile.companyGroups.map((group) => (
+                      <div key={group.company} className={`company-group-card${expandedCompany === group.company ? ' expanded' : ''}`}>
+                        <div className="company-group-header" onClick={() => setExpandedCompany(expandedCompany === group.company ? null : group.company)}>
+                          <div className="company-group-info">
+                            <div className="company-group-mark" aria-hidden="true">{group.company.trim().charAt(0).toUpperCase()}</div>
+                            <div>
+                              <h4>{group.company}</h4>
+                              <small>{group.totalJobs} job{group.totalJobs !== 1 ? 's' : ''} matching your profile</small>
+                            </div>
+                          </div>
+                          <div className="company-group-actions">
+                            {group.sourceId && (
+                              <button type="button" className="button-secondary company-scrape-btn"
+                                disabled={companyScraping === group.sourceId}
+                                onClick={(e) => { e.stopPropagation(); scrapeCompanySource(group.sourceId) }}>
+                                {companyScraping === group.sourceId ? <><span className="button-spinner" />Scraping…</> : 'Scrape now'}
+                              </button>
+                            )}
+                            <span className="company-expand-icon" aria-hidden="true">{expandedCompany === group.company ? '▾' : '▸'}</span>
+                          </div>
+                        </div>
+                        {expandedCompany === group.company && (
+                          <ol className="job-list company-job-list">
+                            {group.jobs.map((job) => <JobCard key={job.id} job={job} updatingId={updatingId} onToggle={toggleApplied} />)}
+                          </ol>
+                        )}
+                      </div>
+                    ))}
+                  </div>}
               </div>}
             </>}
         </div>
@@ -508,7 +588,14 @@ function JobCard({ job, updatingId, onToggle }) {
         <div className="job-card-main">
           <div className="job-card-heading">
             <div><span>{job.company}</span><h3>{job.title}</h3></div>
-            {job.applied && <span className="job-applied-badge">Applied</span>}
+            <div className="job-badges">
+              {job.experienceRequired != null && (
+                <span className="job-exp-badge" title={`Requires ${job.experienceRequired}+ years experience`}>
+                  {job.experienceRequired}+ yrs
+                </span>
+              )}
+              {job.applied && <span className="job-applied-badge">Applied</span>}
+            </div>
           </div>
           <div className="job-meta">
             <span>Shared by {job.postedByName}</span>
@@ -517,10 +604,12 @@ function JobCard({ job, updatingId, onToggle }) {
           </div>
         </div>
         <div className="job-actions">
-          <a href={job.jobUrl} target="_blank" rel="noopener noreferrer">Apply now ↗</a>
-          <button type="button" className={job.applied ? 'button-secondary' : ''}
+          <a href={job.jobUrl} target="_blank" rel="noopener noreferrer" className="job-apply-btn">
+            {job.applied ? '↗ View listing' : '↗ Apply now'}
+          </a>
+          <button type="button" className={`job-applied-toggle${job.applied ? ' is-applied' : ''}`}
             disabled={updatingId === job.id} onClick={() => onToggle(job)}>
-            {updatingId === job.id ? 'Saving…' : job.applied ? 'Undo applied' : 'Mark applied'}
+            {updatingId === job.id ? 'Saving…' : job.applied ? '✓ Already applied' : 'Mark applied'}
           </button>
         </div>
       </article>

@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface JobListingRepository extends JpaRepository<JobListing, Long> {
     Page<JobListing> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
+    boolean existsByJobUrlIgnoreCase(String jobUrl);
 }

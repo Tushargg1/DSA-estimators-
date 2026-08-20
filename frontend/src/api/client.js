@@ -217,8 +217,8 @@ export const api = {
       return response.data
     }),
 
-  getJobProfiles: () => cachedFetch(CACHE_KEYS.JOB_PROFILES,
-    () => http.get('/jobs/profiles').then((r) => r.data),
+  getJobProfiles: (params) => cachedFetch(CACHE_KEYS.JOB_PROFILES,
+    () => http.get('/jobs/profiles', { params }).then((r) => r.data),
     { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
   ).then((result) => result.data),
   createJobProfile: (payload) => http.post('/jobs/profiles', payload).then((response) => {

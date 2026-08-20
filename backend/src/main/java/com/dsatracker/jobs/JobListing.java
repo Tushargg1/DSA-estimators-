@@ -31,6 +31,9 @@ public class JobListing {
     @Column(name = "source_id")
     private Long sourceId;
 
+    @Column(name = "experience_required")
+    private Integer experienceRequired;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -46,6 +49,8 @@ public class JobListing {
     public void setPostedBy(Long postedBy) { this.postedBy = postedBy; }
     public Long getSourceId() { return sourceId; }
     public void setSourceId(Long sourceId) { this.sourceId = sourceId; }
+    public Integer getExperienceRequired() { return experienceRequired; }
+    public void setExperienceRequired(Integer experienceRequired) { this.experienceRequired = experienceRequired; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
