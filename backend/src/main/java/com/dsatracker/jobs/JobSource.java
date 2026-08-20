@@ -43,6 +43,10 @@ public class JobSource {
     @Column(length = 40)
     private String adapter;
 
+    /** Outcome of the latest extraction attempt: FULL, LIMITED, NONE or ERROR. */
+    @Column(name = "extraction_status", length = 20)
+    private String extractionStatus;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -64,6 +68,8 @@ public class JobSource {
     public void setSweepCompletedAt(Instant sweepCompletedAt) { this.sweepCompletedAt = sweepCompletedAt; }
     public String getAdapter() { return adapter; }
     public void setAdapter(String adapter) { this.adapter = adapter; }
+    public String getExtractionStatus() { return extractionStatus; }
+    public void setExtractionStatus(String extractionStatus) { this.extractionStatus = extractionStatus; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

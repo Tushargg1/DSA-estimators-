@@ -69,12 +69,24 @@ class JobIngestWriter {
         return batch.size();
     }
 
-    /** Record sweep progress and the outcome of the latest attempt. */
+    /** Extraction outcomes, surfaced to the UI so unsupported sites are visible. */
+    static final String STATUS_FULL = "FULL";
+    static final String STATUS_LIMITED = "LIMITED";
+    static final String STATUS_NONE = "NONE";
+    static final String STATUS_ERROR = "ERROR";
+
+    /**
+     * Record sweep progress and the outcome of the latest attempt.
+     *
+     * @param status one of the STATUS_* values, or null to leave the existing status alone
+     *               (mid-sweep checkpoints shouldn't overwrite a verdict)
+     */
     @Transactional
     public void markProgress(Long sourceId, String adapter, int cursor,
-                             boolean sweepComplete, String error) {
+                             boolean sweepComplete, String error, String status) {
         sources.findById(sourceId).ifPresent(source -> {
             if (adapter != null) source.setAdapter(adapter);
+            if (status != null) source.setExtractionStatus(status);
             source.setSyncCursor(Math.max(0, cursor));
             source.setLastScrapedAt(Instant.now());
             source.setLastError(error);
@@ -84,6 +96,17 @@ class JobIngestWriter {
             }
             sources.save(source);
         });
+    }
+
+    /** Persist a brand-new source in its own short transaction, before any HTTP happens. */
+    @Transactional
+    public JobSource createSource(Long userId, String url, String label) {
+        JobSource source = new JobSource();
+        source.setAddedBy(userId);
+        source.setUrl(url);
+        source.setLabel(label);
+        source.setCreatedAt(Instant.now());
+        return sources.save(source);
     }
 
     private JobListing toListing(ScrapedJob job, Long sourceId, Long postedBy, String company) {

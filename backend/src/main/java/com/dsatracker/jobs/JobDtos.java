@@ -63,17 +63,16 @@ public final class JobDtos {
     // --- Sources ---
     public record CreateSourceRequest(String url, String label) { }
 
+    /**
+     * @param extractionStatus FULL, LIMITED, NONE or ERROR — lets the UI flag portals that
+     *                         need a dedicated extractor instead of showing an empty source
+     */
     public record SourceResponse(
             Long id, String url, String label, Instant lastScrapedAt,
             String lastError, Instant createdAt, String addedByName,
-            String adapter, int syncCursor, Instant sweepCompletedAt
-    ) {
-        /** Backward-compatible constructor for callers that don't track sync state. */
-        public SourceResponse(Long id, String url, String label, Instant lastScrapedAt,
-                              String lastError, Instant createdAt, String addedByName) {
-            this(id, url, label, lastScrapedAt, lastError, createdAt, addedByName, null, 0, null);
-        }
-    }
+            String adapter, int syncCursor, Instant sweepCompletedAt,
+            String extractionStatus
+    ) { }
 
     public record ScrapeResult(int newListings, String error) { }
 

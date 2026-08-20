@@ -14,6 +14,15 @@ function hostName(value) {
   try { return new URL(value).hostname.replace(/^www\./, '') } catch { return 'External site' }
 }
 
+// How a source's last extraction attempt is presented. NONE/ERROR read as red so
+// portals needing a dedicated extractor stay visible instead of looking merely empty.
+const EXTRACTION_STATUS = {
+  FULL: { label: 'Extracting', tone: 'ok', hint: 'Jobs are being pulled from this portal\u2019s API.' },
+  LIMITED: { label: 'Partial', tone: 'warn', hint: 'Only basic job links could be read; details may be missing.' },
+  NONE: { label: 'Cannot extract', tone: 'bad', hint: 'This site loads jobs with JavaScript. It needs a dedicated extractor.' },
+  ERROR: { label: 'Failed', tone: 'bad', hint: 'The site could not be fetched on the last attempt.' },
+}
+
 const JOB_TAB_STORAGE_KEY = 'dsaTracker.jobBoard.tab'
 const VALID_JOB_TABS = new Set(['all', 'roles', 'sources'])
 
@@ -296,7 +305,16 @@ function JobBoard() {
       setSourceForm(emptySourceForm)
       setSupportCheck(null)
       setSources((c) => [added, ...c])
-      setSourceSuccess('Source added. Click "Scrape now" to fetch jobs, or wait for the 9 AM daily sync.')
+      // The backend attempts extraction immediately, so report what it found.
+      const outcome = EXTRACTION_STATUS[added.extractionStatus]
+      if (outcome?.tone === 'bad') {
+        setSourceError(`Added, but nothing could be extracted. ${outcome.hint}`)
+      } else {
+        setSourceSuccess(outcome?.tone === 'warn'
+          ? 'Added. Only basic job links could be read from this site.'
+          : 'Added and jobs extracted. This source now refreshes daily at 9 AM.')
+      }
+      void loadJobs(0)
     } catch (e) {
       if (e.fieldErrors) setSourceFieldErrors(e.fieldErrors)
       else setSourceError(e.message || 'Could not add source.')
@@ -680,15 +698,24 @@ function JobBoard() {
               <h3>No career sites added</h3>
               <p>Add a careers page URL and scrape it to discover job listings for the community.</p>
             </div> : <div className="company-groups">
-              {sources.map((source) => (
-                <div key={source.id} className={`company-group-card${expandedSource === source.id ? ' expanded' : ''}`}>
+              {sources.map((source) => {
+                const status = EXTRACTION_STATUS[source.extractionStatus]
+                return (
+                <div key={source.id} className={`company-group-card${expandedSource === source.id ? ' expanded' : ''}${status ? ` status-${status.tone}` : ''}`}>
                   <div className="company-group-header" onClick={() => toggleSourceExpand(source.id)}>
                     <div className="company-group-info">
                       <div className="company-group-mark" aria-hidden="true">
                         {(source.label || hostName(source.url)).charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h4>{source.label || hostName(source.url)}</h4>
+                        <h4>
+                          {source.label || hostName(source.url)}
+                          {status && (
+                            <span className={`extraction-badge tone-${status.tone}`} title={status.hint}>
+                              {status.label}
+                            </span>
+                          )}
+                        </h4>
                         <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-url-link" onClick={(e) => e.stopPropagation()}>{source.url}</a>
                         <div className="source-meta">
                           <span>Added by {source.addedByName}</span>
@@ -721,8 +748,10 @@ function JobBoard() {
                       ) : (!sourceJobs[source.id] || sourceJobs[source.id].length === 0) ? (
                         <div className="empty-state jobs-empty source-empty">
                           <span className="empty-state-icon" aria-hidden="true">⌕</span>
-                          <h3>No jobs scraped yet</h3>
-                          <p>Click "Scrape now" to discover job listings from this site.</p>
+                          <h3>{status?.tone === 'bad' ? 'Nothing could be extracted' : 'No jobs yet'}</h3>
+                          <p>{status?.tone === 'bad'
+                            ? status.hint + ' Until then, this source will stay empty.'
+                            : 'Click "Scrape now" to fetch listings from this site.'}</p>
                         </div>
                       ) : (
                         <ol className="job-list company-job-list">
@@ -734,7 +763,8 @@ function JobBoard() {
                     </div>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>}
         </div>
       </div>}

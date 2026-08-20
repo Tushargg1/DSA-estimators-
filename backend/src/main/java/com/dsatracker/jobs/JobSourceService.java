@@ -91,15 +91,22 @@ public class JobSourceService {
         Collection<Long> userIds = allSources.stream().map(JobSource::getAddedBy).collect(Collectors.toSet());
         Map<Long, String> names = users.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, User::getName));
-        return allSources.stream().map(source -> new JobDtos.SourceResponse(
-                source.getId(), source.getUrl(), source.getLabel(),
-                source.getLastScrapedAt(), source.getLastError(),
-                source.getCreatedAt(), names.getOrDefault(source.getAddedBy(), "Member"),
-                source.getAdapter(), source.getSyncCursor(), source.getSweepCompletedAt()
-        )).toList();
+        return allSources.stream()
+                .map(source -> toResponse(source, names.getOrDefault(source.getAddedBy(), "Member")))
+                .toList();
     }
 
-    @Transactional
+    /**
+     * Register a career page and immediately try to extract from it.
+     *
+     * <p>Scraping right away means the user finds out straight away whether the site
+     * works, instead of adding a source that quietly returns nothing. The outcome is
+     * stored as an extraction status so unsupported portals stay visibly flagged until
+     * an adapter exists for them.
+     *
+     * <p>Not {@code @Transactional}: the fetch is an external HTTP call and must not run
+     * inside a transaction. The row is saved first in its own transaction, then scraped.
+     */
     public JobDtos.SourceResponse addSource(Long userId, JobDtos.CreateSourceRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
         String url = validateUrl(request == null ? null : request.url(), errors);
@@ -119,16 +126,33 @@ public class JobSourceService {
             throw new ValidationException(errors);
         }
 
-        JobSource source = new JobSource();
-        source.setAddedBy(userId);
-        source.setUrl(url);
-        source.setLabel(label);
-        source.setCreatedAt(Instant.now());
-        sources.save(source);
+        JobSource source = writer.createSource(userId, url, label);
 
+        // First extraction attempt. A failure here is recorded on the source rather than
+        // thrown, so the source still exists and can be retried or given an adapter later.
+        try {
+            ingest(source, INTERACTIVE_CHUNKS);
+        } catch (Exception ex) {
+            log.warn("Initial extraction failed for new source {} ({}): {}",
+                    source.getId(), url, ex.getMessage());
+            writer.markProgress(source.getId(), null, 0, false,
+                    "Initial extraction failed: " + truncate(ex.getMessage(), 300),
+                    JobIngestWriter.STATUS_ERROR);
+        }
+
+        // Re-read so the response carries the status the extraction just produced.
+        JobSource saved = sources.findById(source.getId()).orElse(source);
         String userName = users.findById(userId).map(User::getName).orElse("Member");
-        return new JobDtos.SourceResponse(source.getId(), source.getUrl(), source.getLabel(),
-                null, null, source.getCreatedAt(), userName);
+        return toResponse(saved, userName);
+    }
+
+    private JobDtos.SourceResponse toResponse(JobSource source, String addedByName) {
+        return new JobDtos.SourceResponse(
+                source.getId(), source.getUrl(), source.getLabel(),
+                source.getLastScrapedAt(), source.getLastError(),
+                source.getCreatedAt(), addedByName,
+                source.getAdapter(), source.getSyncCursor(), source.getSweepCompletedAt(),
+                source.getExtractionStatus());
     }
 
     /**
@@ -263,7 +287,8 @@ public class JobSourceService {
             } catch (Exception ex) {
                 // Leave the cursor where it is so the next run retries this window.
                 String errorMsg = "Sync failed at offset " + cursor + ": " + truncate(ex.getMessage(), 300);
-                writer.markProgress(sourceId, adapter.name(), cursor, false, errorMsg);
+                writer.markProgress(sourceId, adapter.name(), cursor, false, errorMsg,
+                        JobIngestWriter.STATUS_ERROR);
                 log.warn("Adapter {} failed for source {} at offset {}: {}",
                         adapter.name(), sourceId, cursor, ex.getMessage());
                 return new JobDtos.ScrapeResult(created, errorMsg);
@@ -276,11 +301,12 @@ public class JobSourceService {
                 exhausted = true;
                 break;
             }
-            // Checkpoint between chunks so an interrupted run resumes where it stopped.
-            writer.markProgress(sourceId, adapter.name(), cursor, false, null);
+            // Checkpoint between chunks; status is left as-is until the run finishes.
+            writer.markProgress(sourceId, adapter.name(), cursor, false, null, null);
         }
 
-        writer.markProgress(sourceId, adapter.name(), cursor, exhausted, null);
+        writer.markProgress(sourceId, adapter.name(), cursor, exhausted, null,
+                JobIngestWriter.STATUS_FULL);
         log.info("Adapter {} synced source {}: {} new listings, cursor now {}{}",
                 adapter.name(), sourceId, created, exhausted ? 0 : cursor,
                 exhausted ? " (full sweep complete)" : "");
@@ -294,7 +320,8 @@ public class JobSourceService {
             html = fetchPage(source.getUrl());
         } catch (Exception ex) {
             String errorMsg = "Fetch failed: " + truncate(ex.getMessage(), 400);
-            writer.markProgress(source.getId(), null, source.getSyncCursor(), false, errorMsg);
+            writer.markProgress(source.getId(), null, source.getSyncCursor(), false, errorMsg,
+                    JobIngestWriter.STATUS_ERROR);
             return new JobDtos.ScrapeResult(0, errorMsg);
         }
 
@@ -304,11 +331,19 @@ public class JobSourceService {
                 .toList();
 
         int created = writer.persistChunk(source.getId(), source.getAddedBy(), company, jobs);
-        writer.markProgress(source.getId(), null, 0, true, null);
 
-        log.info("Scraped source {} ({}): found {} links, created {} new listings",
-                source.getId(), source.getUrl(), jobs.size(), created);
-        return new JobDtos.ScrapeResult(created, null);
+        // Nothing in the HTML means this portal renders jobs client-side and needs its
+        // own adapter; flag it rather than leaving an empty source that looks broken.
+        String status = jobs.isEmpty() ? JobIngestWriter.STATUS_NONE : JobIngestWriter.STATUS_LIMITED;
+        String note = jobs.isEmpty()
+                ? "No job links found in this page's HTML — it likely loads jobs with JavaScript "
+                        + "and needs a dedicated extractor."
+                : null;
+        writer.markProgress(source.getId(), null, 0, true, note, status);
+
+        log.info("Scraped source {} ({}): found {} links, created {} new listings, status {}",
+                source.getId(), source.getUrl(), jobs.size(), created, status);
+        return new JobDtos.ScrapeResult(created, note);
     }
 
     /**
