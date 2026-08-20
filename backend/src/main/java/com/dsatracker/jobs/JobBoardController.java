@@ -140,6 +140,12 @@ public class JobBoardController {
         return sourceService.scrapeSource(access.userId(authentication), id);
     }
 
+    @GetMapping("/sources/{id}/listings")
+    public List<JobDtos.JobResponse> sourceListings(@PathVariable Long id,
+                                                    Authentication authentication) {
+        return sourceService.listingsForSource(access.userId(authentication), id);
+    }
+
     @DeleteMapping("/sources/{id}")
     public ResponseEntity<Void> deleteSource(@PathVariable Long id,
                                              Authentication authentication) {

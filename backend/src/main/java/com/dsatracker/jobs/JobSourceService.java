@@ -52,13 +52,16 @@ public class JobSourceService {
 
     private final JobSourceRepository sources;
     private final JobListingRepository listings;
+    private final JobApplicationRepository applications;
     private final UserRepository users;
 
     public JobSourceService(JobSourceRepository sources,
                             JobListingRepository listings,
+                            JobApplicationRepository applications,
                             UserRepository users) {
         this.sources = sources;
         this.listings = listings;
+        this.applications = applications;
         this.users = users;
     }
 
@@ -164,6 +167,34 @@ public class JobSourceService {
                 sources.delete(source);
             }
         });
+    }
+
+    /**
+     * Return all job listings scraped from a given source, with applied status for the user.
+     */
+    @Transactional(readOnly = true)
+    public List<JobDtos.JobResponse> listingsForSource(Long userId, Long sourceId) {
+        List<JobListing> jobs = listings.findBySourceIdOrderByCreatedAtDesc(sourceId);
+        if (jobs.isEmpty()) return List.of();
+
+        // Load applied status
+        List<Long> ids = jobs.stream().map(JobListing::getId).toList();
+        Map<Long, java.time.Instant> appliedMap = new java.util.HashMap<>();
+        for (var app : applications.findForUserAndListings(userId, ids)) {
+            appliedMap.put(app.getId().getListingId(), app.getAppliedAt());
+        }
+
+        // Load poster names
+        Set<Long> posterIds = jobs.stream().map(JobListing::getPostedBy).collect(Collectors.toSet());
+        Map<Long, String> posterNames = users.findAllById(posterIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getName));
+
+        return jobs.stream().map(job -> {
+            java.time.Instant applied = appliedMap.get(job.getId());
+            return new JobDtos.JobResponse(job.getId(), job.getTitle(), job.getCompany(), job.getJobUrl(),
+                    posterNames.getOrDefault(job.getPostedBy(), "Community member"),
+                    job.getCreatedAt(), job.getExperienceRequired(), applied != null, applied);
+        }).toList();
     }
 
     // --- Internal helpers ---

@@ -217,10 +217,8 @@ export const api = {
       return response.data
     }),
 
-  getJobProfiles: (params) => cachedFetch(CACHE_KEYS.JOB_PROFILES,
-    () => http.get('/jobs/profiles', { params }).then((r) => r.data),
-    { maxAge: TTL.MEDIUM, staleAge: TTL.STALE_MAX }
-  ).then((result) => result.data),
+  getJobProfiles: (params) =>
+    http.get('/jobs/profiles', { params }).then((r) => r.data),
   createJobProfile: (payload) => http.post('/jobs/profiles', payload).then((response) => {
     invalidateCache(CACHE_KEYS.JOB_PROFILES)
     return response.data
@@ -249,6 +247,8 @@ export const api = {
     invalidateCache(CACHE_KEYS.JOB_SOURCES, CACHE_KEYS.JOB_PROFILES)
     return response.data
   }),
+  getSourceListings: (id) =>
+    http.get(`/jobs/sources/${id}/listings`).then((response) => response.data),
   deleteJobSource: (id) => http.delete(`/jobs/sources/${id}`).then(() => {
     invalidateCache(CACHE_KEYS.JOB_SOURCES)
   }),

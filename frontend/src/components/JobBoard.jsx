@@ -55,6 +55,9 @@ function JobBoard() {
   const [scrapingId, setScrapingId] = useState(null)
   const [sourceError, setSourceError] = useState(null)
   const [sourceSuccess, setSourceSuccess] = useState(null)
+  const [expandedSource, setExpandedSource] = useState(null)
+  const [sourceJobs, setSourceJobs] = useState({})
+  const [sourceJobsLoading, setSourceJobsLoading] = useState(null)
 
   // --- Load jobs ---
   const loadJobs = useCallback(async (requestedPage = pageNumber) => {
@@ -261,8 +264,29 @@ function JobBoard() {
       else setSourceSuccess(`Found ${result.newListings} new job listing${result.newListings !== 1 ? 's' : ''}.`)
       void loadSources()
       void loadJobs(0)
+      // Refresh the expanded source's listings if it was scraped
+      if (expandedSource === id) void loadSourceJobs(id)
     } catch (e) { setSourceError(e.message || 'Scrape failed.') }
     finally { setScrapingId(null) }
+  }
+
+  const loadSourceJobs = async (sourceId) => {
+    setSourceJobsLoading(sourceId)
+    try {
+      const jobs = await api.getSourceListings(sourceId)
+      setSourceJobs((prev) => ({ ...prev, [sourceId]: jobs }))
+    } catch (e) {
+      setSourceError(e.message || 'Could not load jobs for this source.')
+    } finally { setSourceJobsLoading(null) }
+  }
+
+  const toggleSourceExpand = (sourceId) => {
+    if (expandedSource === sourceId) {
+      setExpandedSource(null)
+    } else {
+      setExpandedSource(sourceId)
+      if (!sourceJobs[sourceId]) void loadSourceJobs(sourceId)
+    }
   }
 
   const deleteSource = async (id) => {
@@ -555,25 +579,56 @@ function JobBoard() {
               <span className="empty-state-icon" aria-hidden="true">🔗</span>
               <h3>No career sites added</h3>
               <p>Add a careers page URL and scrape it to discover job listings for the community.</p>
-            </div> : <ul className="source-list">
-              {sources.map((source) => <li key={source.id} className="source-card">
-                <div className="source-card-main">
-                  <h4>{source.label || hostName(source.url)}</h4>
-                  <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-url">{source.url}</a>
-                  <div className="source-meta">
-                    <span>Added by {source.addedByName}</span>
-                    {source.lastScrapedAt && <span>Last scraped: {formatPostedAt(source.lastScrapedAt)}</span>}
-                    {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}
+            </div> : <div className="company-groups">
+              {sources.map((source) => (
+                <div key={source.id} className={`company-group-card${expandedSource === source.id ? ' expanded' : ''}`}>
+                  <div className="company-group-header" onClick={() => toggleSourceExpand(source.id)}>
+                    <div className="company-group-info">
+                      <div className="company-group-mark" aria-hidden="true">
+                        {(source.label || hostName(source.url)).charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4>{source.label || hostName(source.url)}</h4>
+                        <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-url-link" onClick={(e) => e.stopPropagation()}>{source.url}</a>
+                        <div className="source-meta">
+                          <span>Added by {source.addedByName}</span>
+                          {source.lastScrapedAt && <span>Last scraped: {formatPostedAt(source.lastScrapedAt)}</span>}
+                          {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="company-group-actions">
+                      <button type="button" className="button-secondary company-scrape-btn"
+                        disabled={scrapingId === source.id}
+                        onClick={(e) => { e.stopPropagation(); scrapeSource(source.id) }}>
+                        {scrapingId === source.id ? <><span className="button-spinner" />Scraping…</> : 'Scrape now'}
+                      </button>
+                      <button type="button" className="button-quiet" onClick={(e) => { e.stopPropagation(); deleteSource(source.id) }}>Remove</button>
+                      <span className="company-expand-icon" aria-hidden="true">{expandedSource === source.id ? '▾' : '▸'}</span>
+                    </div>
                   </div>
+                  {expandedSource === source.id && (
+                    <div className="source-jobs-panel">
+                      {sourceJobsLoading === source.id ? (
+                        <div className="jobs-loading"><span className="button-spinner" />Loading jobs…</div>
+                      ) : (!sourceJobs[source.id] || sourceJobs[source.id].length === 0) ? (
+                        <div className="empty-state jobs-empty source-empty">
+                          <span className="empty-state-icon" aria-hidden="true">⌕</span>
+                          <h3>No jobs scraped yet</h3>
+                          <p>Click "Scrape now" to discover job listings from this site.</p>
+                        </div>
+                      ) : (
+                        <ol className="job-list company-job-list">
+                          {sourceJobs[source.id].map((job) => (
+                            <JobCard key={job.id} job={job} updatingId={updatingId} onToggle={toggleApplied} />
+                          ))}
+                        </ol>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="source-actions">
-                  <button type="button" disabled={scrapingId === source.id} onClick={() => scrapeSource(source.id)}>
-                    {scrapingId === source.id ? <><span className="button-spinner" />Scraping…</> : 'Scrape now'}
-                  </button>
-                  <button type="button" className="button-quiet" onClick={() => deleteSource(source.id)}>Remove</button>
-                </div>
-              </li>)}
-            </ul>}
+              ))}
+            </div>}
         </div>
       </div>}
     </section>
