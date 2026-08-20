@@ -57,23 +57,31 @@ public class JobSourceService {
      */
     private static final int CHUNK_SIZE = 100;
     private static final int MAX_CHUNKS_PER_RUN = 6;
+    /**
+     * A user clicking "Scrape now" waits on the response, so interactive runs fetch a
+     * single chunk and return. Working through a large board is the scheduler's job.
+     */
+    private static final int INTERACTIVE_CHUNKS = 1;
 
     private final JobSourceRepository sources;
     private final JobListingRepository listings;
     private final JobApplicationRepository applications;
     private final UserRepository users;
     private final List<JobPortalAdapter> adapters;
+    private final JobIngestWriter writer;
 
     public JobSourceService(JobSourceRepository sources,
                             JobListingRepository listings,
                             JobApplicationRepository applications,
                             UserRepository users,
-                            List<JobPortalAdapter> adapters) {
+                            List<JobPortalAdapter> adapters,
+                            JobIngestWriter writer) {
         this.sources = sources;
         this.listings = listings;
         this.applications = applications;
         this.users = users;
         this.adapters = adapters;
+        this.writer = writer;
     }
 
     @Transactional(readOnly = true)
@@ -100,8 +108,14 @@ public class JobSourceService {
         if (label != null && label.length() > 200) label = label.substring(0, 200);
         if (!errors.isEmpty()) throw new ValidationException(errors);
 
-        if (sources.findAllByOrderByCreatedAtDesc().size() >= MAX_SOURCES) {
+        List<JobSource> existing = sources.findAllByOrderByCreatedAtDesc();
+        if (existing.size() >= MAX_SOURCES) {
             errors.put("url", "Maximum of " + MAX_SOURCES + " sources reached.");
+            throw new ValidationException(errors);
+        }
+        // Adding the same board twice produces duplicate cards and duplicate sweeps.
+        if (existing.stream().anyMatch(source -> source.getUrl().equalsIgnoreCase(url))) {
+            errors.put("url", "This career page has already been added.");
             throw new ValidationException(errors);
         }
 
@@ -118,25 +132,31 @@ public class JobSourceService {
     }
 
     /**
-     * Scrape a source URL and create listings for any new job links found.
-     * Returns the count of new listings created plus any error message.
+     * Fetch jobs for one source on behalf of a user request.
+     *
+     * <p>Deliberately not {@code @Transactional}: this method performs external HTTP calls,
+     * and holding a transaction across them would lock the source row for the whole sweep
+     * and block operations like deleting it. Persistence happens in short transactions
+     * inside {@link JobIngestWriter}.
+     *
+     * <p>Interactive calls fetch a single chunk so the response comes back quickly; the
+     * scheduled job is what works through a large board over successive runs.
      */
-    @Transactional
     public JobDtos.ScrapeResult scrapeSource(Long userId, Long sourceId) {
         JobSource source = sources.findById(sourceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source not found"));
-        return scrapeSourceInternal(source);
+        return ingest(source, INTERACTIVE_CHUNKS);
     }
 
-    /**
-     * Internal scrape method usable by the scheduler (no userId needed for lookup).
-     * Creates listings with postedBy = source.addedBy.
-     */
-    @Transactional
+    /** Entry point for the daily scheduler, which may work through several chunks. */
     public JobDtos.ScrapeResult scrapeSourceInternal(JobSource source) {
+        return ingest(source, MAX_CHUNKS_PER_RUN);
+    }
+
+    private JobDtos.ScrapeResult ingest(JobSource source, int maxChunks) {
         JobPortalAdapter adapter = findAdapter(source.getUrl());
         return adapter != null
-                ? syncViaAdapter(source, adapter)
+                ? syncViaAdapter(source, adapter, maxChunks)
                 : scrapeGenericHtml(source);
     }
 
@@ -227,113 +247,44 @@ public class JobSourceService {
      * A sweep ends only when the portal returns a short chunk; the cursor then resets
      * so the next cycle picks up newly posted jobs.
      */
-    private JobDtos.ScrapeResult syncViaAdapter(JobSource source, JobPortalAdapter adapter) {
-        source.setAdapter(adapter.name());
+    private JobDtos.ScrapeResult syncViaAdapter(JobSource source, JobPortalAdapter adapter, int maxChunks) {
+        Long sourceId = source.getId();
+        Long postedBy = source.getAddedBy();
         String company = source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl());
 
         int cursor = Math.max(0, source.getSyncCursor());
         int created = 0;
         boolean exhausted = false;
 
-        for (int chunk = 0; chunk < MAX_CHUNKS_PER_RUN; chunk++) {
+        for (int chunk = 0; chunk < maxChunks; chunk++) {
             JobPortalAdapter.Chunk result;
             try {
                 result = adapter.fetchChunk(source, cursor, CHUNK_SIZE);
             } catch (Exception ex) {
-                // Preserve the cursor so the next run retries this same window.
+                // Leave the cursor where it is so the next run retries this window.
                 String errorMsg = "Sync failed at offset " + cursor + ": " + truncate(ex.getMessage(), 300);
-                source.setLastError(errorMsg);
-                source.setLastScrapedAt(Instant.now());
-                source.setSyncCursor(cursor);
-                sources.save(source);
+                writer.markProgress(sourceId, adapter.name(), cursor, false, errorMsg);
                 log.warn("Adapter {} failed for source {} at offset {}: {}",
-                        adapter.name(), source.getId(), cursor, ex.getMessage());
+                        adapter.name(), sourceId, cursor, ex.getMessage());
                 return new JobDtos.ScrapeResult(created, errorMsg);
             }
 
-            created += persistNewJobs(source, company, result.jobs());
+            created += writer.persistChunk(sourceId, postedBy, company, result.jobs());
             cursor += CHUNK_SIZE;
 
             if (result.exhausted()) {
                 exhausted = true;
                 break;
             }
-
-            // Checkpoint mid-sweep so progress survives an interrupted run.
-            source.setSyncCursor(cursor);
-            sources.save(source);
+            // Checkpoint between chunks so an interrupted run resumes where it stopped.
+            writer.markProgress(sourceId, adapter.name(), cursor, false, null);
         }
 
-        if (exhausted) {
-            source.setSyncCursor(0);
-            source.setSweepCompletedAt(Instant.now());
-        } else {
-            source.setSyncCursor(cursor);
-        }
-        source.setLastScrapedAt(Instant.now());
-        source.setLastError(null);
-        sources.save(source);
-
+        writer.markProgress(sourceId, adapter.name(), cursor, exhausted, null);
         log.info("Adapter {} synced source {}: {} new listings, cursor now {}{}",
-                adapter.name(), source.getId(), created, source.getSyncCursor(),
+                adapter.name(), sourceId, created, exhausted ? 0 : cursor,
                 exhausted ? " (full sweep complete)" : "");
         return new JobDtos.ScrapeResult(created, null);
-    }
-
-    /**
-     * Insert postings not already stored for this source.
-     *
-     * <p>Adapter results dedup on the portal job id; generic scrape results have no
-     * such id and fall back to matching on URL.
-     */
-    private int persistNewJobs(JobSource source, String company, List<ScrapedJob> jobs) {
-        if (jobs.isEmpty()) return 0;
-
-        Set<String> externalIds = jobs.stream()
-                .map(ScrapedJob::externalId)
-                .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toSet());
-        // Mutable: also tracks ids inserted earlier in this same chunk.
-        Set<String> known = externalIds.isEmpty()
-                ? new java.util.HashSet<>()
-                : new java.util.HashSet<>(listings.findExistingExternalIds(source.getId(), externalIds));
-
-        int created = 0;
-        for (ScrapedJob job : jobs) {
-            if (job.externalId() != null) {
-                if (known.contains(job.externalId())) continue;
-            } else if (listings.existsByJobUrlIgnoreCase(job.url())) {
-                continue;
-            }
-
-            JobListing listing = new JobListing();
-            listing.setTitle(job.title() != null ? job.title() : "Job opportunity");
-            listing.setCompany(company);
-            listing.setJobUrl(job.url());
-            listing.setDescription(job.description());
-            listing.setExternalId(job.externalId());
-            listing.setLocation(truncateOrNull(job.location(), 300));
-            listing.setEmploymentType(truncateOrNull(job.employmentType(), 100));
-            listing.setCareerLevel(truncateOrNull(job.careerLevel(), 100));
-            listing.setQualification(truncateOrNull(job.qualification(), 500));
-            listing.setPostedText(truncateOrNull(job.postedText(), 120));
-            listing.setPostedBy(source.getAddedBy());
-            listing.setSourceId(source.getId());
-
-            // Prefer the portal's stated experience, else infer it from the text.
-            Integer experience = job.yearsExperience();
-            if (experience == null) experience = extractExperience(job.title());
-            if (experience == null) experience = extractExperience(job.description());
-            if (experience == null) experience = experienceFromCareerLevel(job.careerLevel());
-            listing.setExperienceRequired(experience);
-
-            listing.setCreatedAt(Instant.now());
-            listings.save(listing);
-            created++;
-            // Guard against duplicates inside a single chunk.
-            if (job.externalId() != null) known.add(job.externalId());
-        }
-        return created;
     }
 
     /** Original regex-over-HTML path, used for sources without a dedicated adapter. */
@@ -343,9 +294,7 @@ public class JobSourceService {
             html = fetchPage(source.getUrl());
         } catch (Exception ex) {
             String errorMsg = "Fetch failed: " + truncate(ex.getMessage(), 400);
-            source.setLastError(errorMsg);
-            source.setLastScrapedAt(Instant.now());
-            sources.save(source);
+            writer.markProgress(source.getId(), null, source.getSyncCursor(), false, errorMsg);
             return new JobDtos.ScrapeResult(0, errorMsg);
         }
 
@@ -354,23 +303,41 @@ public class JobSourceService {
                 .map(link -> ScrapedJob.basic(link.url(), link.title(), link.description(), null))
                 .toList();
 
-        int created = persistNewJobs(source, company, jobs);
+        int created = writer.persistChunk(source.getId(), source.getAddedBy(), company, jobs);
+        writer.markProgress(source.getId(), null, 0, true, null);
 
-        source.setLastScrapedAt(Instant.now());
-        source.setLastError(null);
-        sources.save(source);
         log.info("Scraped source {} ({}): found {} links, created {} new listings",
                 source.getId(), source.getUrl(), jobs.size(), created);
         return new JobDtos.ScrapeResult(created, null);
     }
 
+    /**
+     * Remove a source and detach the listings it produced.
+     *
+     * <p>Listings are unlinked rather than deleted so that anything a user already applied
+     * to stays on the board. Their {@code source_id} is cleared explicitly instead of relying
+     * on the foreign key's ON DELETE behaviour, which keeps this correct regardless of how
+     * the constraint was created in a given environment.
+     *
+     * <p>Failures are reported rather than swallowed: silently doing nothing when the caller
+     * isn't the owner is indistinguishable from a broken button.
+     */
     @Transactional
     public void deleteSource(Long userId, Long sourceId) {
-        sources.findById(sourceId).ifPresent(source -> {
-            if (source.getAddedBy().equals(userId)) {
-                sources.delete(source);
-            }
-        });
+        JobSource source = sources.findById(sourceId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source not found"));
+        if (!source.getAddedBy().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the member who added this source can remove it.");
+        }
+
+        List<JobListing> attached = listings.findBySourceIdOrderByCreatedAtDesc(sourceId);
+        if (!attached.isEmpty()) {
+            attached.forEach(listing -> listing.setSourceId(null));
+            listings.saveAll(attached);
+        }
+        sources.delete(source);
+        log.info("Deleted source {} and detached {} listing(s)", sourceId, attached.size());
     }
 
     /**

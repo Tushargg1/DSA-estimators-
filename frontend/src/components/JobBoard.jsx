@@ -75,6 +75,7 @@ function JobBoard() {
   const [sourceJobsLoading, setSourceJobsLoading] = useState(null)
   const [supportCheck, setSupportCheck] = useState(null)
   const [supportChecking, setSupportChecking] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   // --- Load jobs ---
   const loadJobs = useCallback(async (requestedPage = pageNumber) => {
@@ -306,11 +307,18 @@ function JobBoard() {
     setScrapingId(id); setSourceError(null); setSourceSuccess(null)
     try {
       const result = await api.scrapeJobSource(id)
-      if (result.error) setSourceError(result.error)
-      else setSourceSuccess(`Found ${result.newListings} new job listing${result.newListings !== 1 ? 's' : ''}.`)
+      if (result.error) {
+        setSourceError(result.error)
+      } else if (result.newListings === 0) {
+        setSourceSuccess('No new jobs in this batch — everything fetched is already on the board.')
+      } else {
+        setSourceSuccess(`Added ${result.newListings} new job${result.newListings !== 1 ? 's' : ''}. `
+          + 'Large boards are fetched a batch at a time; the daily 9 AM sync continues from here.')
+      }
       void loadSources()
       void loadJobs(0)
-      // Refresh the expanded source's listings if it was scraped
+      // Freshly scraped jobs invalidate whatever was cached for this source.
+      setSourceJobs((c) => { const next = { ...c }; delete next[id]; return next })
       if (expandedSource === id) void loadSourceJobs(id)
     } catch (e) { setSourceError(e.message || 'Scrape failed.') }
     finally { setScrapingId(null) }
@@ -336,8 +344,21 @@ function JobBoard() {
   }
 
   const deleteSource = async (id) => {
-    try { await api.deleteJobSource(id); setSources((c) => c.filter((s) => s.id !== id)) }
-    catch (e) { setSourceError(e.message || 'Could not delete source.') }
+    const target = sources.find((s) => s.id === id)
+    const name = target?.label || (target ? hostName(target.url) : 'this source')
+    if (!window.confirm(`Remove ${name}? Jobs already fetched from it stay on the board.`)) return
+
+    setDeletingId(id); setSourceError(null); setSourceSuccess(null)
+    try {
+      await api.deleteJobSource(id)
+      setSources((c) => c.filter((s) => s.id !== id))
+      // Drop any cached listings and collapse the panel if it was open.
+      setSourceJobs((c) => { const next = { ...c }; delete next[id]; return next })
+      if (expandedSource === id) setExpandedSource(null)
+      setSourceSuccess(`Removed ${name}.`)
+    } catch (e) {
+      setSourceError(e.message || 'Could not remove this source.')
+    } finally { setDeletingId(null) }
   }
 
   // --- Filtered jobs ---
@@ -686,7 +707,10 @@ function JobBoard() {
                         onClick={(e) => { e.stopPropagation(); scrapeSource(source.id) }}>
                         {scrapingId === source.id ? <><span className="button-spinner" />Scraping…</> : 'Scrape now'}
                       </button>
-                      <button type="button" className="button-quiet" onClick={(e) => { e.stopPropagation(); deleteSource(source.id) }}>Remove</button>
+                      <button type="button" className="button-quiet" disabled={deletingId === source.id}
+                        onClick={(e) => { e.stopPropagation(); deleteSource(source.id) }}>
+                        {deletingId === source.id ? 'Removing…' : 'Remove'}
+                      </button>
                       <span className="company-expand-icon" aria-hidden="true">{expandedSource === source.id ? '▾' : '▸'}</span>
                     </div>
                   </div>
