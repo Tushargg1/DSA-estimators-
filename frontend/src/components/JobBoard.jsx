@@ -723,10 +723,10 @@ function JobBoard() {
                           {source.adapter && <span className="source-adapter-tag">API sync</span>}
                           {source.syncCursor > 0 &&
                             <span title="Continues automatically every few minutes">
-                              Loading more… ({source.syncCursor} fetched)
+                              Still scraping… ({source.syncCursor} fetched so far)
                             </span>}
                           {source.sweepCompletedAt && source.syncCursor === 0 &&
-                            <span>Full sweep done: {formatPostedAt(source.sweepCompletedAt)}</span>}
+                            <span>Fully scraped as of: {formatPostedAt(source.sweepCompletedAt)}</span>}
                           {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}
                         </div>
                       </div>

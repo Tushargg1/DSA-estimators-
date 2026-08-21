@@ -93,7 +93,9 @@ public class AccentureJobAdapter implements JobPortalAdapter {
 
     @Override
     public Chunk fetchChunk(JobSource source, int startIndex, int chunkSize) throws Exception {
-        String locale = localeFrom(source.getUrl());
+        // Locations are wanted for India specifically, regardless of which Accenture
+        // locale page the source URL happens to point at.
+        String locale = "in-en";
         String country = LOCALE_COUNTRY.get(locale);
 
         Map<String, String> fields = new LinkedHashMap<>();

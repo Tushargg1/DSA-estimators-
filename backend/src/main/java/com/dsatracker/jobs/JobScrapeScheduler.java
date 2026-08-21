@@ -31,10 +31,11 @@ public class JobScrapeScheduler {
     }
 
     /**
-     * Runs daily at 9:00 AM IST (03:30 UTC).
+     * Runs daily at 3:00 AM IST (21:30 UTC previous day), so the whole sweep has until
+     * morning to finish before anyone opens the board.
      * Scrapes all registered sources sequentially.
      */
-    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Kolkata")
+    @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Kolkata")
     public void dailyScrapeAll() {
         List<JobSource> allSources = sources.findAllByOrderByCreatedAtDesc();
         if (allSources.isEmpty()) {
