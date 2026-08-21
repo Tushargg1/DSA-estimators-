@@ -210,7 +210,7 @@ public class JobSourceService {
                 source.getLastScrapedAt(), source.getLastError(),
                 source.getCreatedAt(), addedByName,
                 source.getAdapter(), source.getSyncCursor(), source.getSweepCompletedAt(),
-                source.getExtractionStatus());
+                source.getExtractionStatus(), listings.countBySourceId(source.getId()));
     }
 
     /**

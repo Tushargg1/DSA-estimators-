@@ -17,6 +17,8 @@ public interface JobListingRepository extends JpaRepository<JobListing, Long> {
 
     List<JobListing> findBySourceIdOrderByCreatedAtDesc(Long sourceId);
 
+    long countBySourceId(Long sourceId);
+
     /**
      * Dedup lookup for adapter-sourced jobs, keyed on the portal's own job id.
      * Returns the subset of the given ids that already exist for this source, so a

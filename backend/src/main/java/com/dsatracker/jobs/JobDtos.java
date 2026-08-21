@@ -71,7 +71,7 @@ public final class JobDtos {
             Long id, String url, String label, Instant lastScrapedAt,
             String lastError, Instant createdAt, String addedByName,
             String adapter, int syncCursor, Instant sweepCompletedAt,
-            String extractionStatus
+            String extractionStatus, long storedListings
     ) { }
 
     public record ScrapeResult(int newListings, String error) { }

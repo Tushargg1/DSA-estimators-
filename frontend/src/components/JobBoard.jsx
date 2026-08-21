@@ -721,9 +721,10 @@ function JobBoard() {
                           <span>Added by {source.addedByName}</span>
                           {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
                           {source.adapter && <span className="source-adapter-tag">API sync</span>}
+                          <span>{source.storedListings} job{source.storedListings === 1 ? '' : 's'} stored</span>
                           {source.syncCursor > 0 &&
                             <span title="Continues automatically every few minutes">
-                              Still scraping… ({source.syncCursor} fetched so far)
+                              Still scraping… (checked {source.syncCursor} so far, duplicates skipped)
                             </span>}
                           {source.sweepCompletedAt && source.syncCursor === 0 &&
                             <span>Fully scraped as of: {formatPostedAt(source.sweepCompletedAt)}</span>}
