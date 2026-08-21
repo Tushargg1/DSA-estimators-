@@ -416,12 +416,11 @@ public class JobSourceService {
     }
 
     /**
-     * Remove a source and detach the listings it produced.
+     * Remove a source and every listing it produced.
      *
-     * <p>Listings are unlinked rather than deleted so that anything a user already applied
-     * to stays on the board. Their {@code source_id} is cleared explicitly instead of relying
-     * on the foreign key's ON DELETE behaviour, which keeps this correct regardless of how
-     * the constraint was created in a given environment.
+     * <p>Applications on those listings cascade-delete via the {@code job_applications}
+     * foreign key (ON DELETE CASCADE), so removing a company also clears any "applied"
+     * marks a user had set on its postings.
      *
      * <p>Failures are reported rather than swallowed: silently doing nothing when the caller
      * isn't the owner is indistinguishable from a broken button.
@@ -437,11 +436,10 @@ public class JobSourceService {
 
         List<JobListing> attached = listings.findBySourceIdOrderByCreatedAtDesc(sourceId);
         if (!attached.isEmpty()) {
-            attached.forEach(listing -> listing.setSourceId(null));
-            listings.saveAll(attached);
+            listings.deleteAll(attached);
         }
         sources.delete(source);
-        log.info("Deleted source {} and detached {} listing(s)", sourceId, attached.size());
+        log.info("Deleted source {} and its {} listing(s)", sourceId, attached.size());
     }
 
     /**

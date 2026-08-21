@@ -13,7 +13,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,11 +23,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Removing a source must either succeed or say why.
+ * Removing a source must either succeed or say why, and must also remove its postings.
  *
  * <p>The original implementation silently did nothing when the caller wasn't the owner,
- * which from the UI is indistinguishable from a dead button. It also left listings pointing
- * at the deleted row.
+ * which from the UI is indistinguishable from a dead button.
  */
 class JobSourceServiceDeleteTest {
 
@@ -61,7 +59,7 @@ class JobSourceServiceDeleteTest {
     }
 
     @Test
-    void ownerCanDeleteAndListingsAreDetachedNotDeleted() {
+    void ownerCanDeleteAndItsListingsAreDeletedToo() {
         JobSource existing = source(7L, 42L);
         when(sources.findById(7L)).thenReturn(Optional.of(existing));
 
@@ -75,10 +73,9 @@ class JobSourceServiceDeleteTest {
 
         assertAll(
                 () -> verify(sources).delete(existing),
-                // Listings survive so anything already applied to stays visible.
-                () -> verify(listings).saveAll(attachedList),
-                () -> verify(listings, never()).delete(any()),
-                () -> assertNull(attached.getSourceId(), "listing should be unlinked from the source")
+                // Removing a company removes its postings, not just the source row.
+                () -> verify(listings).deleteAll(attachedList),
+                () -> verify(listings, never()).saveAll(any())
         );
     }
 
