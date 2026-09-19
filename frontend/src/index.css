@@ -2825,10 +2825,9 @@ html {
 .jobs-hero-stats small { color: var(--text-muted); font-size: 0.68rem; }
 
 .jobs-layout {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.7fr);
-  gap: 1rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .job-share-card {
@@ -3436,10 +3435,9 @@ html {
 
 /* Roles layout */
 .jobs-roles-layout {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.7fr);
-  gap: 1rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .jobs-roles-layout .field textarea {
@@ -3523,10 +3521,9 @@ html {
 
 /* Sources layout */
 .jobs-sources-layout {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.7fr);
-  gap: 1rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .source-list {
@@ -3629,7 +3626,6 @@ html {
 .source-actions button { min-height: 36px; padding: 0.4rem 0.7rem; font-size: 0.7rem; }
 
 @media (max-width: 900px) {
-  .jobs-layout, .jobs-roles-layout, .jobs-sources-layout { grid-template-columns: 1fr; }
   .job-share-card { position: static; }
   .job-card { grid-template-columns: 44px minmax(0, 1fr); }
   .job-company-mark { width: 44px; height: 44px; }

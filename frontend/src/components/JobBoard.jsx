@@ -533,13 +533,15 @@ function JobBoard() {
             Boards on Greenhouse, Lever, Ashby and Accenture are fully supported. Large boards
             keep loading in the background until every job is stored, then refresh daily.</p>
           <form onSubmit={addSource} aria-busy={sourceAdding}>
-            <label className="field"><span>Career page URL</span>
-              <input type="url" value={sourceForm.url} onChange={updateSourceForm('url')} required maxLength="2048" placeholder="https://company.com/careers" aria-invalid={Boolean(sourceFieldErrors.url)} />
-              {sourceFieldErrors.url && <small className="field-error">{sourceFieldErrors.url}</small>}
-            </label>
-            <label className="field"><span>Company name / label</span>
-              <input value={sourceForm.label} onChange={updateSourceForm('label')} maxLength="200" placeholder="e.g. Google Careers" />
-            </label>
+            <div className="source-edit-fields">
+              <label className="field"><span>Career page URL</span>
+                <input type="url" value={sourceForm.url} onChange={updateSourceForm('url')} required maxLength="2048" placeholder="https://company.com/careers" aria-invalid={Boolean(sourceFieldErrors.url)} />
+                {sourceFieldErrors.url && <small className="field-error">{sourceFieldErrors.url}</small>}
+              </label>
+              <label className="field"><span>Company name / label</span>
+                <input value={sourceForm.label} onChange={updateSourceForm('label')} maxLength="200" placeholder="e.g. Google Careers" />
+              </label>
+            </div>
 
             {/* Extraction verdict for the pasted URL */}
             {supportChecking && (
