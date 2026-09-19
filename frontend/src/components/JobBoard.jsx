@@ -510,6 +510,37 @@ function JobBoard() {
           <span className="eyebrow">Target Roles</span>
           <h3>Add a new target role</h3>
           <p>Define a role title and keywords. Jobs from sources will be matched using regex and the Groq AI API against these rules.</p>
+
+          {/* Quick-add suggested roles */}
+          {(() => {
+            const SUGGESTED = [
+              { roleTitle: 'Java Developer', keywords: 'java, spring, hibernate, microservices, backend' },
+              { roleTitle: 'Software Development Engineer', keywords: 'software engineer, sde, full stack, backend, developer' },
+              { roleTitle: 'Python Developer', keywords: 'python, django, flask, fastapi, backend' },
+              { roleTitle: 'Data Analyst', keywords: 'data analyst, sql, excel, tableau, power bi, analytics' },
+              { roleTitle: 'AI & ML Engineer', keywords: 'machine learning, deep learning, pytorch, tensorflow, nlp, ai engineer' },
+              { roleTitle: 'Frontend Developer', keywords: 'react, vue, angular, javascript, typescript, frontend' },
+              { roleTitle: 'DevOps Engineer', keywords: 'devops, kubernetes, docker, ci/cd, aws, azure, gcp' },
+            ]
+            const addedTitles = new Set(profiles.map(p => p.roleTitle.toLowerCase()))
+            const remaining = SUGGESTED.filter(s => !addedTitles.has(s.roleTitle.toLowerCase()))
+            if (!remaining.length) return null
+            return (
+              <div style={{ marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Quick add</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {remaining.map(s => (
+                    <button key={s.roleTitle} type="button"
+                      style={{ fontSize: '0.75rem', padding: '0.3rem 0.7rem', borderRadius: '100px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'var(--brand-soft)', cursor: 'pointer', fontWeight: 500 }}
+                      onClick={() => setProfileForm({ roleTitle: s.roleTitle, keywords: s.keywords })}>
+                      + {s.roleTitle}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           <form onSubmit={createProfile} aria-busy={profileCreating}>
             <div className="source-edit-fields">
               <label className="field"><span>Role Title</span>
