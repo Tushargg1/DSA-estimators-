@@ -386,10 +386,10 @@ function JobBoard() {
     return (page?.content || []).filter((job) => {
       const matchesStatus = filter === 'all' || (filter === 'applied' ? job.applied : !job.applied)
       const matchesQuery = !needle || job.title.toLowerCase().includes(needle) || job.company.toLowerCase().includes(needle)
-      const matchesRole = roleFilter === 'All 0-Exp Jobs' || job.detectedRole === roleFilter
+      const matchesRole = tab !== 'roles' || (roleFilter === 'All 0-Exp Jobs' ? job.detectedRole != null : job.detectedRole === roleFilter)
       return matchesStatus && matchesQuery && matchesRole
     })
-  }, [page, query, filter, roleFilter])
+  }, [page, query, filter, roleFilter, tab])
 
   const appliedCount = page?.content?.filter((job) => job.applied).length || 0
   const currentProfile = profiles.find((p) => p.id === activeProfile)
@@ -453,10 +453,6 @@ function JobBoard() {
             </div>
           </div>
           
-          <div className="jobs-filter" style={{ marginTop: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }} role="group" aria-label="Filter by Job Role">
-             {['All 0-Exp Jobs', 'Java Developer', 'Software Development Engineer', 'Python Developer', 'Data Analyst', 'AI & ML Engineer'].map((role) =>
-                <button key={role} type="button" className="button-secondary" aria-pressed={roleFilter === role} onClick={() => setRoleFilter(role)}>{role}</button>)}
-          </div>
           {error && <div className="form-error" role="alert"><span>!</span>{error}</div>}
           {success && <p className="job-success" role="status">{success}</p>}
           {loading ? <div className="jobs-loading"><span className="button-spinner" />Loading opportunities…</div>
@@ -476,172 +472,41 @@ function JobBoard() {
       </div>}
 
       {/* ===== MY ROLES TAB ===== */}
-      {tab === 'roles' && <div className="jobs-roles-layout">
+      {tab === 'roles' && <div className="jobs-layout">
         <aside className="job-share-card card">
-          <span className="eyebrow">Create a role profile</span>
-          <h3>Auto-match jobs to your skills</h3>
-          <p>Upload your resume (PDF) or enter details manually. We'll detect your skills and auto-match jobs.</p>
-
-          {/* Resume upload drop zone */}
-          <div
-            className={`resume-upload-zone${resumeDragOver ? ' drag-over' : ''}${resumeUploading ? ' uploading' : ''}${resumeParseResult ? ' has-file' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setResumeDragOver(true) }}
-            onDragLeave={() => setResumeDragOver(false)}
-            onDrop={onResumeDrop}
-            aria-label="Resume upload area"
-          >
-            {resumeUploading ? (
-              <div className="resume-upload-status"><span className="button-spinner" />Parsing your resume…</div>
-            ) : resumeParseResult ? (
-              <div className="resume-upload-status resume-parsed">
-                <span className="resume-file-icon" aria-hidden="true">📄</span>
-                <span>{profileForm.resumeFileName}</span>
-                <button type="button" className="button-quiet" onClick={() => {
-                  setResumeParseResult(null)
-                  setProfileForm(emptyProfileForm)
-                }}>Remove</button>
-              </div>
-            ) : (
-              <>
-                <span className="resume-upload-icon" aria-hidden="true">⬆</span>
-                <span>Drag & drop your resume PDF here</span>
-                <span className="resume-upload-or">or</span>
-                <label className="resume-upload-btn">
-                  <span>Browse file</span>
-                  <input type="file" accept=".pdf,application/pdf" onChange={onResumeFileSelect} hidden />
-                </label>
-              </>
-            )}
-          </div>
-
-          {resumeParseResult?.categoryScores && Object.keys(resumeParseResult.categoryScores).length > 0 && (
-            <div className="resume-categories">
-              <span className="field-label">Detected skills</span>
-              <div className="resume-category-chips">
-                {Object.entries(resumeParseResult.categoryScores)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([cat, score]) => (
-                    <span key={cat} className="resume-category-chip" title={`${score} keyword matches`}>
-                      {cat} <small>({score})</small>
-                    </span>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={createProfile} aria-busy={profileCreating}>
-            <label className="field"><span>Role title</span>
-              <input value={profileForm.roleTitle} onChange={updateProfileForm('roleTitle')} required maxLength="200" placeholder="e.g. Java Developer, ML Engineer" aria-invalid={Boolean(profileFieldErrors.roleTitle)} />
-              {profileFieldErrors.roleTitle && <small className="field-error">{profileFieldErrors.roleTitle}</small>}
-            </label>
-            <label className="field"><span>Keywords (comma-separated)</span>
-              <input value={profileForm.keywords} onChange={updateProfileForm('keywords')} required maxLength="2000" placeholder="java, spring, microservices, aws" aria-invalid={Boolean(profileFieldErrors.keywords)} />
-              {profileFieldErrors.keywords && <small className="field-error">{profileFieldErrors.keywords}</small>}
-            </label>
-            <label className="field"><span>Resume text (optional — extra keywords auto-extracted)</span>
-              <textarea value={profileForm.resumeText} onChange={updateProfileForm('resumeText')} rows={4} maxLength={50000} placeholder="Paste your resume content here…" />
-            </label>
-            <button type="submit" className="job-share-submit" disabled={profileCreating}>
-              {profileCreating ? <><span className="button-spinner" />Creating…</> : 'Create profile'}
-            </button>
-          </form>
+          <span className="eyebrow">Your Target Roles</span>
+          <h3>Zero-Experience Roles</h3>
+          <p>Here are the entry-level jobs automatically extracted and matched to your desired roles.</p>
         </aside>
 
         <div className="jobs-feed">
-          {profileError && <div className="form-error" role="alert"><span>!</span>{profileError}</div>}
-          {profileSuccess && <p className="job-success" role="status">{profileSuccess}</p>}
-
-          {/* Filters */}
-          {profiles.length > 0 && (
-            <div className="jobs-toolbar roles-toolbar">
-              <div className="roles-filter-group">
-                <label className="roles-filter-label">
-                  <span>Experience (years)</span>
-                  <select value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)}>
-                    <option value="">All levels</option>
-                    <option value="0">Fresher (0 yrs)</option>
-                    <option value="1">1+ year</option>
-                    <option value="2">2+ years</option>
-                    <option value="3">3+ years</option>
-                    <option value="5">5+ years</option>
-                    <option value="7">7+ years</option>
-                    <option value="10">10+ years</option>
-                  </select>
-                </label>
-              </div>
-              <div className="roles-filter-group">
-                <label className="roles-filter-label">
-                  <span>Profile</span>
-                  <select value={activeProfile || ''} onChange={(e) => setActiveProfile(Number(e.target.value) || null)}>
-                    {profiles.map((p) => <option key={p.id} value={p.id}>{p.roleTitle}</option>)}
-                  </select>
-                </label>
-              </div>
+          <div className="jobs-toolbar">
+            <label className="jobs-search"><span className="visually-hidden">Search jobs</span><span aria-hidden="true">⌕</span>
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search role or company…" />
+            </label>
+            <div className="jobs-filter" role="group" aria-label="Filter application status">
+              {[['all', 'All'], ['open', 'Not applied'], ['applied', 'Applied']].map(([v, l]) =>
+                <button key={v} type="button" className="button-secondary" aria-pressed={filter === v} onClick={() => setFilter(v)}>{l}</button>)}
             </div>
-          )}
-
-          {profileLoading ? <div className="jobs-loading"><span className="button-spinner" />Loading profiles…</div>
-            : profiles.length === 0 ? <div className="empty-state jobs-empty">
-              <span className="empty-state-icon" aria-hidden="true">👤</span>
-              <h3>No role profiles yet</h3>
-              <p>Create a profile on the left to see auto-matched jobs from the community board.</p>
-            </div> : <>
-              {/* Profile tabs */}
-              <div className="profile-tabs" role="tablist" aria-label="Your role profiles">
-                {profiles.map((p) => <button key={p.id} role="tab" type="button"
-                  className="button-secondary" aria-selected={activeProfile === p.id}
-                  onClick={() => setActiveProfile(p.id)}>
-                  {p.roleTitle}
-                  <span className="profile-match-count">{p.matchedJobs?.length || 0}</span>
-                </button>)}
-              </div>
-
-              {currentProfile && <div className="profile-detail" role="tabpanel">
-                <div className="profile-detail-header">
-                  <div>
-                    <h3>{currentProfile.roleTitle}</h3>
-                    <p className="profile-keywords">{currentProfile.keywords}</p>
-                  </div>
-                  <button type="button" className="button-quiet profile-delete" onClick={() => deleteProfile(currentProfile.id)}>Delete</button>
-                </div>
-
-                {/* Company-grouped jobs */}
-                {(!currentProfile.companyGroups || currentProfile.companyGroups.length === 0)
-                  ? <div className="empty-state jobs-empty"><span className="empty-state-icon" aria-hidden="true">⌕</span><h3>No matching jobs yet</h3><p>Jobs with titles containing your keywords will appear here automatically. Daily scraping runs at 11 AM.</p></div>
-                  : <div className="company-groups">
-                    {currentProfile.companyGroups.map((group) => (
-                      <div key={group.company} className={`company-group-card${expandedCompany === group.company ? ' expanded' : ''}`}>
-                        <div className="company-group-header" onClick={() => setExpandedCompany(expandedCompany === group.company ? null : group.company)}>
-                          <div className="company-group-info">
-                            <div className="company-group-mark" aria-hidden="true">{group.company.trim().charAt(0).toUpperCase()}</div>
-                            <div>
-                              <h4>{group.company}</h4>
-                              <small>{group.totalJobs} job{group.totalJobs !== 1 ? 's' : ''} matching your profile</small>
-                            </div>
-                          </div>
-                          <div className="company-group-actions">
-                            {group.sourceId && (
-                              <button type="button" className="button-secondary company-scrape-btn"
-                                disabled={companyScraping === group.sourceId}
-                                onClick={(e) => { e.stopPropagation(); scrapeCompanySource(group.sourceId) }}>
-                                {companyScraping === group.sourceId ? <><span className="button-spinner" />Scraping…</> : 'Scrape now'}
-                              </button>
-                            )}
-                            <span className="company-expand-icon" aria-hidden="true">{expandedCompany === group.company ? '▾' : '▸'}</span>
-                          </div>
-                        </div>
-                        {expandedCompany === group.company && (
-                          <ol className="job-list company-job-list">
-                            {group.jobs.map((job) => <JobCard key={job.id} job={job} updatingId={updatingId} onToggle={toggleApplied} />)}
-                          </ol>
-                        )}
-                      </div>
-                    ))}
-                  </div>}
-              </div>}
-            </>}
+          </div>
+          
+          <div className="jobs-filter" style={{ marginTop: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }} role="group" aria-label="Filter by Job Role">
+             {['All 0-Exp Jobs', 'Java Developer', 'Software Development Engineer', 'Python Developer', 'Data Analyst', 'AI & ML Engineer'].map((role) =>
+                <button key={role} type="button" className="button-secondary" aria-pressed={roleFilter === role} onClick={() => setRoleFilter(role)}>{role}</button>)}
+          </div>
+          
+          {error && <div className="form-error" role="alert"><span>!</span>{error}</div>}
+          {loading ? <div className="jobs-loading"><span className="button-spinner" />Loading opportunities…</div>
+            : visibleJobs.length === 0 ? <div className="empty-state jobs-empty">
+              <span className="empty-state-icon" aria-hidden="true">⌕</span>
+              <h3>No matching opportunities</h3>
+              <p>Try selecting a different role or wait for more jobs to be scraped.</p>
+            </div> : <ol className="job-list">
+              {visibleJobs.map((job) => <JobCard key={job.id} job={job} updatingId={updatingId} onToggle={toggleApplied} />)}
+            </ol>}
         </div>
       </div>}
+
 
       {/* ===== SOURCES TAB ===== */}
       {tab === 'sources' && <div className="jobs-sources-layout">
