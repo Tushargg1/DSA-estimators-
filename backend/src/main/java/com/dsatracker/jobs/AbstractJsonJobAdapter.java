@@ -71,6 +71,26 @@ abstract class AbstractJsonJobAdapter implements JobPortalAdapter {
         return mapper.readTree(body);
     }
 
+    /** POST JSON body and parse the response as a JSON tree. */
+    protected JsonNode postJson(String url, Object requestBody) throws IOException, InterruptedException {
+        String json = mapper.writeValueAsString(requestBody);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(TIMEOUT)
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new IOException("Job board API returned HTTP " + response.statusCode());
+        }
+        String body = response.body();
+        if (body.length() > MAX_BODY_CHARS) body = body.substring(0, MAX_BODY_CHARS);
+        return mapper.readTree(body);
+    }
+
     // --- field helpers ---
 
     protected static String text(JsonNode node, String field) {
