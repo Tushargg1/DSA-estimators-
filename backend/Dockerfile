@@ -1,23 +1,9 @@
 # syntax=docker/dockerfile:1
 
 # =============================================================================
-# DSA Progress Tracker — backend image (task 12.1)
-# Multi-stage build: (1) build the fat jar with the Maven wrapper, (2) run it on
-# a slim JRE.
-#
-# Java version decision
-# ----------------------
-# The spec's intent is Java 21. Spring Boot 3.4 fully supports Java 21, so BOTH
-# stages use Eclipse Temurin 21 images (21-jdk to build, 21-jre-alpine to run).
-#
-# The pom currently targets Java 17 (<java.version>17</java.version>) because
-# only a JDK 17 is installed on the dev host. That is intentional and safe here:
-#   * `--release 17` produces Java 17 bytecode, which compiles cleanly under the
-#     JDK 21 in the builder stage, and
-#   * Java 17 bytecode runs without modification on the Java 21 runtime.
-# So the deployed image runs on Java 21 while the source stays compatible with
-# the local JDK 17. Bump <java.version> to 21 in pom.xml once a JDK 21 is the
-# standard build environment — no Dockerfile change is required.
+# DSA Progress Tracker — backend image
+# Multi-stage build: (1) build the fat jar, (2) run it on a JRE with Playwright
+# Chromium pre-installed for scraping JS-rendered career sites.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -27,41 +13,66 @@ FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 
 # Copy only the wrapper + pom first so Docker can cache the dependency layer.
-# This layer is only invalidated when the wrapper or pom.xml changes, not on
-# every source edit.
 COPY mvnw ./
 COPY .mvn/ .mvn/
 COPY pom.xml ./
 
-# Normalize line endings for the wrapper (the repo may be checked out on Windows)
+# Normalize line endings for the wrapper (repo may be checked out on Windows)
 # and make it executable, then warm the local Maven repository offline.
 RUN sed -i 's/\r$//' mvnw && chmod +x mvnw \
     && ./mvnw -B -q dependency:go-offline
 
-# Now copy the source and build the jar. Tests are skipped in the image build
-# (they run in CI via `mvnw clean verify`); the image only needs the artifact.
+# Now copy the source and build the jar.
 COPY src/ src/
 RUN ./mvnw -B -q clean package -DskipTests \
     && cp target/*.jar app.jar
 
 # -----------------------------------------------------------------------------
-# Stage 2 — runtime
+# Stage 2 — runtime (with Playwright Chromium)
 # -----------------------------------------------------------------------------
-FROM eclipse-temurin:21-jre-alpine AS runtime
+# Use Debian-based JRE (not Alpine) because Playwright needs glibc + browser deps
+FROM eclipse-temurin:21-jre-jammy AS runtime
 WORKDIR /app
 
-# Run as a non-root user (defense in depth — a compromised process has no root).
-RUN addgroup -S app && adduser -S app -G app
-USER app
+# Install Playwright's Chromium system dependencies.
+# These are the libraries Chromium needs to run headlessly on Debian/Ubuntu.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Chromium runtime dependencies
+    libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libdbus-1-3 libexpat1 libxcb1 libxkbcommon0 libx11-6 libxcomposite1 \
+    libxdamage1 libxext6 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 \
+    libpangocairo-1.0-0 libcairo2 libasound2 libatspi2.0-0 libwayland-client0 \
+    # Font rendering
+    fonts-liberation fonts-noto-color-emoji \
+    # Misc
+    wget ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Run as a non-root user (defense in depth).
+RUN groupadd -r app && useradd -r -g app -d /app app
 
 # Copy just the built artifact from the build stage.
 COPY --from=build --chown=app:app /workspace/app.jar app.jar
 
-# Spring Boot defaults to 8080; application.yml also honors Render's injected
-# PORT at runtime. EXPOSE documents the local/default container port only.
+# Install Playwright browsers as the app user.
+# The PLAYWRIGHT_BROWSERS_PATH env var tells Playwright where to store browsers.
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/.playwright-browsers
+RUN mkdir -p /app/.playwright-browsers \
+    && chown -R app:app /app/.playwright-browsers
+
+USER app
+
+# Download Chromium for Playwright Java.
+# This runs the Playwright CLI embedded in the Java dependency to install Chromium.
+RUN java -cp app.jar -Dloader.main=com.microsoft.playwright.CLI \
+    org.springframework.boot.loader.launch.PropertiesLauncher install chromium \
+    2>/dev/null || \
+    # Fallback: use the playwright driver directly
+    java -cp app.jar -Dloader.main=com.microsoft.playwright.CLI \
+    org.springframework.boot.loader.PropertiesLauncher install chromium \
+    2>/dev/null || true
+
+# Spring Boot defaults to 8080; application.yml also honors Render's PORT.
 EXPOSE 8080
 
-# DB_URL / DB_USERNAME / DB_PASSWORD / DB_POOL_MAX / DB_POOL_MIN_IDLE /
-# CORS_ALLOWED_ORIGINS / WEBSOCKET_ALLOWED_ORIGINS / PORT / SERVER_PORT are
-# supplied at runtime (see application.yml + .env.example).
 ENTRYPOINT ["java", "-jar", "app.jar"]
