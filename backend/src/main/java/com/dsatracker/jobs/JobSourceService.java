@@ -55,7 +55,7 @@ public class JobSourceService {
     private static final Pattern HREF_PATTERN = Pattern.compile(
             "href\\s*=\\s*[\"']([^\"']{10,2048})[\"']", Pattern.CASE_INSENSITIVE);
     private static final Pattern JOB_URL_PATTERN = Pattern.compile(
-            "/job[s]?/|/career[s]?/|/apply|/position[s]?/|/opening[s]?/|/vacanc",
+            "(/job|/career|/apply|/position|/opening|/vacanc|/req|/role|/opportunity|/posting|/detail)",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern TITLE_PATTERN = Pattern.compile(
             ">([^<]{3,200})</a>", Pattern.CASE_INSENSITIVE);
