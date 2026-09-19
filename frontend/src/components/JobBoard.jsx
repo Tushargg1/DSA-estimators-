@@ -733,7 +733,8 @@ function JobBoard() {
                       <span>Still scraping… ({source.syncCursor} checked)</span>}
                     {source.sweepCompletedAt && source.syncCursor === 0 &&
                       <span>Fully scraped as of: {formatPostedAt(source.sweepCompletedAt)}</span>}
-                    {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}
+                    {source.lastError && !source.lastError.includes('JavaScript') && <span className="source-error-note">Error: {source.lastError}</span>}
+                    {source.lastError && source.lastError.includes('JavaScript') && <span style={{ color: 'var(--text-muted)' }}>Note: This site loads jobs dynamically. API adapter recommended.</span>}
                   </div>
 
                   {/* Action footer */}
