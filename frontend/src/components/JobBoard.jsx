@@ -613,23 +613,22 @@ function JobBoard() {
                         </h4>
                         <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-url-link" onClick={(e) => e.stopPropagation()}>{source.url}</a>
                         <div className="source-meta">
-                        <div className="source-meta">
                           <span>Added by {source.addedByName}</span>
                           {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
                           {source.adapter && <span className="source-adapter-tag">API sync</span>}
                           
                           {source.lastScrapeTotalJobs != null && (
-                              <span title="Total jobs seen by the scraper in the latest run">
-                                  {source.lastScrapeTotalJobs} jobs seen
+                              <span title="Total jobs seen by the scraper in the latest run" className="source-stat-pill">
+                                  <strong>{source.lastScrapeTotalJobs}</strong> jobs seen
                               </span>
                           )}
-                          <span title="Jobs matching your target roles and 0-experience criteria">
-                              {source.storedListings} job{source.storedListings === 1 ? '' : 's'} related to you
+                          <span title="Jobs matching your target roles and 0-experience criteria" className="source-stat-pill success">
+                              <strong>{source.storedListings}</strong> job{source.storedListings === 1 ? '' : 's'} related to you
                           </span>
 
                           {source.syncCursor > 0 &&
                             <span title="Continues automatically every few minutes">
-                              Still scraping… (checked {source.syncCursor} so far, duplicates skipped)
+                              Still scraping… (checked {source.syncCursor} so far)
                             </span>}
                           {source.sweepCompletedAt && source.syncCursor === 0 &&
                             <span>Fully scraped as of: {formatPostedAt(source.sweepCompletedAt)}</span>}
@@ -655,20 +654,20 @@ function JobBoard() {
                     </div>
                   </div>
                   {editingSource === source.id && (
-                      <div className="source-jobs-panel" style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderTop: '1px solid #ddd' }}>
+                      <div className="source-jobs-panel source-edit-panel">
                           <form onSubmit={(e) => {
                               e.preventDefault();
                               updateSource(source.id);
                           }}>
-                              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                                  <label className="field" style={{ flex: 1 }}><span>Career page URL</span>
+                              <div className="source-edit-fields">
+                                  <label className="field"><span>Career page URL</span>
                                       <input type="url" value={sourceForm.url} onChange={updateSourceForm('url')} required />
                                   </label>
-                                  <label className="field" style={{ flex: 1 }}><span>Company name / label</span>
+                                  <label className="field"><span>Company name / label</span>
                                       <input value={sourceForm.label} onChange={updateSourceForm('label')} />
                                   </label>
                               </div>
-                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                              <div className="source-edit-actions">
                                   <button type="button" className="button-quiet" onClick={() => setEditingSource(null)}>Cancel</button>
                                   <button type="submit" className="button-secondary">Save Changes</button>
                               </div>
