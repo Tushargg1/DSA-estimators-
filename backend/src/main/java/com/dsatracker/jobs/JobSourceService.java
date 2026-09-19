@@ -31,6 +31,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.options.WaitUntilState;
+
 /**
  * Manages job source URLs and performs basic HTML scraping to discover job links.
  *
@@ -469,27 +475,23 @@ public class JobSourceService {
 
     // --- Internal helpers ---
 
-    private String fetchPage(String url) throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(REQUEST_TIMEOUT)
-                .build();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(REQUEST_TIMEOUT)
-                .header("User-Agent", "DSA-Tracker-JobBot/1.0")
-                .header("Accept", "text/html,application/xhtml+xml")
-                .GET()
-                .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 400) {
-            throw new IOException("HTTP " + response.statusCode());
+    private String fetchPage(String url) throws IOException {
+        try (Playwright playwright = Playwright.create()) {
+            Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+            Page page = browser.newPage();
+            page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+            
+            // Give SPAs a moment to render the job listings
+            try {
+                page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(5000));
+            } catch (Exception e) {
+                // Ignore timeout and grab whatever is rendered
+            }
+            
+            return page.content();
+        } catch (Exception e) {
+            throw new IOException("Failed to fetch with Playwright: " + e.getMessage(), e);
         }
-        String body = response.body();
-        if (body.length() > MAX_BODY_BYTES) {
-            body = body.substring(0, MAX_BODY_BYTES);
-        }
-        return body;
     }
 
     // How much surrounding HTML (before and after the link) to scan for descriptive
