@@ -156,6 +156,12 @@ public class JobBoardController {
                                                     Authentication authentication) {
         return sourceService.listingsForSource(access.userId(authentication), id);
     }
+    @PutMapping("/sources/{id}")
+    public JobDtos.SourceResponse updateSource(@PathVariable Long id,
+                                               @RequestBody JobDtos.UpdateSourceRequest request,
+                                               Authentication authentication) {
+        return sourceService.updateSource(access.userId(authentication), id, request);
+    }
 
     @DeleteMapping("/sources/{id}")
     public ResponseEntity<Void> deleteSource(@PathVariable Long id,

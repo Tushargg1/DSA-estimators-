@@ -46,6 +46,12 @@ public class JobSource {
     /** Outcome of the latest extraction attempt: FULL, LIMITED, NONE or ERROR. */
     @Column(name = "extraction_status", length = 20)
     private String extractionStatus;
+    
+    @Column(name = "last_scrape_total_jobs")
+    private Integer lastScrapeTotalJobs;
+    
+    @Column(name = "last_scrape_matched_jobs")
+    private Integer lastScrapeMatchedJobs;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -70,6 +76,10 @@ public class JobSource {
     public void setAdapter(String adapter) { this.adapter = adapter; }
     public String getExtractionStatus() { return extractionStatus; }
     public void setExtractionStatus(String extractionStatus) { this.extractionStatus = extractionStatus; }
+    public Integer getLastScrapeTotalJobs() { return lastScrapeTotalJobs; }
+    public void setLastScrapeTotalJobs(Integer lastScrapeTotalJobs) { this.lastScrapeTotalJobs = lastScrapeTotalJobs; }
+    public Integer getLastScrapeMatchedJobs() { return lastScrapeMatchedJobs; }
+    public void setLastScrapeMatchedJobs(Integer lastScrapeMatchedJobs) { this.lastScrapeMatchedJobs = lastScrapeMatchedJobs; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

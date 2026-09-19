@@ -198,7 +198,7 @@ public class JobSourceService {
                     source.getId(), url, ex.getMessage());
             writer.markProgress(source.getId(), null, 0, false,
                     "Initial extraction failed: " + truncate(ex.getMessage(), 300),
-                    JobIngestWriter.STATUS_ERROR);
+                    JobIngestWriter.STATUS_ERROR, null, null);
         }
 
         // Anything beyond the first chunk continues without the user asking again.
@@ -216,7 +216,8 @@ public class JobSourceService {
                 source.getLastScrapedAt(), source.getLastError(),
                 source.getCreatedAt(), addedByName,
                 source.getAdapter(), source.getSyncCursor(), source.getSweepCompletedAt(),
-                source.getExtractionStatus(), listings.countBySourceId(source.getId()));
+                source.getExtractionStatus(), listings.countBySourceId(source.getId()),
+                source.getLastScrapeTotalJobs(), source.getLastScrapeMatchedJobs());
     }
 
     /**
@@ -353,6 +354,7 @@ public class JobSourceService {
 
         int cursor = Math.max(0, source.getSyncCursor());
         int created = 0;
+        int totalSeen = 0;
         boolean exhausted = false;
 
         for (int chunk = 0; chunk < maxChunks; chunk++) {
@@ -363,13 +365,15 @@ public class JobSourceService {
                 // Leave the cursor where it is so the next run retries this window.
                 String errorMsg = "Sync failed at offset " + cursor + ": " + truncate(ex.getMessage(), 300);
                 writer.markProgress(sourceId, adapter.name(), cursor, false, errorMsg,
-                        JobIngestWriter.STATUS_ERROR);
+                        JobIngestWriter.STATUS_ERROR, null, null);
                 log.warn("Adapter {} failed for source {} at offset {}: {}",
                         adapter.name(), sourceId, cursor, ex.getMessage());
-                return new JobDtos.ScrapeResult(created, errorMsg);
+                return new JobDtos.ScrapeResult(created, errorMsg, totalSeen, created);
             }
 
-            created += writer.persistChunk(sourceId, postedBy, company, result.jobs());
+            int chunkCreated = writer.persistChunk(sourceId, postedBy, company, result.jobs());
+            created += chunkCreated;
+            totalSeen += result.jobs().size();
             cursor += CHUNK_SIZE;
 
             if (result.exhausted()) {
@@ -377,15 +381,15 @@ public class JobSourceService {
                 break;
             }
             // Checkpoint between chunks; status is left as-is until the run finishes.
-            writer.markProgress(sourceId, adapter.name(), cursor, false, null, null);
+            writer.markProgress(sourceId, adapter.name(), cursor, false, null, null, totalSeen, created);
         }
 
         writer.markProgress(sourceId, adapter.name(), cursor, exhausted, null,
-                JobIngestWriter.STATUS_FULL);
+                JobIngestWriter.STATUS_FULL, totalSeen, created);
         log.info("Adapter {} synced source {}: {} new listings, cursor now {}{}",
                 adapter.name(), sourceId, created, exhausted ? 0 : cursor,
                 exhausted ? " (full sweep complete)" : "");
-        return new JobDtos.ScrapeResult(created, null);
+        return new JobDtos.ScrapeResult(created, null, totalSeen, created);
     }
 
     /** Original regex-over-HTML path, used for sources without a dedicated adapter. */
@@ -396,8 +400,8 @@ public class JobSourceService {
         } catch (Exception ex) {
             String errorMsg = "Fetch failed: " + truncate(ex.getMessage(), 400);
             writer.markProgress(source.getId(), null, source.getSyncCursor(), false, errorMsg,
-                    JobIngestWriter.STATUS_ERROR);
-            return new JobDtos.ScrapeResult(0, errorMsg);
+                    JobIngestWriter.STATUS_ERROR, null, null);
+            return new JobDtos.ScrapeResult(0, errorMsg, 0, 0);
         }
 
         String company = source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl());
@@ -414,11 +418,11 @@ public class JobSourceService {
                 ? "No job links found in this page's HTML — it likely loads jobs with JavaScript "
                         + "and needs a dedicated extractor."
                 : null;
-        writer.markProgress(source.getId(), null, 0, true, note, status);
+        writer.markProgress(source.getId(), null, 0, true, note, status, jobs.size(), created);
 
         log.info("Scraped source {} ({}): found {} links, created {} new listings, status {}",
                 source.getId(), source.getUrl(), jobs.size(), created, status);
-        return new JobDtos.ScrapeResult(created, note);
+        return new JobDtos.ScrapeResult(created, note, jobs.size(), created);
     }
 
     /**
@@ -446,6 +450,22 @@ public class JobSourceService {
         }
         sources.delete(source);
         log.info("Deleted source {} and its {} listing(s)", sourceId, attached.size());
+    }
+    
+    @Transactional
+    public JobDtos.SourceResponse updateSource(Long userId, Long sourceId, JobDtos.UpdateSourceRequest request) {
+        JobSource source = sources.findById(sourceId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source not found"));
+        if (!source.getAddedBy().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the member who added this source can edit it.");
+        }
+        if (request.url() != null && !request.url().isBlank()) {
+            source.setUrl(request.url().trim());
+        }
+        source.setLabel(request.label() != null ? request.label().trim() : null);
+        source = sources.save(source);
+        return toResponse(source, users.findById(userId).orElseThrow().getName());
     }
 
     /**

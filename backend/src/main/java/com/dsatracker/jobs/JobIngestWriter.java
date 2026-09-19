@@ -99,13 +99,16 @@ class JobIngestWriter {
      */
     @Transactional
     public void markProgress(Long sourceId, String adapter, int cursor,
-                             boolean sweepComplete, String error, String status) {
+                             boolean sweepComplete, String error, String status,
+                             Integer totalSeen, Integer totalMatched) {
         sources.findById(sourceId).ifPresent(source -> {
             if (adapter != null) source.setAdapter(adapter);
             if (status != null) source.setExtractionStatus(status);
             source.setSyncCursor(Math.max(0, cursor));
             source.setLastScrapedAt(Instant.now());
             source.setLastError(error);
+            if (totalSeen != null) source.setLastScrapeTotalJobs(totalSeen);
+            if (totalMatched != null) source.setLastScrapeMatchedJobs(totalMatched);
             if (sweepComplete) {
                 source.setSyncCursor(0);
                 source.setSweepCompletedAt(Instant.now());

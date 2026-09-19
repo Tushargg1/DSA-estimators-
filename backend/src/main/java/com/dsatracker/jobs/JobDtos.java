@@ -64,6 +64,8 @@ public final class JobDtos {
     // --- Sources ---
     public record CreateSourceRequest(String url, String label) { }
 
+    public record UpdateSourceRequest(String url, String label) { }
+
     /**
      * @param extractionStatus FULL, LIMITED, NONE or ERROR — lets the UI flag portals that
      *                         need a dedicated extractor instead of showing an empty source
@@ -72,10 +74,11 @@ public final class JobDtos {
             Long id, String url, String label, Instant lastScrapedAt,
             String lastError, Instant createdAt, String addedByName,
             String adapter, int syncCursor, Instant sweepCompletedAt,
-            String extractionStatus, long storedListings
+            String extractionStatus, long storedListings,
+            Integer lastScrapeTotalJobs, Integer lastScrapeMatchedJobs
     ) { }
 
-    public record ScrapeResult(int newListings, String error) { }
+    public record ScrapeResult(int newListings, String error, Integer totalJobsSeen, Integer matchedJobs) { }
 
     /**
      * Verdict on whether a career URL can be extracted, shown before the user commits
