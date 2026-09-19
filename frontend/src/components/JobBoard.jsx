@@ -73,6 +73,8 @@ function JobBoard() {
 
   // --- Sources state ---
   const [sources, setSources] = useState([])
+  const [sourceQuery, setSourceQuery] = useState('')
+  const [editingSource, setEditingSource] = useState(null)
   const [sourceForm, setSourceForm] = useState(emptySourceForm)
   const [sourceFieldErrors, setSourceFieldErrors] = useState({})
   const [sourceLoading, setSourceLoading] = useState(false)
@@ -376,8 +378,22 @@ function JobBoard() {
       if (expandedSource === id) setExpandedSource(null)
       setSourceSuccess(`Removed ${name}.`)
     } catch (e) {
-      setSourceError(e.message || 'Could not remove this source.')
-    } finally { setDeletingId(null) }
+      setSourceError(e.message || 'Failed to remove source')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const updateSource = async (id) => {
+    setSourceError(null); setSourceSuccess(null)
+    try {
+      const updated = await api.updateJobSource(id, sourceForm.url, sourceForm.label)
+      setSources((c) => c.map((s) => s.id === id ? updated : s))
+      setEditingSource(null)
+      setSourceSuccess('Source updated successfully.')
+    } catch (e) {
+      setSourceError(e.message || 'Failed to update source')
+    }
   }
 
   // --- Filtered jobs ---
@@ -562,6 +578,11 @@ function JobBoard() {
         </aside>
 
         <div className="jobs-feed">
+          <div className="jobs-toolbar">
+            <label className="jobs-search"><span className="visually-hidden">Search sources</span><span aria-hidden="true">⌕</span>
+              <input value={sourceQuery} onChange={(e) => setSourceQuery(e.target.value)} placeholder="Search sources by name or URL…" />
+            </label>
+          </div>
           {sourceError && <div className="form-error" role="alert"><span>!</span>{sourceError}</div>}
           {sourceSuccess && <p className="job-success" role="status">{sourceSuccess}</p>}
           {sourceLoading ? <div className="jobs-loading"><span className="button-spinner" />Loading sources…</div>
@@ -570,7 +591,9 @@ function JobBoard() {
               <h3>No career sites added</h3>
               <p>Add a careers page URL and scrape it to discover job listings for the community.</p>
             </div> : <div className="company-groups">
-              {sources.map((source) => {
+              {sources
+                .filter(s => !sourceQuery || (s.label || '').toLowerCase().includes(sourceQuery.toLowerCase()) || (s.url || '').toLowerCase().includes(sourceQuery.toLowerCase()))
+                .map((source) => {
                 const status = EXTRACTION_STATUS[source.extractionStatus]
                 return (
                 <div key={source.id} className={`company-group-card${expandedSource === source.id ? ' expanded' : ''}${status ? ` status-${status.tone}` : ''}`}>
@@ -590,10 +613,20 @@ function JobBoard() {
                         </h4>
                         <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-url-link" onClick={(e) => e.stopPropagation()}>{source.url}</a>
                         <div className="source-meta">
+                        <div className="source-meta">
                           <span>Added by {source.addedByName}</span>
                           {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
                           {source.adapter && <span className="source-adapter-tag">API sync</span>}
-                          <span>{source.storedListings} job{source.storedListings === 1 ? '' : 's'} stored</span>
+                          
+                          {source.lastScrapeTotalJobs != null && (
+                              <span title="Total jobs seen by the scraper in the latest run">
+                                  {source.lastScrapeTotalJobs} jobs seen
+                              </span>
+                          )}
+                          <span title="Jobs matching your target roles and 0-experience criteria">
+                              {source.storedListings} job{source.storedListings === 1 ? '' : 's'} related to you
+                          </span>
+
                           {source.syncCursor > 0 &&
                             <span title="Continues automatically every few minutes">
                               Still scraping… (checked {source.syncCursor} so far, duplicates skipped)
@@ -610,6 +643,10 @@ function JobBoard() {
                         onClick={(e) => { e.stopPropagation(); scrapeSource(source.id) }}>
                         {scrapingId === source.id ? <><span className="button-spinner" />Scraping…</> : 'Scrape now'}
                       </button>
+                      <button type="button" className="button-quiet"
+                        onClick={(e) => { e.stopPropagation(); setEditingSource(source.id); setSourceForm({ url: source.url, label: source.label || '' }) }}>
+                        Edit
+                      </button>
                       <button type="button" className="button-quiet" disabled={deletingId === source.id}
                         onClick={(e) => { e.stopPropagation(); deleteSource(source.id) }}>
                         {deletingId === source.id ? 'Removing…' : 'Remove'}
@@ -617,7 +654,28 @@ function JobBoard() {
                       <span className="company-expand-icon" aria-hidden="true">{expandedSource === source.id ? '▾' : '▸'}</span>
                     </div>
                   </div>
-                  {expandedSource === source.id && (
+                  {editingSource === source.id && (
+                      <div className="source-jobs-panel" style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderTop: '1px solid #ddd' }}>
+                          <form onSubmit={(e) => {
+                              e.preventDefault();
+                              updateSource(source.id);
+                          }}>
+                              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                                  <label className="field" style={{ flex: 1 }}><span>Career page URL</span>
+                                      <input type="url" value={sourceForm.url} onChange={updateSourceForm('url')} required />
+                                  </label>
+                                  <label className="field" style={{ flex: 1 }}><span>Company name / label</span>
+                                      <input value={sourceForm.label} onChange={updateSourceForm('label')} />
+                                  </label>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                  <button type="button" className="button-quiet" onClick={() => setEditingSource(null)}>Cancel</button>
+                                  <button type="submit" className="button-secondary">Save Changes</button>
+                              </div>
+                          </form>
+                      </div>
+                  )}
+                  {expandedSource === source.id && editingSource !== source.id && (
                     <div className="source-jobs-panel">
                       {sourceJobsLoading === source.id ? (
                         <div className="jobs-loading"><span className="button-spinner" />Loading jobs…</div>

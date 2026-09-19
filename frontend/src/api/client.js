@@ -255,6 +255,10 @@ export const api = {
   deleteJobSource: (id) => http.delete(`/jobs/sources/${id}`).then(() => {
     invalidateCache(CACHE_KEYS.JOB_SOURCES)
   }),
+  updateJobSource: (id, url, label) => http.put(`/jobs/sources/${id}`, { url, label }).then((response) => {
+    invalidateCache(CACHE_KEYS.JOB_SOURCES)
+    return response.data
+  }),
 
   getGitHubStatus: () => cachedFetch(CACHE_KEYS.GITHUB_STATUS,
     () => http.get('/github/status').then((r) => r.data),
