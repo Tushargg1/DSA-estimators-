@@ -500,6 +500,7 @@ public class JobSourceService {
     // --- Internal helpers ---
 
     private String fetchPage(String url) throws IOException {
+        // First try with Playwright (handles JS-rendered pages)
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
             com.microsoft.playwright.BrowserContext context = browser.newContext(new com.microsoft.playwright.Browser.NewContextOptions()
@@ -507,36 +508,51 @@ public class JobSourceService {
                 .setViewportSize(1920, 1080)
             );
             Page page = context.newPage();
-            
-            // Adding extra headers to look less like a bot
             page.setExtraHTTPHeaders(Map.of(
                 "Accept-Language", "en-US,en;q=0.9",
                 "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
             ));
-
             com.microsoft.playwright.Response response = page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
-            
-            if (response != null && response.status() >= 400 && response.status() != 404) {
-                // If it's a 403 or 500, we want to know, but let's see if the page still rendered something useful
-                log.warn("Playwright returned HTTP {} for {}", response.status(), url);
+            if (response != null && response.status() >= 400) {
+                log.warn("Playwright returned HTTP {} for {}, trying plain HTTP fallback...", response.status(), url);
+                // Try plain HTTP as a fallback (works for sites that only block headless browsers)
+                return fetchPageViaHttp(url);
             }
-            
-            // Give SPAs a moment to render the job listings
             try {
                 page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(5000));
-            } catch (Exception e) {
-                // Ignore timeout and grab whatever is rendered
+            } catch (Exception e) { /* Ignore timeout, grab whatever rendered */ }
+            return page.content();
+        } catch (Exception playwrightEx) {
+            log.warn("Playwright failed for {}: {}, trying plain HTTP fallback...", url, playwrightEx.getMessage());
+            return fetchPageViaHttp(url);
+        }
+    }
+
+    /** Plain HTTP GET fallback — works for simple HTML pages not protected by WAF. */
+    private String fetchPageViaHttp(String url) throws IOException {
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                .followRedirects(java.net.http.HttpClient.Redirect.ALWAYS)
+                .connectTimeout(java.time.Duration.ofSeconds(15))
+                .build();
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create(url))
+                .header("User-Agent", "Mozilla/5.0 (compatible; JobBot/1.0; +https://dsa-estimators.vercel.app)")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "en-US,en;q=0.9")
+                .GET()
+                .build();
+            java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 403) {
+                throw new IOException("HTTP 403 Forbidden — this site blocks automated access. Consider using a direct API adapter instead.");
             }
-            
-            String html = page.content();
-            
-            if (response != null && response.status() == 403 && html.length() < 2000) {
-                throw new IOException("HTTP 403 Forbidden (Blocked by Anti-Bot/WAF)");
+            if (response.statusCode() >= 400) {
+                throw new IOException("HTTP " + response.statusCode() + " — could not fetch page.");
             }
-            
-            return html;
-        } catch (Exception e) {
-            throw new IOException("Failed to fetch with Playwright: " + e.getMessage(), e);
+            return response.body();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Request interrupted", e);
         }
     }
 

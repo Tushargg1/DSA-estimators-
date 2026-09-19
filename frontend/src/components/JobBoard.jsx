@@ -527,6 +527,25 @@ function JobBoard() {
               {profileCreating ? <><span className="button-spinner" />Adding...</> : 'Add target role'}
             </button>
           </form>
+
+          {/* List of existing target roles */}
+          {profiles.length > 0 && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: '0.6rem' }}>Your {profiles.length} target role{profiles.length !== 1 ? 's' : ''}</span>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {profiles.map(p => (
+                  <li key={p.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', padding: '0.6rem 0.75rem', background: 'var(--surface-raised)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ fontSize: '0.85rem', display: 'block' }}>{p.roleTitle}</strong>
+                      {p.keywords && <small style={{ color: 'var(--text-muted)', fontSize: '0.72rem', wordBreak: 'break-word' }}>{p.keywords}</small>}
+                    </div>
+                    <button type="button" className="button-quiet" style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', flexShrink: 0, color: 'var(--danger)' }} onClick={() => deleteProfile(p.id)}>✕</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {profileLoading && <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}><span className="button-spinner" /> Loading roles…</p>}
         </aside>
 
         <div className="jobs-feed">
