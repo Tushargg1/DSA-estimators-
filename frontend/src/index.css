@@ -2831,8 +2831,7 @@ html {
 }
 
 .job-share-card {
-  position: sticky;
-  top: 6.7rem;
+  /* Removed sticky positioning to allow scrolling */
 }
 
 .job-share-card h3 { margin: 0.35rem 0 0.5rem; font-size: 1.35rem; }
@@ -2971,7 +2970,8 @@ html {
 /* Company group cards */
 .company-groups {
   display: grid;
-  gap: 0.6rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
 }
 .company-group-card {
   border: 1px solid var(--line);
@@ -3626,6 +3626,7 @@ html {
 .source-actions button { min-height: 36px; padding: 0.4rem 0.7rem; font-size: 0.7rem; }
 
 @media (max-width: 900px) {
+  .company-groups { grid-template-columns: 1fr; }
   .job-share-card { position: static; }
   .job-card { grid-template-columns: 44px minmax(0, 1fr); }
   .job-company-mark { width: 44px; height: 44px; }
