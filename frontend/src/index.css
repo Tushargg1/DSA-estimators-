@@ -2989,9 +2989,9 @@ html {
 }
 .company-group-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0.85rem 1rem;
+  padding: 0.85rem 1rem 0.6rem;
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -3000,8 +3000,10 @@ html {
 }
 .company-group-info {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
 }
 .company-group-mark {
   width: 38px;
@@ -3015,19 +3017,32 @@ html {
   font-weight: 700;
   font-size: 1rem;
   flex-shrink: 0;
+  margin-top: 0.05rem;
 }
 .company-group-info h4 {
-  margin: 0;
+  margin: 0 0 0.15rem;
   font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
-.company-group-info small {
+.company-group-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  padding: 0 1rem 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  border-bottom: 1px solid var(--line);
 }
 .company-group-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
 }
 .company-scrape-btn {
   font-size: 0.72rem;

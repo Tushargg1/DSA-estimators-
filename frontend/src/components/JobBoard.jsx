@@ -637,12 +637,13 @@ function JobBoard() {
                 const status = EXTRACTION_STATUS[source.extractionStatus]
                 return (
                 <div key={source.id} className={`company-group-card${expandedSource === source.id ? ' expanded' : ''}${status ? ` status-${status.tone}` : ''}`}>
+                  {/* Card header — click to expand */}
                   <div className="company-group-header" onClick={() => toggleSourceExpand(source.id)}>
                     <div className="company-group-info">
                       <div className="company-group-mark" aria-hidden="true">
                         {(source.label || hostName(source.url)).charAt(0).toUpperCase()}
                       </div>
-                      <div>
+                      <div style={{ minWidth: 0 }}>
                         <h4>
                           {source.label || hostName(source.url)}
                           {status && (
@@ -660,59 +661,59 @@ function JobBoard() {
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                           </button>
                         </div>
-                        <div className="source-meta">
-                          <span>Added by {source.addedByName}</span>
-                          {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
-                          {source.adapter && <span className="source-adapter-tag">API sync</span>}
-                          
-                          {source.lastScrapeTotalJobs != null && (
-                              <span title="Total jobs seen by the scraper in the latest run" className="source-stat-pill">
-                                  <strong>{source.lastScrapeTotalJobs}</strong> jobs seen
-                              </span>
-                          )}
-                          <span title="Jobs matching your target roles and 0-experience criteria" className="source-stat-pill success">
-                              <strong>{source.storedListings}</strong> job{source.storedListings === 1 ? '' : 's'} related to you
-                          </span>
-
-                          {source.syncCursor > 0 &&
-                            <span title="Continues automatically every few minutes">
-                              Still scraping… (checked {source.syncCursor} so far)
-                            </span>}
-                          {source.sweepCompletedAt && source.syncCursor === 0 &&
-                            <span>Fully scraped as of: {formatPostedAt(source.sweepCompletedAt)}</span>}
-                          {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}
-                        </div>
                       </div>
                     </div>
-                    <div className="company-group-actions">
-                      <select 
-                        id={`scrape-profile-select-${source.id}`} 
-                        className="source-profile-select button-quiet"
-                        style={{ padding: '0.4rem', border: '1px solid var(--line-strong)', borderRadius: 'var(--radius-sm)' }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="">All target roles</option>
-                        {profiles.map(p => <option key={p.id} value={p.id}>{p.roleTitle}</option>)}
-                      </select>
-                      <button type="button" className="button-secondary company-scrape-btn"
-                        disabled={scrapingId === source.id}
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          const pid = document.getElementById(`scrape-profile-select-${source.id}`).value;
-                          scrapeSource(source.id, pid ? parseInt(pid) : null) 
-                        }}>
-                        {scrapingId === source.id ? <><span className="button-spinner" />Scraping...</> : 'Scrape now'}
-                      </button>
-                      <button type="button" className="button-quiet"
-                        onClick={(e) => { e.stopPropagation(); setEditingSource(source.id); setSourceForm({ url: source.url, label: source.label || '' }) }}>
-                        Edit
-                      </button>
-                      <button type="button" className="button-quiet" disabled={deletingId === source.id}
-                        onClick={(e) => { e.stopPropagation(); deleteSource(source.id) }}>
-                        {deletingId === source.id ? 'Removing…' : 'Remove'}
-                      </button>
-                      <span className="company-expand-icon" aria-hidden="true">{expandedSource === source.id ? '▾' : '▸'}</span>
-                    </div>
+                    <span className="company-expand-icon" aria-hidden="true">{expandedSource === source.id ? '▲' : '▼'}</span>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="company-group-meta">
+                    <span>Added by {source.addedByName}</span>
+                    {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
+                    {source.adapter && <span className="source-adapter-tag">API sync</span>}
+                    {source.lastScrapeTotalJobs != null && (
+                      <span title="Total jobs seen by the scraper in the latest run" className="source-stat-pill">
+                        <strong>{source.lastScrapeTotalJobs}</strong> jobs seen
+                      </span>
+                    )}
+                    <span title="Jobs matching your target roles and 0-experience criteria" className="source-stat-pill success">
+                      <strong>{source.storedListings}</strong> job{source.storedListings === 1 ? '' : 's'} related to you
+                    </span>
+                    {source.syncCursor > 0 &&
+                      <span>Still scraping… ({source.syncCursor} checked)</span>}
+                    {source.sweepCompletedAt && source.syncCursor === 0 &&
+                      <span>Fully scraped as of: {formatPostedAt(source.sweepCompletedAt)}</span>}
+                    {source.lastError && <span className="source-error-note">Error: {source.lastError}</span>}
+                  </div>
+
+                  {/* Action footer */}
+                  <div className="company-group-actions">
+                    <select
+                      id={`scrape-profile-select-${source.id}`}
+                      className="source-profile-select button-quiet"
+                      style={{ padding: '0.35rem 0.5rem', border: '1px solid var(--line-strong)', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <option value="">All target roles</option>
+                      {profiles.map(p => <option key={p.id} value={p.id}>{p.roleTitle}</option>)}
+                    </select>
+                    <button type="button" className="button-secondary company-scrape-btn"
+                      disabled={scrapingId === source.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const pid = document.getElementById(`scrape-profile-select-${source.id}`).value;
+                        scrapeSource(source.id, pid ? parseInt(pid) : null)
+                      }}>
+                      {scrapingId === source.id ? <><span className="button-spinner" />Scraping...</> : 'Scrape now'}
+                    </button>
+                    <button type="button" className="button-quiet"
+                      onClick={(e) => { e.stopPropagation(); setEditingSource(source.id); setSourceForm({ url: source.url, label: source.label || '' }) }}>
+                      Edit
+                    </button>
+                    <button type="button" className="button-quiet" disabled={deletingId === source.id}
+                      onClick={(e) => { e.stopPropagation(); deleteSource(source.id) }}>
+                      {deletingId === source.id ? 'Removing…' : 'Remove'}
+                    </button>
                   </div>
                   {editingSource === source.id && (
                       <div className="source-jobs-panel source-edit-panel">
