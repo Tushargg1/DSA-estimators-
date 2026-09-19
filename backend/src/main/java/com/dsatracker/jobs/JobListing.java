@@ -56,6 +56,9 @@ public class JobListing {
     @Column(name = "experience_required")
     private Integer experienceRequired;
 
+    @Column(name = "detected_role", length = 100)
+    private String detectedRole;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -87,6 +90,8 @@ public class JobListing {
     public void setPostedText(String postedText) { this.postedText = postedText; }
     public Integer getExperienceRequired() { return experienceRequired; }
     public void setExperienceRequired(Integer experienceRequired) { this.experienceRequired = experienceRequired; }
+    public String getDetectedRole() { return detectedRole; }
+    public void setDetectedRole(String detectedRole) { this.detectedRole = detectedRole; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

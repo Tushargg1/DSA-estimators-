@@ -24,7 +24,8 @@ public final class JobDtos {
             String qualification,
             String postedText,
             boolean applied,
-            Instant appliedAt
+            Instant appliedAt,
+            String detectedRole
     ) {
         /** Build from an entity, keeping field mapping in one place. */
         static JobResponse from(JobListing listing, String postedByName, Instant appliedAt) {
@@ -33,7 +34,7 @@ public final class JobDtos {
                     postedByName, listing.getCreatedAt(), listing.getExperienceRequired(),
                     listing.getDescription(), listing.getLocation(), listing.getEmploymentType(),
                     listing.getCareerLevel(), listing.getQualification(), listing.getPostedText(),
-                    appliedAt != null, appliedAt);
+                    appliedAt != null, appliedAt, listing.getDetectedRole());
         }
     }
 

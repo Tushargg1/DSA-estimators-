@@ -48,6 +48,7 @@ function JobBoard() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
+  const [roleFilter, setRoleFilter] = useState('All 0-Exp Jobs')
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [updatingId, setUpdatingId] = useState(null)
@@ -385,9 +386,10 @@ function JobBoard() {
     return (page?.content || []).filter((job) => {
       const matchesStatus = filter === 'all' || (filter === 'applied' ? job.applied : !job.applied)
       const matchesQuery = !needle || job.title.toLowerCase().includes(needle) || job.company.toLowerCase().includes(needle)
-      return matchesStatus && matchesQuery
+      const matchesRole = roleFilter === 'All 0-Exp Jobs' || job.detectedRole === roleFilter
+      return matchesStatus && matchesQuery && matchesRole
     })
-  }, [page, query, filter])
+  }, [page, query, filter, roleFilter])
 
   const appliedCount = page?.content?.filter((job) => job.applied).length || 0
   const currentProfile = profiles.find((p) => p.id === activeProfile)
@@ -449,6 +451,11 @@ function JobBoard() {
               {[['all', 'All'], ['open', 'Not applied'], ['applied', 'Applied']].map(([v, l]) =>
                 <button key={v} type="button" className="button-secondary" aria-pressed={filter === v} onClick={() => setFilter(v)}>{l}</button>)}
             </div>
+          </div>
+          
+          <div className="jobs-filter" style={{ marginTop: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }} role="group" aria-label="Filter by Job Role">
+             {['All 0-Exp Jobs', 'Java Developer', 'Software Development Engineer', 'Python Developer', 'Data Analyst', 'AI & ML Engineer'].map((role) =>
+                <button key={role} type="button" className="button-secondary" aria-pressed={roleFilter === role} onClick={() => setRoleFilter(role)}>{role}</button>)}
           </div>
           {error && <div className="form-error" role="alert"><span>!</span>{error}</div>}
           {success && <p className="job-success" role="status">{success}</p>}
@@ -787,7 +794,7 @@ function summarizeLocation(location, max = 3) {
 function JobCard({ job, updatingId, onToggle }) {
   const locationLabel = summarizeLocation(job.location)
   // Structured portal metadata when available, otherwise fall back to who shared it.
-  const facts = [locationLabel, job.employmentType, job.careerLevel].filter(Boolean)
+  const facts = [job.detectedRole, locationLabel, job.employmentType, job.careerLevel].filter(Boolean)
   const hasPortalMeta = facts.length > 0
 
   return (

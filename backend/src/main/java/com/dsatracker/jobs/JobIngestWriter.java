@@ -61,7 +61,23 @@ class JobIngestWriter {
                 // Generic scrapes have no portal id, so fall back to the URL.
                 continue;
             }
-            batch.add(toListing(job, sourceId, postedBy, company));
+            
+            JobListing listing = toListing(job, sourceId, postedBy, company);
+            
+            // Apply strict filters based on user request:
+            // 1. Must be 0 experience (null or 0)
+            if (listing.getExperienceRequired() != null && listing.getExperienceRequired() > 0) {
+                continue;
+            }
+            
+            // 2. Must match one of the target roles
+            String detected = detectTargetRole(listing.getTitle(), listing.getDescription());
+            if (detected == null) {
+                continue;
+            }
+            listing.setDetectedRole(detected);
+            
+            batch.add(listing);
         }
 
         if (batch.isEmpty()) return 0;
@@ -139,5 +155,43 @@ class JobIngestWriter {
         if (value == null || value.isBlank()) return null;
         String trimmed = value.trim();
         return trimmed.length() <= max ? trimmed : trimmed.substring(0, max);
+    }
+    
+    private String detectTargetRole(String title, String description) {
+        String combined = ((title != null ? title : "") + " " + (description != null ? description : "")).toLowerCase();
+        
+        // Java Developer
+        if (combined.contains("java developer") || combined.contains("java software engineer") || 
+            (combined.contains("java") && combined.contains("developer"))) {
+            return "Java Developer";
+        }
+        
+        // Python Developer
+        if (combined.contains("python developer") || combined.contains("python software engineer") ||
+            (combined.contains("python") && combined.contains("developer"))) {
+            return "Python Developer";
+        }
+        
+        // AI & ML Engineer
+        if (combined.contains("machine learning") || combined.contains("artificial intelligence") ||
+            combined.contains("ai/ml") || combined.contains("ai & ml") || 
+            combined.contains("ml engineer") || combined.contains("ai engineer")) {
+            return "AI & ML Engineer";
+        }
+        
+        // Data Analyst
+        if (combined.contains("data analyst") || combined.contains("data analysis") || 
+            combined.contains("business analyst") && combined.contains("data")) {
+            return "Data Analyst";
+        }
+        
+        // Software Development Engineer (SDE)
+        if (combined.contains("software development engineer") || combined.contains("sde") || 
+            combined.contains("software engineer") || combined.contains("backend engineer") ||
+            combined.contains("frontend engineer") || combined.contains("full stack engineer")) {
+            return "Software Development Engineer";
+        }
+        
+        return null;
     }
 }
