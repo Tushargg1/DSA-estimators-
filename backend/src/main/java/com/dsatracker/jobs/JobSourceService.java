@@ -502,8 +502,24 @@ public class JobSourceService {
     private String fetchPage(String url) throws IOException {
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
-            Page page = browser.newPage();
-            page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+            com.microsoft.playwright.BrowserContext context = browser.newContext(new com.microsoft.playwright.Browser.NewContextOptions()
+                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                .setViewportSize(1920, 1080)
+            );
+            Page page = context.newPage();
+            
+            // Adding extra headers to look less like a bot
+            page.setExtraHTTPHeaders(Map.of(
+                "Accept-Language", "en-US,en;q=0.9",
+                "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+            ));
+
+            com.microsoft.playwright.Response response = page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+            
+            if (response != null && response.status() >= 400 && response.status() != 404) {
+                // If it's a 403 or 500, we want to know, but let's see if the page still rendered something useful
+                log.warn("Playwright returned HTTP {} for {}", response.status(), url);
+            }
             
             // Give SPAs a moment to render the job listings
             try {
@@ -512,7 +528,13 @@ public class JobSourceService {
                 // Ignore timeout and grab whatever is rendered
             }
             
-            return page.content();
+            String html = page.content();
+            
+            if (response != null && response.status() == 403 && html.length() < 2000) {
+                throw new IOException("HTTP 403 Forbidden (Blocked by Anti-Bot/WAF)");
+            }
+            
+            return html;
         } catch (Exception e) {
             throw new IOException("Failed to fetch with Playwright: " + e.getMessage(), e);
         }
