@@ -243,10 +243,13 @@ export const api = {
     invalidateCache(CACHE_KEYS.JOB_SOURCES)
     return response.data
   }),
-  scrapeJobSource: (id) => http.post(`/jobs/sources/${id}/scrape`).then((response) => {
-    invalidateCache(CACHE_KEYS.JOB_SOURCES, CACHE_KEYS.JOB_PROFILES)
-    return response.data
-  }),
+  scrapeJobSource: (id, profileId = null) => {
+    const url = profileId ? `/jobs/sources/${id}/scrape?profileId=${profileId}` : `/jobs/sources/${id}/scrape`;
+    return http.post(url).then((response) => {
+      invalidateCache(CACHE_KEYS.JOB_SOURCES)
+      return response.data
+    })
+  },
   getSourceListings: (id) =>
     http.get(`/jobs/sources/${id}/listings`).then((response) => response.data),
   checkJobSource: (url, signal) =>
@@ -259,6 +262,7 @@ export const api = {
     invalidateCache(CACHE_KEYS.JOB_SOURCES)
     return response.data
   }),
+  getGroqLimits: () => http.get('/jobs/limits').then(r => r.data),
 
   getGitHubStatus: () => cachedFetch(CACHE_KEYS.GITHUB_STATUS,
     () => http.get('/github/status').then((r) => r.data),

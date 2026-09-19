@@ -25,10 +25,14 @@ import java.util.stream.Collectors;
 class JobIngestWriter {
     private final JobSourceRepository sources;
     private final JobListingRepository listings;
+    private final JobProfileRepository profiles;
+    private final GroqService groqService;
 
-    JobIngestWriter(JobSourceRepository sources, JobListingRepository listings) {
+    JobIngestWriter(JobSourceRepository sources, JobListingRepository listings, JobProfileRepository profiles, GroqService groqService) {
         this.sources = sources;
         this.listings = listings;
+        this.profiles = profiles;
+        this.groqService = groqService;
     }
 
     /**
@@ -41,8 +45,15 @@ class JobIngestWriter {
      * @return how many new listings were created
      */
     @Transactional
-    public int persistChunk(Long sourceId, Long postedBy, String company, List<ScrapedJob> jobs) {
+    public int persistChunk(Long sourceId, Long postedBy, String company, List<ScrapedJob> jobs, Long targetProfileId) {
         if (jobs.isEmpty()) return 0;
+
+        List<JobProfile> targetProfiles;
+        if (targetProfileId != null) {
+            targetProfiles = profiles.findById(targetProfileId).map(List::of).orElse(List.of());
+        } else {
+            targetProfiles = profiles.findByUserIdOrderByCreatedAtDesc(postedBy);
+        }
 
         Set<String> incomingIds = jobs.stream()
                 .map(ScrapedJob::externalId)
@@ -70,8 +81,17 @@ class JobIngestWriter {
                 continue;
             }
             
-            // 2. Must match one of the target roles
-            String detected = detectTargetRole(listing.getTitle(), listing.getDescription());
+            // 2. Must match one of the target roles using basic regex first, then Groq
+            String detected = null;
+            for (JobProfile profile : targetProfiles) {
+                if (matchesProfileRegex(profile, listing.getTitle(), listing.getDescription())) {
+                    if (groqService.confirmJobMatch(profile.getRoleTitle(), profile.getKeywords(), listing.getTitle(), listing.getDescription())) {
+                        detected = profile.getRoleTitle();
+                        break;
+                    }
+                }
+            }
+
             if (detected == null) {
                 continue;
             }
@@ -160,41 +180,30 @@ class JobIngestWriter {
         return trimmed.length() <= max ? trimmed : trimmed.substring(0, max);
     }
     
-    private String detectTargetRole(String title, String description) {
+    private boolean matchesProfileRegex(JobProfile profile, String title, String description) {
         String combined = ((title != null ? title : "") + " " + (description != null ? description : "")).toLowerCase();
+        String roleLower = profile.getRoleTitle().toLowerCase();
         
-        // Java Developer
-        if (combined.contains("java developer") || combined.contains("java software engineer") || 
-            (combined.contains("java") && combined.contains("developer"))) {
-            return "Java Developer";
+        // Basic naive check: if the title or keywords appear in the text
+        if (combined.contains(roleLower)) return true;
+        
+        // If they provided keywords, check if any match
+        if (profile.getKeywords() != null && !profile.getKeywords().isBlank()) {
+            String[] words = profile.getKeywords().toLowerCase().split("[,\\s]+");
+            for (String w : words) {
+                if (!w.isBlank() && combined.contains(w)) return true;
+            }
         }
         
-        // Python Developer
-        if (combined.contains("python developer") || combined.contains("python software engineer") ||
-            (combined.contains("python") && combined.contains("developer"))) {
-            return "Python Developer";
+        // If it's something like "Java Developer", check for "Java" and "Developer"
+        String[] parts = roleLower.split("\\s+");
+        boolean allMatch = true;
+        for (String p : parts) {
+            if (!combined.contains(p)) {
+                allMatch = false;
+                break;
+            }
         }
-        
-        // AI & ML Engineer
-        if (combined.contains("machine learning") || combined.contains("artificial intelligence") ||
-            combined.contains("ai/ml") || combined.contains("ai & ml") || 
-            combined.contains("ml engineer") || combined.contains("ai engineer")) {
-            return "AI & ML Engineer";
-        }
-        
-        // Data Analyst
-        if (combined.contains("data analyst") || combined.contains("data analysis") || 
-            combined.contains("business analyst") && combined.contains("data")) {
-            return "Data Analyst";
-        }
-        
-        // Software Development Engineer (SDE)
-        if (combined.contains("software development engineer") || combined.contains("sde") || 
-            combined.contains("software engineer") || combined.contains("backend engineer") ||
-            combined.contains("frontend engineer") || combined.contains("full stack engineer")) {
-            return "Software Development Engineer";
-        }
-        
-        return null;
+        return allMatch;
     }
 }

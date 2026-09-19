@@ -31,18 +31,29 @@ public class JobBoardController {
     private final JobProfileService profileService;
     private final JobSourceService sourceService;
     private final ResumeParserService resumeParser;
+    private final GroqService groqService;
     private final AccessService access;
 
     public JobBoardController(JobBoardService jobs,
                               JobProfileService profileService,
                               JobSourceService sourceService,
                               ResumeParserService resumeParser,
+                              GroqService groqService,
                               AccessService access) {
         this.jobs = jobs;
         this.profileService = profileService;
         this.sourceService = sourceService;
         this.resumeParser = resumeParser;
+        this.groqService = groqService;
         this.access = access;
+    }
+
+    @GetMapping("/limits")
+    public Map<String, Integer> getGroqLimits() {
+        return Map.of(
+            "requestsLeft", groqService.getLimitRequestsLeft() != null ? groqService.getLimitRequestsLeft() : -1,
+            "tokensLeft", groqService.getLimitTokensLeft() != null ? groqService.getLimitTokensLeft() : -1
+        );
     }
 
     // --- Listings ---
@@ -147,8 +158,9 @@ public class JobBoardController {
 
     @PostMapping("/sources/{id}/scrape")
     public JobDtos.ScrapeResult scrapeSource(@PathVariable Long id,
+                                             @RequestParam(required = false) Long profileId,
                                              Authentication authentication) {
-        return sourceService.scrapeSource(access.userId(authentication), id);
+        return sourceService.scrapeSource(access.userId(authentication), id, profileId);
     }
 
     @GetMapping("/sources/{id}/listings")

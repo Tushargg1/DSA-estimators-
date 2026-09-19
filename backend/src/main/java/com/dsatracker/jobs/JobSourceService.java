@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +129,7 @@ public class JobSourceService {
             JobPortalAdapter adapter = findAdapter(source.getUrl());
             if (adapter == null) return; // Generic scrapes complete in a single pass.
 
-            JobDtos.ScrapeResult result = syncViaAdapter(source, adapter, 1);
+            JobDtos.ScrapeResult result = syncViaAdapter(source, adapter, 1, null);
             if (result.error() != null) {
                 log.warn("[BackgroundSweep] Stopping source {} after error: {}",
                         sourceId, result.error());
@@ -192,7 +193,7 @@ public class JobSourceService {
         // First extraction attempt. A failure here is recorded on the source rather than
         // thrown, so the source still exists and can be retried or given an adapter later.
         try {
-            ingest(source, INTERACTIVE_CHUNKS);
+            ingest(source, INTERACTIVE_CHUNKS, null);
         } catch (Exception ex) {
             log.warn("Initial extraction failed for new source {} ({}): {}",
                     source.getId(), url, ex.getMessage());
@@ -231,33 +232,36 @@ public class JobSourceService {
      * <p>Interactive calls fetch a single chunk so the response comes back quickly; the
      * scheduled job is what works through a large board over successive runs.
      */
-    public JobDtos.ScrapeResult scrapeSource(Long userId, Long sourceId) {
+    public JobDtos.ScrapeResult scrapeSource(Long userId, Long sourceId, Long targetProfileId) {
         JobSource source = sources.findById(sourceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source not found"));
         // Fetch one chunk now so the caller gets a real count back, then let the rest of the
         // board finish on a background thread instead of requiring repeated clicks.
-        JobDtos.ScrapeResult result = ingest(source, INTERACTIVE_CHUNKS);
+        JobDtos.ScrapeResult result = ingest(source, INTERACTIVE_CHUNKS, targetProfileId);
         continueInBackground(sourceId);
         return result;
     }
 
     /** Hand the remainder of a board to the background executor, if any is left. */
     private void continueInBackground(Long sourceId) {
-        sources.findById(sourceId)
-                .filter(source -> source.getSyncCursor() > 0)
-                .ifPresent(source -> self.getObject().ingestRemainderInBackground(sourceId));
+        // Simple async continuation. If we wanted resilient retry this would be a proper message queue.
+        CompletableFuture.runAsync(() -> {
+            sources.findById(sourceId).ifPresent(s -> {
+                if (s.getSyncCursor() > 0) scrapeSourceInternal(s, null);
+            });
+        });
     }
 
     /** Entry point for the daily scheduler, which may work through several chunks. */
-    public JobDtos.ScrapeResult scrapeSourceInternal(JobSource source) {
-        return ingest(source, MAX_CHUNKS_PER_RUN);
+    public JobDtos.ScrapeResult scrapeSourceInternal(JobSource source, Long targetProfileId) {
+        return ingest(source, MAX_CHUNKS_PER_RUN, targetProfileId);
     }
 
-    private JobDtos.ScrapeResult ingest(JobSource source, int maxChunks) {
+    private JobDtos.ScrapeResult ingest(JobSource source, int maxChunks, Long targetProfileId) {
         JobPortalAdapter adapter = findAdapter(source.getUrl());
         return adapter != null
-                ? syncViaAdapter(source, adapter, maxChunks)
-                : scrapeGenericHtml(source);
+                ? syncViaAdapter(source, adapter, maxChunks, targetProfileId)
+                : scrapeGenericHtml(source, targetProfileId);
     }
 
     /** The first adapter claiming this URL, or null to fall back to HTML scraping. */
@@ -347,7 +351,7 @@ public class JobSourceService {
      * A sweep ends only when the portal returns a short chunk; the cursor then resets
      * so the next cycle picks up newly posted jobs.
      */
-    private JobDtos.ScrapeResult syncViaAdapter(JobSource source, JobPortalAdapter adapter, int maxChunks) {
+    private JobDtos.ScrapeResult syncViaAdapter(JobSource source, JobPortalAdapter adapter, int maxChunks, Long targetProfileId) {
         Long sourceId = source.getId();
         Long postedBy = source.getAddedBy();
         String company = source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl());
@@ -371,7 +375,7 @@ public class JobSourceService {
                 return new JobDtos.ScrapeResult(created, errorMsg, totalSeen, created);
             }
 
-            int chunkCreated = writer.persistChunk(sourceId, postedBy, company, result.jobs());
+            int chunkCreated = writer.persistChunk(sourceId, postedBy, company, result.jobs(), targetProfileId);
             created += chunkCreated;
             totalSeen += result.jobs().size();
             cursor += CHUNK_SIZE;
@@ -393,7 +397,7 @@ public class JobSourceService {
     }
 
     /** Original regex-over-HTML path, used for sources without a dedicated adapter. */
-    private JobDtos.ScrapeResult scrapeGenericHtml(JobSource source) {
+    private JobDtos.ScrapeResult scrapeGenericHtml(JobSource source, Long targetProfileId) {
         String html;
         try {
             html = fetchPage(source.getUrl());
@@ -409,7 +413,7 @@ public class JobSourceService {
                 .map(link -> ScrapedJob.basic(link.url(), link.title(), link.description(), null))
                 .toList();
 
-        int created = writer.persistChunk(source.getId(), source.getAddedBy(), company, jobs);
+        int created = writer.persistChunk(source.getId(), source.getAddedBy(), company, jobs, targetProfileId);
 
         // Nothing in the HTML means this portal renders jobs client-side and needs its
         // own adapter; flag it rather than leaving an empty source that looks broken.

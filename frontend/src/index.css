@@ -3634,7 +3634,7 @@ html {
 
 @media (max-width: 640px) {
   .jobs-hero { grid-template-columns: 1fr; }
-  .jobs-hero-stats { width: 100%; grid-template-columns: repeat(3, 1fr); }
+  .jobs-hero-stats { width: 100%; grid-template-columns: repeat(2, 1fr); }
   .jobs-tabs { width: 100%; }
   .jobs-toolbar { align-items: stretch; flex-direction: column; }
   .jobs-filter { display: grid; grid-template-columns: repeat(3, 1fr); }

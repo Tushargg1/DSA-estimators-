@@ -49,7 +49,7 @@ public class JobScrapeScheduler {
 
         for (JobSource source : allSources) {
             try {
-                JobDtos.ScrapeResult result = sourceService.scrapeSourceInternal(source);
+                JobDtos.ScrapeResult result = sourceService.scrapeSourceInternal(source, null);
                 totalNew += result.newListings();
                 if (result.error() != null) errors++;
                 log.debug("[DailyScrape] Source {} ({}): {} new, error={}",
@@ -85,7 +85,7 @@ public class JobScrapeScheduler {
         log.info("[ContinueSweep] Resuming {} partially ingested source(s)", pending.size());
         for (JobSource source : pending) {
             try {
-                JobDtos.ScrapeResult result = sourceService.scrapeSourceInternal(source);
+                JobDtos.ScrapeResult result = sourceService.scrapeSourceInternal(source, null);
                 log.info("[ContinueSweep] Source {} added {} listing(s){}",
                         source.getId(), result.newListings(),
                         result.error() != null ? " (error: " + result.error() + ")" : "");

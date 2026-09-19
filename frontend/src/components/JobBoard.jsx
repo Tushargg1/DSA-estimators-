@@ -123,7 +123,17 @@ function JobBoard() {
     }
   }, [activeProfile, experienceFilter])
 
-  useEffect(() => { if (tab === 'roles') void loadProfiles() }, [tab, experienceFilter])
+  const [groqLimits, setGroqLimits] = useState(null)
+
+  const loadGroqLimits = useCallback(async () => {
+    try {
+      setGroqLimits(await api.getGroqLimits())
+    } catch (e) {
+      // Ignore gracefully
+    }
+  }, [])
+
+  useEffect(() => { if (tab === 'roles') { void loadProfiles(); void loadGroqLimits(); } }, [tab, experienceFilter])
 
   // --- Load sources ---
   const loadSources = useCallback(async () => {
@@ -131,6 +141,7 @@ function JobBoard() {
     setSourceError(null)
     try {
       setSources(await api.getJobSources())
+      void loadGroqLimits()
     } catch (e) {
       setSourceError(e.message || 'Could not load sources.')
     } finally {
@@ -324,10 +335,10 @@ function JobBoard() {
     } finally { setSourceAdding(false) }
   }
 
-  const scrapeSource = async (id) => {
+  const scrapeSource = async (id, profileId = null) => {
     setScrapingId(id); setSourceError(null); setSourceSuccess(null)
     try {
-      const result = await api.scrapeJobSource(id)
+      const result = await api.scrapeJobSource(id, profileId)
       if (result.error) {
         setSourceError(result.error)
       } else if (result.newListings === 0) {
@@ -421,6 +432,12 @@ function JobBoard() {
         <div className="jobs-hero-stats" aria-label="Job board summary">
           <span><strong>{page?.totalElements ?? 0}</strong><small>shared roles</small></span>
           <span><strong>{profiles.length || '—'}</strong><small>my profiles</small></span>
+          <span>
+            <strong style={{ fontSize: groqLimits?.requestsLeft >= 0 ? '1.25rem' : undefined }}>
+              {groqLimits?.requestsLeft >= 0 ? `${groqLimits.requestsLeft} req` : '—'}
+            </strong>
+            <small>Groq API limit</small>
+          </span>
           <span><strong>{appliedCount}</strong><small>applied</small></span>
         </div>
       </header>
@@ -488,11 +505,28 @@ function JobBoard() {
       </div>}
 
       {/* ===== MY ROLES TAB ===== */}
-      {tab === 'roles' && <div className="jobs-layout">
+      {tab === 'roles' && <div className="jobs-roles-layout">
         <aside className="job-share-card card">
-          <span className="eyebrow">Your Target Roles</span>
-          <h3>Zero-Experience Roles</h3>
-          <p>Here are the entry-level jobs automatically extracted and matched to your desired roles.</p>
+          <span className="eyebrow">Target Roles</span>
+          <h3>Add a new target role</h3>
+          <p>Define a role title and keywords. Jobs from sources will be matched using regex and the Groq AI API against these rules.</p>
+          <form onSubmit={createProfile} aria-busy={profileCreating}>
+            <div className="source-edit-fields">
+              <label className="field"><span>Role Title</span>
+                <input value={profileForm.roleTitle} onChange={updateProfileForm('roleTitle')} required placeholder="e.g. AI Engineer" aria-invalid={Boolean(profileFieldErrors.roleTitle)} />
+                {profileFieldErrors.roleTitle && <small className="field-error">{profileFieldErrors.roleTitle}</small>}
+              </label>
+              <label className="field"><span>Keywords (comma separated)</span>
+                <input value={profileForm.keywords} onChange={updateProfileForm('keywords')} required placeholder="python, machine learning, gcp" aria-invalid={Boolean(profileFieldErrors.keywords)} />
+                {profileFieldErrors.keywords && <small className="field-error">{profileFieldErrors.keywords}</small>}
+              </label>
+            </div>
+            {profileError && <div className="form-error" role="alert"><span>!</span>{profileError}</div>}
+            {profileSuccess && <p className="job-success" role="status">{profileSuccess}</p>}
+            <button type="submit" className="job-share-submit" disabled={profileCreating}>
+              {profileCreating ? <><span className="button-spinner" />Adding...</> : 'Add target role'}
+            </button>
+          </form>
         </aside>
 
         <div className="jobs-feed">
@@ -507,8 +541,12 @@ function JobBoard() {
           </div>
           
           <div className="jobs-filter" style={{ marginTop: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }} role="group" aria-label="Filter by Job Role">
-             {['All 0-Exp Jobs', 'Java Developer', 'Software Development Engineer', 'Python Developer', 'Data Analyst', 'AI & ML Engineer'].map((role) =>
-                <button key={role} type="button" className="button-secondary" aria-pressed={roleFilter === role} onClick={() => setRoleFilter(role)}>{role}</button>)}
+             <button type="button" className="button-secondary" aria-pressed={roleFilter === 'All 0-Exp Jobs'} onClick={() => setRoleFilter('All 0-Exp Jobs')}>All 0-Exp Jobs</button>
+             {profiles.map((profile) => (
+                <button key={profile.id} type="button" className="button-secondary" aria-pressed={roleFilter === profile.roleTitle} onClick={() => setRoleFilter(profile.roleTitle)}>
+                  {profile.roleTitle}
+                </button>
+             ))}
           </div>
           
           {error && <div className="form-error" role="alert"><span>!</span>{error}</div>}
@@ -639,10 +677,23 @@ function JobBoard() {
                       </div>
                     </div>
                     <div className="company-group-actions">
+                      <select 
+                        id={`scrape-profile-select-${source.id}`} 
+                        className="source-profile-select button-quiet"
+                        style={{ padding: '0.4rem', border: '1px solid var(--line-strong)', borderRadius: 'var(--radius-sm)' }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <option value="">All target roles</option>
+                        {profiles.map(p => <option key={p.id} value={p.id}>{p.roleTitle}</option>)}
+                      </select>
                       <button type="button" className="button-secondary company-scrape-btn"
                         disabled={scrapingId === source.id}
-                        onClick={(e) => { e.stopPropagation(); scrapeSource(source.id) }}>
-                        {scrapingId === source.id ? <><span className="button-spinner" />Scraping…</> : 'Scrape now'}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          const pid = document.getElementById(`scrape-profile-select-${source.id}`).value;
+                          scrapeSource(source.id, pid ? parseInt(pid) : null) 
+                        }}>
+                        {scrapingId === source.id ? <><span className="button-spinner" />Scraping...</> : 'Scrape now'}
                       </button>
                       <button type="button" className="button-quiet"
                         onClick={(e) => { e.stopPropagation(); setEditingSource(source.id); setSourceForm({ url: source.url, label: source.label || '' }) }}>
