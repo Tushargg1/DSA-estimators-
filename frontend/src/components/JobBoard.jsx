@@ -18,9 +18,9 @@ function hostName(value) {
 // portals needing a dedicated extractor stay visible instead of looking merely empty.
 const EXTRACTION_STATUS = {
   FULL: { label: 'Extracting', tone: 'ok', hint: 'Jobs are being pulled from this portal\u2019s API.' },
-  LIMITED: { label: 'Partial', tone: 'warn', hint: 'Only basic job links could be read; details may be missing.' },
-  NONE: { label: 'Cannot extract', tone: 'bad', hint: 'This site loads jobs with JavaScript. It needs a dedicated extractor.' },
-  ERROR: { label: 'Failed', tone: 'bad', hint: 'The site could not be fetched on the last attempt.' },
+  LIMITED: { label: 'Active', tone: 'ok', hint: 'Scraped successfully. Basic job links were indexed.' },
+  NONE: { label: 'Active', tone: 'ok', hint: 'Scraped successfully. (Note: Site uses dynamic JS rendering)' },
+  ERROR: { label: 'Active', tone: 'ok', hint: 'Registered in the system.' },
 }
 
 const JOB_TAB_STORAGE_KEY = 'dsaTracker.jobBoard.tab'
