@@ -55,7 +55,8 @@ public class JobSourceService {
     private static final Pattern HREF_PATTERN = Pattern.compile(
             "href\\s*=\\s*[\"']([^\"']{10,2048})[\"']", Pattern.CASE_INSENSITIVE);
     private static final Pattern JOB_URL_PATTERN = Pattern.compile(
-            "(/job|/career|/apply|/position|/opening|/vacanc|/req|/role|/opportunity|/posting|/detail)",
+            "(/job|/career|/apply|/position|/opening|/vacanc|/req|/role|/opportunity|/posting|/detail"
+            + "|/join|/intern|/talent|/hiring|/work-with|/open-position|/current-open|join-us|work-with-us)",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern TITLE_PATTERN = Pattern.compile(
             ">([^<]{3,200})</a>", Pattern.CASE_INSENSITIVE);
@@ -502,26 +503,63 @@ public class JobSourceService {
     private String fetchPage(String url) throws IOException {
         // First try with Playwright (handles JS-rendered pages)
         try (Playwright playwright = Playwright.create()) {
-            Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+            Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+                    .setHeadless(true)
+                    .setArgs(java.util.List.of(
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu"
+                    ))
+            );
             com.microsoft.playwright.BrowserContext context = browser.newContext(new com.microsoft.playwright.Browser.NewContextOptions()
                 .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                 .setViewportSize(1920, 1080)
+                .setIgnoreHTTPSErrors(true)
             );
             Page page = context.newPage();
             page.setExtraHTTPHeaders(Map.of(
                 "Accept-Language", "en-US,en;q=0.9",
                 "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
             ));
-            com.microsoft.playwright.Response response = page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+
+            com.microsoft.playwright.Response response = page.navigate(url,
+                    new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED).setTimeout(30000));
+
             if (response != null && response.status() >= 400) {
                 log.warn("Playwright returned HTTP {} for {}, trying plain HTTP fallback...", response.status(), url);
-                // Try plain HTTP as a fallback (works for sites that only block headless browsers)
+                browser.close();
                 return fetchPageViaHttp(url);
             }
+
+            // Wait for NETWORKIDLE so JS-rendered job lists have time to appear.
+            // Capped at 15s — if the site is still loading after that, grab what's there.
             try {
-                page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(5000));
-            } catch (Exception e) { /* Ignore timeout, grab whatever rendered */ }
-            return page.content();
+                page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE,
+                        new Page.WaitForLoadStateOptions().setTimeout(15000));
+            } catch (Exception e) {
+                log.debug("NETWORKIDLE timeout for {} (grabbing partial render): {}", url, e.getMessage());
+            }
+
+            // Attempt to wait for a job list element to appear (covers most ATS portals).
+            // If none of these selectors appear it just continues with whatever rendered.
+            String[] jobListSelectors = {
+                "a[href*='/job']", "a[href*='/career']", "a[href*='/opening']",
+                "[class*='job-card']", "[class*='jobCard']", "[class*='job-listing']",
+                "[class*='position']", "[class*='vacancy']", "[data-job-id]",
+                "li[class*='job']", "div[class*='job-item']"
+            };
+            for (String selector : jobListSelectors) {
+                try {
+                    page.waitForSelector(selector, new Page.WaitForSelectorOptions().setTimeout(3000));
+                    log.debug("Found job-list selector '{}' on {}", selector, url);
+                    break;
+                } catch (Exception ignored) { /* try next selector */ }
+            }
+
+            String html = page.content();
+            browser.close();
+            return html;
         } catch (Exception playwrightEx) {
             log.warn("Playwright failed for {}: {}, trying plain HTTP fallback...", url, playwrightEx.getMessage());
             return fetchPageViaHttp(url);
@@ -567,7 +605,7 @@ public class JobSourceService {
         Matcher hrefMatcher = HREF_PATTERN.matcher(html);
         Set<String> seen = new java.util.HashSet<>();
 
-        while (hrefMatcher.find() && results.size() < 50) {
+        while (hrefMatcher.find() && results.size() < 500) {
             String href = hrefMatcher.group(1).trim();
             String resolved = resolveUrl(href, baseUrl);
             if (resolved == null) continue;
