@@ -558,20 +558,31 @@ public class JobSourceService {
                 } catch (Exception ignored) { /* try next selector */ }
             }
 
-            // Evaluate generic job extractor script for sites that don't use real hrefs
-            String jsExtractor = 
-                "() => {\n" +
-                "  let jobs = [];\n" +
-                "  let elements = document.querySelectorAll('a, [class*=job], [class*=position], [class*=vacancy], [class*=card], li, div');\n" +
-                "  for(let el of elements) {\n" +
-                "    let title = el.innerText ? el.innerText.trim() : '';\n" +
-                "    if(title.length > 5 && title.length < 150 && !title.includes('\\n') && " +
-                "       (title.toLowerCase().includes('engineer') || title.toLowerCase().includes('manager') || title.toLowerCase().includes('developer') || title.toLowerCase().includes('analyst') || title.toLowerCase().includes('consultant'))) {\n" +
-                "       let url = el.href || (window.location.href.split('#')[0] + '#/job-' + encodeURIComponent(title.replace(/\\s+/g, '-').toLowerCase()));\n" +
-                "       if(url.startsWith('http')) jobs.push({url: url, title: title});\n" +
-                "    }\n" +
-                "  }\n" +
-                "  return jobs;\n" +
+            // Extract only jobs with REAL hrefs — skip fabricated fragment anchors.
+            // Darwinbox / similar SPAs load job cards whose click is JS-routed;
+            // we try to pick up a real anchor inside the card or build the URL from data-job-id.
+            String jsExtractor =
+                "() => {" +
+                "  let jobs = []; let seen = new Set();" +
+                "  let anchors = document.querySelectorAll('a[href]');" +
+                "  for(let el of anchors) {" +
+                "    let href = el.href;" +
+                "    if(!href || href.startsWith('javascript:')) continue;" +
+                "    let text = el.innerText ? el.innerText.trim() : '';" +
+                "    if(text.length < 2) text = el.title || el.getAttribute('aria-label') || '';" +
+                "    if(href.startsWith('http') && !seen.has(href)) { seen.add(href); jobs.push({url:href,title:text||null}); }" +
+                "  }" +
+                "  let cards = document.querySelectorAll('[class*=job-card],[class*=jobCard],[class*=job-item],[class*=jobItem],[data-job-id],[data-jobid]');" +
+                "  for(let card of cards) {" +
+                "    let jobId = card.getAttribute('data-job-id') || card.getAttribute('data-jobid') || card.getAttribute('data-id');" +
+                "    let titleEl = card.querySelector('h1,h2,h3,h4,h5,[class*=title],[class*=role],[class*=position],[class*=name]');" +
+                "    let title = titleEl ? titleEl.innerText.trim() : (card.innerText ? card.innerText.split('\\n')[0].trim() : '');" +
+                "    let anchor = card.querySelector('a[href]');" +
+                "    let cardUrl = anchor ? anchor.href : null;" +
+                "    if(!cardUrl && jobId) cardUrl = window.location.origin + window.location.pathname.replace(/\\/allJobs.*/, '') + '/jobDetails/' + jobId;" +
+                "    if(cardUrl && cardUrl.startsWith('http') && !seen.has(cardUrl) && title.length > 2) { seen.add(cardUrl); jobs.push({url:cardUrl,title:title}); }" +
+                "  }" +
+                "  return jobs;" +
                 "}";
 
             String html = page.content();
@@ -584,7 +595,8 @@ public class JobSourceService {
                             java.util.Map<?, ?> map = (java.util.Map<?, ?>) o;
                             String jUrl = (String) map.get("url");
                             String jTitle = (String) map.get("title");
-                            if (jUrl != null) {
+                            // Only inject real HTTP URLs — never fake #/job- fragment anchors
+                            if (jUrl != null && jUrl.startsWith("http") && !jUrl.matches(".*#/job-[^/]+$")) {
                                 html += "\n<a href=\"" + jUrl + "\">" + (jTitle != null ? jTitle : "Job") + "</a>";
                             }
                         }
