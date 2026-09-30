@@ -240,7 +240,10 @@ public class JobSourceService {
         // board finish on a background thread instead of requiring repeated clicks.
         JobDtos.ScrapeResult result = ingest(source, INTERACTIVE_CHUNKS, targetProfileId);
         continueInBackground(sourceId);
-        return result;
+        
+        // Fetch fresh source to return updated stats (markProgress updates a different instance)
+        JobSource updatedSource = sources.findById(sourceId).orElse(source);
+        return new JobDtos.ScrapeResult(result.newListings(), result.error(), updatedSource.getLastScrapeTotalJobs(), updatedSource.getLastScrapeMatchedJobs());
     }
 
     /** Hand the remainder of a board to the background executor, if any is left. */
@@ -363,8 +366,9 @@ public class JobSourceService {
         String company = source.getLabel() != null ? source.getLabel() : hostFromUrl(source.getUrl());
 
         int cursor = Math.max(0, source.getSyncCursor());
-        int created = 0;
-        int totalSeen = 0;
+        int totalSeen = (cursor > 0 && source.getLastScrapeTotalJobs() != null) ? source.getLastScrapeTotalJobs() : 0;
+        int accumulatedCreated = (cursor > 0 && source.getLastScrapeMatchedJobs() != null) ? source.getLastScrapeMatchedJobs() : 0;
+        int createdInThisRun = 0;
         boolean exhausted = false;
 
         for (int chunk = 0; chunk < maxChunks; chunk++) {
@@ -378,11 +382,12 @@ public class JobSourceService {
                         JobIngestWriter.STATUS_ERROR, null, null);
                 log.warn("Adapter {} failed for source {} at offset {}: {}",
                         adapter.name(), sourceId, cursor, ex.getMessage());
-                return new JobDtos.ScrapeResult(created, errorMsg, totalSeen, created);
+                return new JobDtos.ScrapeResult(createdInThisRun, errorMsg, totalSeen, accumulatedCreated);
             }
 
             int chunkCreated = writer.persistChunk(sourceId, postedBy, company, result.jobs(), targetProfileId);
-            created += chunkCreated;
+            createdInThisRun += chunkCreated;
+            accumulatedCreated += chunkCreated;
             totalSeen += result.jobs().size();
             cursor += CHUNK_SIZE;
 
@@ -391,15 +396,15 @@ public class JobSourceService {
                 break;
             }
             // Checkpoint between chunks; status is left as-is until the run finishes.
-            writer.markProgress(sourceId, adapter.name(), cursor, false, null, null, totalSeen, created);
+            writer.markProgress(sourceId, adapter.name(), cursor, false, null, null, totalSeen, accumulatedCreated);
         }
 
         writer.markProgress(sourceId, adapter.name(), cursor, exhausted, null,
-                JobIngestWriter.STATUS_FULL, totalSeen, created);
+                JobIngestWriter.STATUS_FULL, totalSeen, accumulatedCreated);
         log.info("Adapter {} synced source {}: {} new listings, cursor now {}{}",
-                adapter.name(), sourceId, created, exhausted ? 0 : cursor,
+                adapter.name(), sourceId, createdInThisRun, exhausted ? 0 : cursor,
                 exhausted ? " (full sweep complete)" : "");
-        return new JobDtos.ScrapeResult(created, null, totalSeen, created);
+        return new JobDtos.ScrapeResult(createdInThisRun, null, totalSeen, accumulatedCreated);
     }
 
     /** Original regex-over-HTML path, used for sources without a dedicated adapter. */

@@ -722,12 +722,12 @@ function JobBoard() {
                     {source.lastScrapedAt && <span>Last extracted: {formatPostedAt(source.lastScrapedAt)}</span>}
                     {source.adapter && <span className="source-adapter-tag">API sync</span>}
                     {source.lastScrapeTotalJobs != null && (
-                      <span title="Total jobs seen by the scraper in the latest run" className="source-stat-pill">
-                        <strong>{source.lastScrapeTotalJobs}</strong> jobs seen
+                      <span title="Jobs processed in the most recent background batch" className="source-stat-pill">
+                        <strong>{source.lastScrapeTotalJobs}</strong> jobs seen in latest batch
                       </span>
                     )}
                     <span title="Jobs matching your target roles and 0-experience criteria" className="source-stat-pill success">
-                      <strong>{source.storedListings}</strong> job{source.storedListings === 1 ? '' : 's'} related to you
+                      <strong>{source.storedListings}</strong> total stored job{source.storedListings === 1 ? '' : 's'}
                     </span>
                     {source.syncCursor > 0 &&
                       <span>Still scraping… ({source.syncCursor} checked)</span>}
