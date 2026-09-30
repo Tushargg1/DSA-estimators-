@@ -66,7 +66,7 @@ public class JobSourceService {
      * bound a single run's work (600 postings) so a large portal is ingested across
      * several scheduled runs rather than one long request that a free-tier host kills.
      */
-    private static final int CHUNK_SIZE = 100;
+    private static final int CHUNK_SIZE = 20;
     private static final int MAX_CHUNKS_PER_RUN = 6;
     /**
      * A user clicking "Scrape now" waits on the response, so interactive runs fetch a
@@ -705,7 +705,7 @@ public class JobSourceService {
             if (resolved.getHost() == null || resolved.getHost().isBlank()) return null;
             if (resolved.getRawUserInfo() != null) return null;
             return resolved.toString();
-        } catch (URISyntaxException e) {
+        } catch (Exception e) {
             return null;
         }
     }

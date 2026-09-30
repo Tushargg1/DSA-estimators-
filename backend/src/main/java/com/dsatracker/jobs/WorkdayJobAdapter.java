@@ -64,9 +64,12 @@ public class WorkdayJobAdapter extends AbstractJsonJobAdapter {
 
         String baseUrl = String.format("https://%s.%s.myworkdayjobs.com", tenant, wdInstance);
 
+        // Workday restricts the max limit to 20 per request.
+        int safeLimit = Math.min(chunkSize, 20);
+        
         Map<String, Object> body = Map.of(
                 "appliedFacets", Map.of(),
-                "limit", chunkSize,
+                "limit", safeLimit,
                 "offset", startIndex,
                 "searchText", ""
         );
