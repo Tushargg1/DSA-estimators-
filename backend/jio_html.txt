@@ -1,0 +1,903 @@
+<!DOCTYPE html><html lang="en" style="" class=" js flexbox canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths"><head id="Head1"><meta http-equiv="Cache-control" content="no-cache"><meta http-equiv="cache-control" content="max-age=0"><meta http-equiv="expires" content="0"><meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="Cache-Control" content="no-store"><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"><meta name="format-detection" content="telephone=no"><meta property="og:image" content="https://careers.jio.com/images/jio_New.jpg">
+
+    <!-- Google tag (gtag.js) -->
+    <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-641EDJ7QDH"></script>
+    <script> window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-641EDJ7QDH');
+
+    </script>
+
+
+
+    <title>
+	Jio careers
+</title>
+    <noscript>
+        <div>
+            You must enable javascript to continue.
+        </div>
+    </noscript>
+    <link rel="shortcut icon" href="images/favicon.png" type="image/x-icon"><link rel="icon" type="images/favicon.ico" href="images/favicon.ico"><link href="css/normalize.css" rel="stylesheet" type="text/css"><link href="css/master.css" rel="stylesheet" type="text/css"><link href="css/custom.css" rel="stylesheet" type="text/css"><link href="css/main.css" rel="stylesheet" type="text/css">
+    <!-- responsive table -->
+    <link href="css/table.css" rel="stylesheet" type="text/css"><link href="css/hf-main.css" rel="stylesheet" type="text/css">
+
+        <style>
+
+                    /*04 June 2026*/
+
+            .btn-theme-toggle {
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                border: 1.5px solid #ccc;
+                background: #fff;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding: 0;
+                transition: border-color 0.2s, background 0.2s;
+                margin-left: 5px;
+            }
+
+            .theme-sun-icon {
+                color: #222;
+                transition: color 0.25s, transform 0.6s ease;
+            }
+
+            .btn-theme-toggle:hover .theme-sun-icon {
+                transform: rotate(45deg);
+            }
+
+            .btn-theme-toggle.active .theme-sun-icon {
+                color: #3535f3;
+                transform: rotate(180deg);
+            }
+
+            .btn-theme-toggle.active {
+                border-color: #3535f3;
+                background: rgba(53, 53, 243, 0.07);
+            }
+
+            .btn-theme-toggle:focus {
+                border:2px solid #000;
+            }
+ 
+    </style>
+
+    <style>
+        #panelmodal {
+            top: 0 !important;
+            width: 600px;
+        }
+
+        [id$="panelmodal"],
+        [id$="panelConfirmmodal"],
+        [id$="Agreepanelmodal"] {
+            z-index: 100001 !important;
+        }
+
+        .backgroundmodal {
+            z-index: 100000 !important;
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        /* Fix for Logo */
+        .logo input[type="image"] {
+            margin: 0 auto;
+            height: 50px;
+            display: block;
+        }
+
+        .prolist {
+            background: #fff;
+            padding: 20px;
+            width: 79%;
+            margin: 15px auto 0;
+        }
+
+            .prolist h2 {
+                text-align: left;
+            }
+
+                .prolist h2 a {
+                    font-size: 17px;
+                    font-family: 'hel65', Arial, Helvetica, sans-serif;
+                    margin-bottom: 10px;
+                    color: #555;
+                    text-align: left;
+                }
+
+            .prolist p span {
+                font-size: 14px;
+                font-family: 'hel65', Arial, Helvetica, sans-serif;
+                color: #9a9a9a;
+                margin-bottom: 20px;
+                text-align: left;
+            }
+
+            .prolist p {
+                text-align: left;
+                padding: 0 0px 20px;
+                margin: 0;
+                border-bottom: 1px solid #ccc;
+            }
+
+                .prolist p:last-child {
+                    border-bottom: none;
+                }
+
+        .videobtn {
+            margin-bottom: 15px
+        }
+    </style>
+    <link href="css/media-queries.css" rel="stylesheet" type="text/css">
+
+    <script src="js/modernizr-2.6.2.min.js"></script>
+    
+    <script src="js/jquery-1.11.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    
+    <script src="js/CareerJS.js"></script>
+
+
+    <script src="js/hf-main.js"></script>
+    <script src="js/accessibility-modals.js"></script>
+    <script src="js/accessibility.js"></script>
+    
+    <title>Jio Job Opportunities by Function - Join the Digital Movement</title>
+    <meta name="description" content="Explore function-wise job opportunities at Jio. Join the digital India movement and shape your career today.">
+    <meta name="keywords" content="Jio Jobs, Function-wise Careers at Jio, Jio Digital Movement, Jio Job Search, Jio Customer Service Roles, Digital India Careers, Jio Advisor Jobs, Career at Jio">
+
+
+    <script>
+
+       function Funcback()
+       {
+             window.location.href = document.getElementById("MainContent_hdnback").value;
+        }
+    </script>
+
+    <script>
+        function disableEnterKey(e) {
+            var key;
+            if (window.event) key = window.event.keyCode; // Internet Explorer
+            else
+                key = e.which;
+
+            return (key != 13);
+        }
+
+        function ShowPopup() {
+            $find('modalpopup').show();
+            //$get('Button1').click();
+        }
+
+        function HidePopup() {
+            $find('modalpopup').hide();
+            //$get('btnCancel').click();
+        }
+
+        function initializeBootstrapPopovers() {
+            var popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            for (var i = 0; i < popoverTriggerList.length; i++) {
+                var el = popoverTriggerList[i];
+                var popover = bootstrap.Popover.getInstance(el);
+                if (!popover) {
+                    new bootstrap.Popover(el, {
+                        trigger: 'hover focus',
+                        html: true
+                    });
+                }
+            }
+        }
+
+        $(document).ready(function () {
+            // 1. Initialize all popovers currently in the DOM
+            initializeBootstrapPopovers();
+
+            // 2. Setup dynamic delegation for dynamically loaded/data-bound elements (e.g. after view switches or partial updates)
+            $(document).on('focus mouseenter', '[data-bs-toggle="popover"]', function () {
+                var popover = bootstrap.Popover.getInstance(this);
+                if (!popover) {
+                    popover = new bootstrap.Popover(this, {
+                        trigger: 'hover focus',
+                        html: true
+                    });
+                    popover.show();
+                }
+            });
+
+            // 3. Setup listener for ASP.NET Web Forms partial postbacks (UpdatePanel updates)
+            if (typeof Sys !== 'undefined' && Sys.WebForms && Sys.WebForms.PageRequestManager) {
+                Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+                    initializeBootstrapPopovers();
+                });
+            }
+
+            $('#divOverlay').hide();
+            $('#divOverlay2').hide();
+        });
+
+    </script>
+</head>
+
+<body onload="DisableBackButton();" oncontextmenu="return false">
+    <a href="#main-navigation" class="visually-hidden focusable skip-link" role="button" aria-label="Skip to main content">Skip to main content
+    </a>
+    <div id="divOverlay" class="overlay" style="display: none;"></div>
+    <div id="awz-preloader" style="opacity: 0.269513;">
+        <div id="status">
+            <img src="images/loader.svg" class="img-preloader" alt="Loading....">
+        </div>
+    </div>
+
+
+    <form method="post" action="./frmfuncwisejob.aspx?func=098qkj0vwzk%3d&amp;desc=tBOU2f2ubJIKJIaEorlljoC0j8hJb9P7" id="Form1" autocomplete="off">
+<div class="aspNetHidden">
+<input type="hidden" name="ToolkitScriptManager1_HiddenField" id="ToolkitScriptManager1_HiddenField" value=";;AjaxControlToolkit, Version=3.0.30930.28736, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e:en:b0eefc76-0092-471b-ab62-f3ddc8240d71:9ea3f0e2:e2e86ef9:c7c04611:1df13a87:cd120801:c4c00916:3858419b:96741c43:38ec41c0">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
+<input type="hidden" name="__LASTFOCUS" id="__LASTFOCUS" value="">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="+xoWeaMGxVhzBmBVJseXPmA6dNVWCij495XzP0wdrTlLjQLAHZTHsre/Rmco8hFSIiKHDYgMiTqh1XxsNuTC8TP42FQd4ATKouaeVRtYnz1YA3DDYd8Q27JWxz+ckWpsSoVHWGPHYnDhQJzGaluXAOTiMDzYVRgXAuyDza+otGklfthfKHFHmrTiWXEP0/cdlkBwgSemJa40kiY9oK/r9bBCpTMIGlb5g2xlKpp+6sNn86Zhfp42yC5Ia7nJ927SLEBxWiUyFrKAS5APMM0rdg5eNv4lg+idkAteDfzKNKjZ7GVaDx846tjv71ZylMCDVmGwF2fb8qWLm3vE8OhOOmYNAXJPvbyj8rc/MwiUO9aB0oeVUI6cTogUamJy37YlZgvCX13TqirsqV/ViroYff1u0oOE2Mkr7O3mgi92T57o8qRc6ktscqIgKSAoh/PlO8OEPw3bT30xVJGCkn5EGV1PdR/pBnIgJWnEa31/6K6uSvmpEUAWr2OYSaxlBALztNlnI5MN0HkYE9QEnM2dcUu5u435FhF+w9/aMCb9aqjx2d1ad8rkwUxZgO3Hl7GTkqcO4IYvqnlcCupfDGFpF131TH+H1pOKR72yOcv2MYUNYxCiFLf3FgjpIxSVIBkgzRTi0VR9RcVN0uc8MxfnpMnHrE92NlPL7AyvajUPawu5tyLOZc7BJOKApESe6DJ/+h/Y0IDNnEsVAbND0BwNRMlwucQkNw3HaH3FSqYj5vgLHSEDtrxaZIbUssSZbpdpgz8VipTk7MtRPFeHA6VmZDZLmORlgPFoLRkuh2+cazlNfKKJFiAZmiat4DOQIitgEkK/M3GCWNG2WLiAQooPVzTVTXyVLZGY2yKMgCga1fOLY5NQ2ujJssD0IwzBhTIecqvo3LE6QN7FlkFc0I083JmcAnj2wPaHew7uZgOxsQICYHUIfqEQcKrVZjsGI0SFfC3TNb3agSyrvgkDSx0sKCnLTcDgkNQMfKR685uqocG5YOvWcp+i9b/yT/wQKebTUFMTMc4zOo+xwv9p16XTD2se7/PYJT9UR2DPoE7cj3HEHH6q7b1CFceTZ1nWmLoZTITvTTPulWiG2Ke7XvbDYDSLwsY/ETifItJjGilsgOevWlq1E6wuwC8TL7foHZmcOwxN2h19Rsc8uwTImmmxEGz6J4Wq9FpNJG6gOfLDyRnDjZ3m6XlVvHS3EMqyjiKeHeMgoYslOlJ/TPdO1x+U6sqs+9WTFJTIwN2s//rh6jkvsHCnAY3bAL0Tj58qulCd4jrs2EOVmozkzLREiSLIZvfWbXTsdZEwXM5d/QpmCevANn9QF271J3wVvv4+yn8oYuslsmqr3BOynjvKwcqEVRsdnwc78dj9NG8T/BTNrrxUChE/uwX14J5DYcxCe6PEOsNiW9Vur6rX8W+l39uN2Pq9UMEYVfUzqSIs8ACChJQ3b362x8I1PA2rX1ss/hC9yi8IzkyHY+pV6mNI/KHE6w==">
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=VHlmoceCgKsL3YUU4u5RcRP6dNw623b1rLuK-G-I_x9rRV3AO2_2CRJVIc7AohJPnfZpVinyemmSAHhyu5ao7SD_2rboy92PgvoX1r3bMBc1&amp;t=638942408819057530" type="text/javascript"></script>
+
+
+<script src="/ScriptResource.axd?d=vF6xHpmcpreWwKlIB-bpVivxFksd2nqnQ-NIbrqQ_V18hfRksn63v-8uezNlHFyGINrh_TrTAlECKOasItNFepx_grWbFv0m2RR__zUJHrmnFe3EidDvWz3BA1lkZxNZ7q_rbPENo9dr04ZqtMtef82-9X4GNkqLFQELZavfKpo1&amp;t=32e5dfca" type="text/javascript"></script>
+<script src="/ScriptResource.axd?d=qW8ixlXSwVYqQaixK9r29FPHNeVZMzuHnIAjaHIL-1dgrikuPzGxRWWthpoNDaSrSRN4UIu-65QgJORpMUEKvTYFYhBev9rvna7skOH0MpdSA6jynqGSkHo4CdgGNQlS1TQZU0EXFVCvVjW42Hw_KvVdDaVtq5KX56631YCdhdaND89eDUHnASlu1fJhGf4j0&amp;t=32e5dfca" type="text/javascript"></script>
+<script src="/frmfuncwisejob.aspx?_TSM_HiddenField_=ToolkitScriptManager1_HiddenField&amp;_TSM_CombinedScripts_=%3b%3bAjaxControlToolkit%2c+Version%3d3.0.30930.28736%2c+Culture%3dneutral%2c+PublicKeyToken%3d28f01b0e84b6d53e%3aen%3ab0eefc76-0092-471b-ab62-f3ddc8240d71%3a9ea3f0e2%3ae2e86ef9%3ac7c04611%3a1df13a87%3acd120801%3ac4c00916%3a3858419b%3a96741c43%3a38ec41c0" type="text/javascript"></script>
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="1F7B5C4E">
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0">
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0">
+	<input type="hidden" name="__VIEWSTATEENCRYPTED" id="__VIEWSTATEENCRYPTED" value="">
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="msYRebgpwSQt/j2/qmK2EYBNHeCQlzI4oSLG/c8sWs5ExZEepJjXWAKJ8JReHsMbTyZoJvQ6vyreuA6kTFpfMPXwwm4wRDo/Tgy8LJ9Pk5M5xaNY0pLsBpTQnSgxkIooxy8N8v2Sa16ZWuoDiu/2D5+L34VOLuTmN6HcupMSsLnbMW7pQDGn3Hn5MzhhYT+sn1CwEvE6BqccEH1MOC0r1YshcoeVOo/fdRIOd0b2ZuiZMrVM09GGBfG+OvD6OgYx5AzHC5yubY9cwqxC5Dlry1f6XX/wWwRZIwM8xUDzlKMXwT3gsa37xdRiVg3KF5OJ/WskUNFC4eSXcz/DB8CYQpiMPjddBU1yVVFXoC4XBkItclAehjwwRn6SvqiNA6V9fZsZG5krSPxWsOTHHc1i1EgiIV01VeGd8QPeb28ujs13MIEb9XGCpT7k4//u3T29QRdY1QrfJElwKt9vW50lGzF0luzUdUlm07lGShPGhkDbAvx4N8u8zHZTEawIZ7oiWQt6p3566uI+feoDSY6FiZ+HhiuhrTkn6ujCJsKWjYxv1V5GNRgwvuAqxSM5/TWS56YmQaOzNQh3aKOgWm/ay6EhPpYh86hu3R24+XlNqptTCRfsUSVfi+eewoLUBspFXnt0UZ9pDfzlwRb86le90MTTB0qNs7kl0i0Zr1lLShKsbiC1WamejOw+yCFoYo9GSJJBghf7xFFj3oVAl8HzWLTvBbGHgY7IZ5whwDQ3e9Ew5eG8EXNbhl1DUtdkT2Avbfjn7/7CMNnKaWdtc3QyPKWF/tlWjjzocVKnuTBWSv8ZB820f5KCHuTs0DIf0CgHh8tW7GElCk0+pdx2iK696v8TXc69f+/FzwREUBUPKph+fYq5S7GD1Y9cGVzVF/90WgaW78kNjLNjui7pLCOn4ZdzG+a+1i5GPidiUU++eRCchwEjy1atQEAN1MTaXlbDAdFCYZTqvBJ+85nlNnQTrL3vBGbt43KKAzVWE1VsCyT2jiitWda9GUVtkRmvt4MdqnlYlmpnZGFuKS623b0vYYh9FobewIBYrqbBHNbdPp+n9lrjyRf6bIvOQO4q1vpP5A+nDz0ZQ9KmpHVT0+gAkyAGOXSU63oBkbrrKi6plSCDlZGug1PNbJamRw2h75iyebN8z0x2Z8T/LeUg2vkVSUe7OyzAr5eL+3vPzF20UYZk8eRpTWX5gQ8gsZcxpDcky47ok3Fg+S3GZXDGa4+EyZKDd7LyKRx0z9uyC0I2tGs=">
+</div>
+        <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$ToolkitScriptManager1', 'Form1', [], [], [], 90, 'ctl00');
+//]]>
+</script>
+
+        <a href="#main-navigation" class="skip-link" role="button" aria-label="Skip to main content">Skip to main content
+        </a>
+
+        <!--wrapper-->
+        <div class="wrapper">
+            <!--header-->
+            <header class="header" id="main-navigation">
+                <nav class="navbar navbar-expand-lg">
+                    <div class="container">
+                        <div class="hamburger" data-bs-toggle="collapse" data-bs-target="#main-menu">
+                            <span class="line"></span>
+                            <span class="line"></span>
+                            <span class="line"></span>
+                        </div>
+                        <a class="navbar-brand">
+                            
+                            <input type="image" name="ctl00$ImageButton1" id="ImageButton1" role="link" src="img/logo.png" alt="Jio Careers Logo" style="outline: none !important;">
+                            <span>Careers</span>
+                        </a>
+                        <div class="collapse navbar-collapse" id="main-menu">
+                            <ul class="navbar-nav mx-auto">
+                                <li id="lihome" class="nav-item">
+                                    <a class="nav-link" aria-current="page" href="index.aspx">Home</a>
+                                </li>
+                                <li id="liAbourUs" class="nav-item">
+                                    
+                                    <a href="https://www.jio.com/aboutus/" id="AoutUsSelect" class="nav-link">About Us</a>
+                                </li>
+                               
+                                <li id="lijobopportunity" class="nav-item">
+                                    <a class="nav-link" href="frmJobCategories.aspx">Job Opportunities</a>
+                                </li>
+                            </ul>
+                            <div class="d-lg-flex">
+                                
+
+                                <div class="dropdown">
+                                    <button id="alumniDropdown" class="btn btn-white-outline my-xxl-0 my-xl-0 my-lg-0 my-4" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Alumni Corner
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alumniDropdown">
+                                        <li><a class="dropdown-item" href="https://swayam.jio.com/alumni/" target="_blank">Alumni
+                                                Verification</a></li>
+                                        <li><a class="dropdown-item" href="https://swayam.jio.com/qms/" target="_blank">Alumni
+                                                Assistance</a></li>
+                                        <li><a class="dropdown-item" href="https://ess.jio.com/alumni" target="_blank">Alumni Portal</a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <a href="frmOfferCheck.aspx" id="btnoffercheck" class="btn btn-white-outline mx-lg-3">Validate Your Offer</a>
+
+
+                            </div>
+                        </div>
+                        
+                        
+
+                        <!-- Brand Contrast Toggle -->
+                           <button type="button" class="btn-theme-toggle" id="themeToggleABtn" aria-label="Toggle brand contrast" title="Brand Contrast">
+                            <svg class="theme-sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                             <!-- centre circle -->
+                             <circle cx="12" cy="12" r="4"></circle>
+                             <!-- 8 rays -->
+                             <line x1="12" y1="2" x2="12" y2="5"></line>
+                             <line x1="12" y1="19" x2="12" y2="22"></line>
+                             <line x1="2" y1="12" x2="5" y2="12"></line>
+                             <line x1="19" y1="12" x2="22" y2="12"></line>
+                             <line x1="4.22" y1="4.22" x2="6.34" y2="6.34"></line>
+                             <line x1="17.66" y1="17.66" x2="19.78" y2="19.78"></line>
+                             <line x1="19.78" y1="4.22" x2="17.66" y2="6.34"></line>
+                             <line x1="6.34" y1="17.66" x2="4.22" y2="19.78"></line>
+                            </svg>
+                           </button>
+                    </div>
+                </nav>
+            </header>
+            <!--header end-->
+            <main>
+                
+                <div class="clear"></div>
+                
+    <!--inside content area-->
+    <div id="categories">
+        <input type="hidden" name="ctl00$MainContent$hdnback" id="MainContent_hdnback" value="frmJobCategories.aspx">
+        <div id="MainContent_topdiv" class="home-contentarea">
+            
+
+<script>
+    $(document).ready(function () {
+        $("#aclick").click(function () {
+            $('#MainContent_RefineYourSearch_txtKeyword').val("");
+            $('#MainContent_RefineYourSearch_MultiCheckCombo1').val("");
+            $('#MainContent_RefineYourSearch_ddlFunction').val("0");
+            $('#MainContent_RefineYourSearch_ddlFreshness').val("0");
+        })
+    });
+</script>
+
+<div id="MainContent_RefineYourSearch_panSearch" onkeypress="javascript:return WebForm_FireDefaultButton(event, 'MainContent_RefineYourSearch_btnSearch')">
+	
+    <div class="col-left round-border no-css-transition">
+        <h3 role="heading" aria-level="2">Job Search</h3>
+        <div class="search-accordion no-css-transition">
+            <h3><a href="#collapse1" class="nav-toggle linktxt"></a>Refine your search</h3>
+            
+            <a id="aclick" role="button" class="clear-filters" href="javascript:__doPostBack('ctl00$MainContent$RefineYourSearch$aclick','')">Clear All Filters</a>
+
+            <a href="#!" class="nav-toggle">
+                <img src="images/responsive-button.png"></a>
+            <div id="collapse1">
+                <div class="states">
+                    <label>Keyword</label>
+                    <input name="ctl00$MainContent$RefineYourSearch$txtKeyword" type="text" maxlength="30" id="MainContent_RefineYourSearch_txtKeyword" class="form-control" aria-label="Keyword Input" autocomplete="off">
+                </div>
+                <div class="states">
+                    <label>Select Industry</label>
+                    <select name="ctl00$MainContent$RefineYourSearch$ddlFunction" id="MainContent_RefineYourSearch_ddlFunction" class="form-control" aria-label="Select Industry">
+		<option value="0"></option>
+		<option value="0227">Apprentice</option>
+		<option value="0201">Business Operations</option>
+		<option value="0203">Corporate Affairs</option>
+		<option value="0204">Corporate Services (Admin)</option>
+		<option value="0205">Customer Service</option>
+		<option value="0206">Engineering &amp; Technology</option>
+		<option value="0207">Finance Compliance &amp; Accounting</option>
+		<option value="0223">Freelancer</option>
+		<option value="0224">Freelancer - Sales Associate</option>
+		<option value="0226">Freelancer Enterprise</option>
+		<option value="0208">Human Resources &amp; Training</option>
+		<option value="0222">Information Security</option>
+		<option value="0209">Infrastructure</option>
+		<option value="0210">IT &amp; Systems</option>
+		<option value="0225">Jio Sales Associate</option>
+		<option value="0211">Legal</option>
+		<option value="0212">Marketing</option>
+		<option value="0214">Operations</option>
+		<option value="0221">Others</option>
+		<option value="0215">Procurement and Contracts</option>
+		<option value="0216">Product Management</option>
+		<option value="0217">Regulatory</option>
+		<option value="0218">Sales and Distribution</option>
+		<option value="0219">Supply Chain</option>
+
+	</select>
+                </div>
+                <div class="states">
+                    <label>Location</label>
+                    <input name="ctl00$MainContent$RefineYourSearch$MultiCheckCombo1" type="text" maxlength="30" id="MainContent_RefineYourSearch_MultiCheckCombo1" class="form-control" aria-label="Location" autocomplete="off">
+                </div>
+                <div class="states">
+                    <label>Date Posted</label>
+                    <select name="ctl00$MainContent$RefineYourSearch$ddlFreshness" id="MainContent_RefineYourSearch_ddlFreshness" class="form-control" aria-label="date posted">
+		<option value="0">Freshness</option>
+		<option value="1">Today</option>
+		<option value="2">Last 1 day</option>
+		<option value="7">Last 7 days</option>
+		<option value="30">Last 30 days</option>
+
+	</select>
+                </div>
+                <div class="states">
+                    <input type="submit" name="ctl00$MainContent$RefineYourSearch$btnSearch" value="Search" id="MainContent_RefineYourSearch_btnSearch" class="search-orange-but">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    //nav
+    $('.nav-toggle').on('click', function () {
+        $('#collapse1').slideToggle('fast');
+        //$('.main_menu li a').removeClass('menu-active');
+        //$('.submenu').removeClass('block');
+        //$('.submenu').removeClass('submenu-large-screen');
+    });
+
+    //$('.sub_nav_mobile').on('click', function () {
+    //    $('.sub_nav_mobile').removeClass('active');
+    //    $(this).addClass('active');
+
+    //    $('.submenu').slideUp('fast');
+    //    $(this).next('.submenu').slideToggle("fast");
+    //});
+
+    //$('.main_menu li a').on('click', function () {
+    //    $('.main_menu li a').removeClass('menu-active');
+    //    $(this).addClass('menu-active');
+    //    $('.submenu').slideUp('fast');
+    //    $(this).next('span').next('.submenu').addClass('submenu-large-screen').removeClass('block').slideToggle("fast");
+    //});
+
+
+    //$('.sub_nav_mobile2').on('click', function () {
+    //    $('.submenu2').slideToggle("fast");
+    //});
+
+</script>
+
+            <div class="col-right">
+                <ul class="featured" role="presentation">
+                    <li role="presentation"><h3 role="heading" aria-level="1">Our Featured Categories</h3></li>
+                </ul>
+                <div class="jobdescription">
+                    
+                    <a class="back-btn" style="cursor: pointer" role="button" tabindex="0" onclick="Funcback();" onkeydown="if(event.key === 'Enter' || event.key === ' ') { Funcback(); }">
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>Back
+                    </a>
+
+
+                    
+                    <div class="col-half pull-right">
+                        <div class="imgshow">
+                            <img src="images/joblist/Bad%20Data.%0D%0A.jpg" id="MainContent_imgfunction" alt="">
+
+                        </div>
+                    </div>
+                    <div class="col-half">
+                        <span id="MainContent_lblfunctioninfo"></span>
+                        <div class="slogan" role="heading" aria-level="2">Come, join the digital India Movement</div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="botty">
+                        <h1 class="blacktxt" role="presentation">Show
+                            <select name="ctl00$MainContent$ddlentries" onchange="javascript:setTimeout('__doPostBack(\'ctl00$MainContent$ddlentries\',\'\')', 0)" id="MainContent_ddlentries" class="dropdown-box">
+	<option value="5">05</option>
+	<option selected="selected" value="10">10</option>
+	<option value="15">15</option>
+	<option value="20">20</option>
+	<option value="25">25</option>
+
+</select>
+                            entries
+                        </h1>
+                        <article>
+                            
+                                    No records found
+                                
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+        <!--tabs end-->
+    </div>
+    <!--inside content area end-->
+
+                <input type="hidden" name="ctl00$HiddenfldURL" id="HiddenfldURL">
+                
+                <div class="clear"></div>
+
+            </main>
+        </div>
+
+        <footer class="footer" role="contentinfo">
+
+            <div class="subfooter">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <img src="img/footer-logo.png" alt="" data-bs-toggle="popover" data-bs-content="Image is here" data-bs-original-title="" title="">
+                            <p class="wow fadeInUp">Copyright © 2026 Reliance Jio Infocomm Ltd. All rights reserved.</p>
+                        </div>
+                        <div class="col-sm-6 d-flex justify-content-end">
+                            <a href="https://www.jio.com/jcms/en-in/privacy-policy/" class="wow fadeInUp" target="_blank">Privacy Policy</a>
+                            <a href="https://www.jio.com/jcms/en-in/terms-conditions/" class="wow fadeInUp" target="_blank">Legal Notice</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="floating-nav">
+                <div class="dropdown">
+                    <button class="dropdown-toggle" type="button" id="dropdownMenu2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="img/alert-icon.png" alt="Fraud Alert">
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Global.pdf" target="_blank">Fraud Alert - Global</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - English.pdf" target="_blank">Fraud Alert</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Hindi.pdf" target="_blank">à¤§à¥‹à¤–à¤¾à¤§à¤¡à¤¼à¥€ à¤•à¥€ à¤šà¥‡à¤¤à¤¾à¤µà¤¨à¥€</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Marathi.pdf" target="_blank">à¤«à¤¸à¤µà¤£à¥à¤•à¥€à¤šà¤¾ à¤‡à¤¶à¤¾à¤°à¤¾</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Gujrati.pdf" target="_blank">àª›à«‡àª¤àª°àªªàª¿àª‚àª¡à«€ àª…àª‚àª—à«‡ àªšà«‡àª¤àªµàª£à«€</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Tamil.pdf" target="_blank">à®®à¯‹à®šà®Ÿà®¿ à®Žà®šà¯à®šà®°à®¿à®•à¯à®•à¯ˆ!</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Telgu.pdf" target="_blank">à°®à±‹à°¸à°¾à°²à°ªà±ˆ à°¹à±†à°šà±à°šà°°à°¿à°•</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Malyalam.pdf" target="_blank">à´µà´žàµà´šà´¨à´¾ à´®àµà´¨àµà´¨à´±à´¿à´¯à´¿à´ªàµà´ªàµ!</a></li>
+                        <li><a class="dropdown-item" href="pdf/Fraud Alert - Kannada.pdf" target="_blank">à²®à³‹à²¸à²¦ à²•à³à²°à²¿à²¤à³ à²Žà²šà³à²šà²°à²¿à²•à³†!</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Modal -->
+            <div class="modal login fade" id="login-modal" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                                <i class="far fa-times-circle"></i>
+                            </button>
+                            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="user-login-tab" data-bs-toggle="tab" data-bs-target="#user-login" type="button" role="tab" aria-controls="user-login" aria-selected="true">User Login</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="partner-login-tab" data-bs-toggle="tab" data-bs-target="#partner-login" type="button" role="tab" aria-controls="partner-login" aria-selected="false">Partner Login</button>
+                                </li>
+                            </ul>
+                            <div id="myTabContent" class="tab-content">
+                                <div class="tab-pane fade show active" id="user-login" role="tabpanel" aria-labelledby="user-login-tab">
+                                    <div class="row">
+                                        
+                                        <div class="col-12 mb-4">
+                                            <div class="input-group">
+                                                
+                                                
+                                                <span class="input-group-text">
+                                                    <img src="img/email-icon.png" alt="Email">
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="input-group">
+                                                
+                                                
+                                                <span class="input-group-text">
+                                                    <img src="img/pass-icon.png" alt="">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-flex align-items-center mt-3">
+                                        <div class="col-lg-4">
+                                            <a href="frmForgotPassword.aspx" class="forgot">Forgot Password?</a>
+                                        </div>
+                                        <div class="col-lg-8 text-end">
+                                            <div class="row">
+                                                <div class="col-6 d-grid">
+
+                                                </div>
+                                                <div class="col-6 d-grid">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12 mt-5">
+                                                Or Sign in with 
+                                           
+                                                <img src="img/google-icon.png">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="partner-login" role="tabpanel" aria-labelledby="partner-login-tab">
+                                    <div class="row">
+                                        
+                                        <div class="col-12 mb-4">
+                                            <div class="input-group">
+                                                
+                                                
+                                                <span class="input-group-text">
+                                                    <img src="img/email-icon.png" alt="Email">
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <img src="img/pass-icon.png" alt="">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-flex align-items-center mt-3">
+                                        <div class="col-lg-4">
+                                            <a href="frmForgotPassword.aspx" class="forgot">Forgot Password?</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </footer>
+        <!--wrapper end-->
+        <input type="hidden" name="ctl00$hdnToken" id="hdnToken" value="2114135216">
+        <input type="hidden" name="ctl00$hdnmaibaap" id="hdnmaibaap" value="737179497">
+        <span id="idbrowser"></span>
+        <!--Common modal popup customize-->
+        
+        <input type="submit" name="ctl00$btnpopup" value="PopUp" id="btnpopup" class="hide"><!--dummy button-->
+        
+
+        <!--Common confirm box for all delete activities customize-->
+        <div id="panelConfirmmodal" class="modal-dialog" style="display: none">
+	
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="H1">Confirm</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert-content">
+                        <p id="p1">Are you sure you want to delete?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input type="submit" name="ctl00$btnYes" value="Yes" id="btnYes" class="btn-small">
+                    <input type="submit" name="ctl00$btnNo" value="No" onclick="javascript:skipLN();" id="btnNo" class="btn-small">
+                </div>
+            </div>
+        
+</div>
+
+        
+
+        <input type="submit" name="ctl00$btnpopupagree" value="PopUp" id="btnpopupagree" class="hide">
+        
+
+    
+
+<script type="text/javascript">
+//<![CDATA[
+(function() {var fn = function() {$get('ToolkitScriptManager1_HiddenField').value = '';Sys.Application.remove_init(fn);};Sys.Application.add_init(fn);})();
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+Sys.Application.add_init(function() {
+    $create(AjaxControlToolkit.ModalPopupBehavior, {"BackgroundCssClass":"backgroundmodal","CancelControlID":"btnCancel","OkControlID":"btnOkay","PopupControlID":"panelmodal","dynamicServicePath":"/frmfuncwisejob.aspx","id":"modalpopup"}, null, null, $get("btnpopup"));
+});
+Sys.Application.add_init(function() {
+    $create(AjaxControlToolkit.ModalPopupBehavior, {"BackgroundCssClass":"backgroundmodal","PopupControlID":"Agreepanelmodal","dynamicServicePath":"/frmfuncwisejob.aspx","id":"modalpopup1"}, null, null, $get("btnpopupagree"));
+});
+//]]>
+</script>
+<div id="panelmodal" class="modal-dialog" role="dialog" style="display: none; position: fixed; z-index: 1000001;">
+	
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 id="myModalheader" class="modal-title" role="heading" aria-level="2">Alert</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert-content">
+                        <p id="palertmessage">Hello, this is an alert</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input type="submit" name="ctl00$btnOkay" value="Ok" onclick="javascript:skipLN();" id="btnOkay" class="btn-small">
+                    <input type="submit" name="ctl00$btnCancel" value="Can" onclick="javascript:skipLN();" id="btnCancel" class="btn-small">
+                    
+                </div>
+            </div>
+        
+</div><div id="modalpopup_backgroundElement" class="backgroundmodal" style="display: none; position: fixed; left: 0px; top: 0px; z-index: 10000;"></div><div id="Agreepanelmodal" class="modal-dialog" style="display: none; position: fixed; z-index: 1000001;">
+	
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 id="myModalheaderAlert1" class="modal-title">Alert</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert-content">
+                        <p id="agreealert1">Hello, this is an alertsssa</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    
+                    <a href="http://www.jio.com/en-in/privacy-policy" id="hrefPolicy" target="_blank" rel="noreferrer" style="text-decoration: none; float: left; margin-top: 10px;">Privacy Policy</a>
+                    <input type="submit" name="ctl00$btnAgree1" value="Agree" id="btnAgree1" class="btn-small">
+                    <input type="submit" name="ctl00$btnDisagree" value="Disagree" id="btnDisagree" class="btn-small">
+                    
+                </div>
+            </div>
+        
+</div><div id="modalpopup1_backgroundElement" class="backgroundmodal" style="display: none; position: fixed; left: 0px; top: 0px; z-index: 10000;"></div></form>
+
+
+    <script>
+
+        $(document).ready(function () {
+
+            $(".log--out").click(function () {
+                $(this).children(".dropdown").toggleClass("active");  //Add the active class to the area is hovered
+            });
+
+
+
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip()
+            })
+        });
+        // modelpopup end
+        $(function () {
+
+            var appendthis = ("<div class='modal-overlay js-modal-close'></div>");
+            //$('#popup1').css({"top":"0"});
+            $('a[data-modal-id]').click(function (e) {
+                e.preventDefault();
+                $("body").append(appendthis);
+                $(".modal-overlay").slideDown();
+                //$(".js-modalbox").fadeIn(500);
+                var modalBox = $(this).attr('data-modal-id');
+                $('#' + modalBox).slideDown($(this).data());
+            });
+
+
+            $(".js-modal-close, .modal-overlay").click(function () {
+                $(".modal-box, .modal-overlay").slideUp(function () {
+                    $(".modal-overlay").remove();
+                });
+
+            });
+
+            $(window).resize(function () {
+                $(".modal-box").css({
+                    // top: ($(window).height() - $(".modal-box").outerHeight()) / 2,
+                    left: ($(window).width() - $(".modal-box").outerWidth()) / 2
+                });
+            });
+
+            $(window).resize();
+
+        });
+        // modelpopup end
+    </script>
+
+
+
+    <script type="text/javascript">
+
+        $(document).ready(function (e) {
+
+            $('#btnchatbot').click(function (event) {
+                //alert(1);
+                $('#myHRModal').modal('hide');
+                $('#myHRModal').on('hidden.bs.modal', function () {
+                    $('#fixedrightcontainer').removeClass('slide-data');
+                    $(".chatbotcontainer").removeClass('hidebox');
+                    $(".cbot").addClass('hidebox');
+                })
+            });
+
+            $(".cbot a").on("click", function () {
+                $(".chatbotcontainer").removeClass('hidebox');
+                $(".cbot").addClass('hidebox');
+            })
+
+            // $(".cbot a").on("mouseover", function() {
+            //     $(".chatbotcontainer").removeClass('hidebox');
+            //     $(".cbot").addClass('hidebox');
+            // })
+
+            $("a.closebtn").on("click", function () {
+                $(".chatbotcontainer").addClass('hidebox');
+                $(".cbot").removeClass('hidebox');
+            })
+
+
+        });
+
+        function show_chtbtBox() {
+            var ua = window.navigator.userAgent;
+            var msie = ua.indexOf("MSIE ");
+
+
+            //var boturl = document.getElementById('ctl00_ContentPlaceHolder1_HiddenfldURL').value;
+            var boturl = document.getElementById('HiddenfldURL').value;
+            //alert(boturl);
+            //if (document.getElementById('ctl00_ContentPlaceHolder1_hdnEncUID')) {
+            //    var c = document.getElementById('ctl00_ContentPlaceHolder1_hdnEncUID').value;
+            //    boturl = boturl + '&UID_BOT=' + c;
+            //}
+
+            if (msie > 0) // If Internet Explorer, return version number        
+            {
+                window.open(boturl, "", "height=539,width=393,toolbar=0,titlebar=0,status=0,scrollbars=0,resizable=0,menubar=0");
+            }
+            else {
+                //alert(boturl);
+                jQuery(".chatbotcontainer").empty();
+                jQuery(".chatbotcontainer").append('<a class="closebtn" ><img style="border:none; width:16px; position:absolute; right:5px; top:10px;" src="images/CloseBot.gif" /></a>');
+                jQuery(".chatbotcontainer").append('<iframe style="height:410px; width:308px; border:none;" src="' + boturl + '"></iframe>');
+                //jQuery(".chatbotcontainer").css("display", "none");
+                //jQuery(".closebtn").css("display", "none");
+            }
+            $("a.closebtn").on("click", function () {
+                $(".chatbotcontainer").addClass('hidebox');
+                $(".cbot").removeClass('hidebox');
+            })
+        }
+    </script>
+
+    <script>
+
+            $(document).ready(function () {
+              $('#themeToggleABtn').click(function () {
+               $(this).toggleClass('active');
+               var isActive = $(this).hasClass('active');
+
+               if (isActive) {
+                // inject aditya contrast.css
+                $('<link>', {
+                 id: 'contrast-stylesheet',
+                 rel: 'stylesheet',
+                 href: 'css/contrast.css'
+                }).appendTo('head');
+               } else {
+                // remove new aditya contrast.css
+                $('#contrast-stylesheet').remove();
+               }
+              });
+             });
+     </script>
+
+
+</body></html>

@@ -1,0 +1,412 @@
+[
+  {
+    "title": "114 Openings Found",
+    "cardClass": "total-jobs",
+    "innerHTML": "<span _ngcontent-igf-c362=\"\">114 Openings Found</span><button _ngcontent-igf-c362=\"\" mat-icon-button"
+  },
+  {
+    "title": "addGet Discovered for Future Jobs",
+    "cardClass": "mat-focus-indicator add-job-btn mat-icon-button mat-button-base",
+    "innerHTML": "<span class=\"mat-button-wrapper\"><mat-icon _ngcontent-igf-c362=\"\" role=\"img\" class=\"mat-icon notrans"
+  },
+  {
+    "title": "Bangalore,...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Bangalore,...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Mumbai",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Mumbai, Ma...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Chennai, T...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Gurgaon, H...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Gurgaon, H...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Bangalore,...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Mumbai",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Pune, Maha...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Mumbai, Ma...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Pune, Maha...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Hyderabad,...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Bengaluru",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Mumbai",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Bangalore,...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Hyderabad,...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Pune, Maha...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Bangalore,...",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  },
+  {
+    "title": "Bangalore",
+    "cardClass": "job-type",
+    "innerHTML": "<!----><div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcont"
+  },
+  {
+    "title": "Full Time",
+    "cardClass": "job-type",
+    "innerHTML": "<div _ngcontent-igf-c362=\"\" style=\"display: flex;\" class=\"ng-star-inserted\"><mat-icon _ngcontent-igf"
+  },
+  {
+    "title": "Apply",
+    "cardClass": "mat-focus-indicator apply-job-btn mat-flat-button mat-button-base mat-#ffffff",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> Apply </span><span matripple=\"\" class=\"mat-ripple mat-button-rippl"
+  },
+  {
+    "title": "View Details",
+    "cardClass": "mat-focus-indicator cancel-job-btn mat-flat-button mat-button-base mat-#25364d ng-star-inserted",
+    "innerHTML": "<span class=\"mat-button-wrapper\"> View Details </span><span matripple=\"\" class=\"mat-ripple mat-butto"
+  }
+]

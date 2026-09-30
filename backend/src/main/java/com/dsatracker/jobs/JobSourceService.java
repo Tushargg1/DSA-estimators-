@@ -247,9 +247,14 @@ public class JobSourceService {
     private void continueInBackground(Long sourceId) {
         // Simple async continuation. If we wanted resilient retry this would be a proper message queue.
         CompletableFuture.runAsync(() -> {
-            sources.findById(sourceId).ifPresent(s -> {
-                if (s.getSyncCursor() > 0) scrapeSourceInternal(s, null);
-            });
+            JobSourceService selfProxy = self.getIfAvailable();
+            if (selfProxy != null) {
+                selfProxy.ingestRemainderInBackground(sourceId);
+            } else {
+                sources.findById(sourceId).ifPresent(s -> {
+                    if (s.getSyncCursor() > 0) scrapeSourceInternal(s, null);
+                });
+            }
         });
     }
 
@@ -548,7 +553,10 @@ public class JobSourceService {
                 "a[href*='/job']", "a[href*='/career']", "a[href*='/opening']",
                 "[class*='job-card']", "[class*='jobCard']", "[class*='job-listing']",
                 "[class*='position']", "[class*='vacancy']", "[data-job-id]",
-                "li[class*='job']", "div[class*='job-item']"
+                "li[class*='job']", "div[class*='job-item']",
+                // Darwinbox and Angular SPA selectors
+                "[class*='jobOpenings']", "[class*='job-opening']",
+                "app-job-search", "db-job-card", "[class*='careers-list'] li"
             };
             for (String selector : jobListSelectors) {
                 try {
@@ -558,9 +566,18 @@ public class JobSourceService {
                 } catch (Exception ignored) { /* try next selector */ }
             }
 
-            // Extract only jobs with REAL hrefs — skip fabricated fragment anchors.
+            // Scroll to trigger lazy-loading of job cards in SPAs (Darwinbox, ADP, etc.)
+            try {
+                page.evaluate("() => { window.scrollTo(0, document.body.scrollHeight / 2); }");
+                page.waitForTimeout(1200);
+                page.evaluate("() => { window.scrollTo(0, document.body.scrollHeight); }");
+                page.waitForTimeout(1200);
+                page.evaluate("() => { window.scrollTo(0, 0); }");
+            } catch (Exception ignored) { }
+
+            // Extract only jobs with REAL hrefs.
             // Darwinbox / similar SPAs load job cards whose click is JS-routed;
-            // we try to pick up a real anchor inside the card or build the URL from data-job-id.
+            // we try to pick up a real anchor inside the card or build the URL from data attributes.
             String jsExtractor =
                 "() => {" +
                 "  let jobs = []; let seen = new Set();" +
@@ -572,15 +589,26 @@ public class JobSourceService {
                 "    if(text.length < 2) text = el.title || el.getAttribute('aria-label') || '';" +
                 "    if(href.startsWith('http') && !seen.has(href)) { seen.add(href); jobs.push({url:href,title:text||null}); }" +
                 "  }" +
-                "  let cards = document.querySelectorAll('[class*=job-card],[class*=jobCard],[class*=job-item],[class*=jobItem],[data-job-id],[data-jobid]');" +
+                "  let cards = document.querySelectorAll('[class*=job-card],[class*=jobCard],[class*=job-item],[class*=jobItem],[data-job-id],[data-jobid],[class*=job-opening],[class*=jobOpening],db-job-card,app-job-card');" +
                 "  for(let card of cards) {" +
-                "    let jobId = card.getAttribute('data-job-id') || card.getAttribute('data-jobid') || card.getAttribute('data-id');" +
-                "    let titleEl = card.querySelector('h1,h2,h3,h4,h5,[class*=title],[class*=role],[class*=position],[class*=name]');" +
+                "    let jobId = card.getAttribute('data-job-id') || card.getAttribute('data-jobid') || card.getAttribute('data-id') || card.getAttribute('data-req-id') || card.getAttribute('data-jid');" +
+                "    let titleEl = card.querySelector('h1,h2,h3,h4,h5,[class*=title],[class*=role],[class*=position],[class*=name],[class*=job-name]');" +
                 "    let title = titleEl ? titleEl.innerText.trim() : (card.innerText ? card.innerText.split('\\n')[0].trim() : '');" +
+                "    if(title.length > 120) title = title.substring(0, 120).trim();" +
                 "    let anchor = card.querySelector('a[href]');" +
                 "    let cardUrl = anchor ? anchor.href : null;" +
                 "    if(!cardUrl && jobId) cardUrl = window.location.origin + window.location.pathname.replace(/\\/allJobs.*/, '') + '/jobDetails/' + jobId;" +
                 "    if(cardUrl && cardUrl.startsWith('http') && !seen.has(cardUrl) && title.length > 2) { seen.add(cardUrl); jobs.push({url:cardUrl,title:title}); }" +
+                "  }" +
+                "  let routerEls = document.querySelectorAll('[routerlink*=job],[routerlink*=career],[ng-href*=job],[data-url*=job],[data-href*=job]');" +
+                "  for(let el of routerEls) {" +
+                "    let href = el.getAttribute('routerlink') || el.getAttribute('ng-href') || el.getAttribute('data-url') || el.getAttribute('data-href');" +
+                "    if(!href) continue;" +
+                "    let absUrl = href.startsWith('http') ? href : window.location.origin + (href.startsWith('/') ? '' : '/') + href;" +
+                "    if(!seen.has(absUrl)) {" +
+                "      let t = el.innerText ? el.innerText.trim().split('\\n')[0] : (el.getAttribute('title') || '');" +
+                "      if(t.length > 2) { seen.add(absUrl); jobs.push({url:absUrl,title:t}); }" +
+                "    }" +
                 "  }" +
                 "  return jobs;" +
                 "}";

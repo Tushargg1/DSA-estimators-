@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="cache-control" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate, post-check=0, pre-check=0">
+  <meta http-equiv="expires" content="0">
+  <meta name="google-site-verification" content="qbkOvLLGCa2CpQ7wxppUG7uLpapx3eLGc-iOYTIUC4I">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#fafafa">
+  <!-- <meta name="apple-mobile-web-app-capable" content="yes"> -->
+   <meta name="mobile-web-app-capable" content="yes">
+  <!-- <script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="talentrecruit-test"></script> -->
+  <title>TalentRecruit Softwares</title>
+  <base href="/">
+  <!-- <link rel="icon" type="image/x-icon" href="favicon.ico"> -->
+  <link rel="icon" type="image/svg+xml" href="https://talentimages.s3.ap-south-1.amazonaws.com/favicon.svg">
+  <link rel="icon" type="image/png" href="https://talentimages.s3.ap-south-1.amazonaws.com/logo-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <!-- Fonts (Material Icons, Manrope, Font Awesome) are self-hosted from
+    /assets/fonts and bundled via styles.scss instead of loaded from a CDN. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    .w-20 {
+      width: 22% !important;
+    }
+
+    .display-flex {
+      display: flex !important;
+      grid-template-columns: 50px repeat(3, 1fr);
+      grid-gap: 1rem;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+      padding: 1rem 0;
+      border-bottom: 1px solid #ebeaed;
+      color: #2e2c34;
+    }
+
+    .margin-10 {
+      margin: 10px;
+    }
+
+    .bg-lightgreen {
+      background: rgba(20, 177, 59, 0.1);
+    }
+
+    .cursor-pointer {
+      cursor: pointer;
+    }
+
+    .w-50 {
+      width: 50% !important;
+    }
+
+    .w-40 {
+      width: 40% !important;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .w-60 {
+      width: 60% !important;
+    }
+
+    .padding-15 {
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+
+    .center-container {
+      display: flex;
+      justify-content: center;
+      height: 100vh;
+      align-items: center;
+    }
+
+    .center-container img {
+      animation: bounce 1s infinite alternate;
+      -webkit-animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0px);
+      }
+
+      to {
+        transform: translateY(-10px);
+      }
+    }
+
+    @-webkit-keyframes bounce {
+      from {
+        transform: translateY(0px);
+      }
+
+      to {
+        transform: translateY(-10px);
+      }
+    }
+  </style>
+  <link rel="apple-touch-icon" href="assets/icons/manifest-icon-192.maskable.png">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/manifest-icon-192.maskable.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <!-- Google tag (gtag.js) -->
+  <!-- <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+  </script> -->
+
+<style>@charset "UTF-8";@import url(https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap);@font-face{font-family:Manrope;font-style:normal;font-weight:200;font-display:swap;src:url(manrope-200.c5d858e9b56ba827c16c.woff2) format("woff2")}@font-face{font-family:Manrope;font-style:normal;font-weight:300;font-display:swap;src:url(manrope-300.c5d858e9b56ba827c16c.woff2) format("woff2")}@font-face{font-family:Manrope;font-style:normal;font-weight:400;font-display:swap;src:url(manrope-400.c5d858e9b56ba827c16c.woff2) format("woff2")}@font-face{font-family:Manrope;font-style:normal;font-weight:500;font-display:swap;src:url(manrope-500.c5d858e9b56ba827c16c.woff2) format("woff2")}@font-face{font-family:Manrope;font-style:normal;font-weight:600;font-display:swap;src:url(manrope-600.c5d858e9b56ba827c16c.woff2) format("woff2")}@font-face{font-family:Manrope;font-style:normal;font-weight:700;font-display:swap;src:url(manrope-700.c5d858e9b56ba827c16c.woff2) format("woff2")}@font-face{font-family:Manrope;font-style:normal;font-weight:800;font-display:swap;src:url(manrope-800.c5d858e9b56ba827c16c.woff2) format("woff2")}body,div,html,img{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}*{box-sizing:border-box}body{line-height:1}:root{--bs-blue:#0d6efd;--bs-indigo:#6610f2;--bs-purple:#6f42c1;--bs-pink:#d63384;--bs-red:#dc3545;--bs-orange:#fd7e14;--bs-yellow:#ffc107;--bs-green:#198754;--bs-teal:#20c997;--bs-cyan:#0dcaf0;--bs-white:#fff;--bs-gray:#6c757d;--bs-gray-dark:#343a40;--bs-gray-100:#f8f9fa;--bs-gray-200:#e9ecef;--bs-gray-300:#dee2e6;--bs-gray-400:#ced4da;--bs-gray-500:#adb5bd;--bs-gray-600:#6c757d;--bs-gray-700:#495057;--bs-gray-800:#343a40;--bs-gray-900:#212529;--bs-primary:#0d6efd;--bs-secondary:#6c757d;--bs-success:#198754;--bs-info:#0dcaf0;--bs-warning:#ffc107;--bs-danger:#dc3545;--bs-light:#f8f9fa;--bs-dark:#212529;--bs-primary-rgb:13,110,253;--bs-secondary-rgb:108,117,125;--bs-success-rgb:25,135,84;--bs-info-rgb:13,202,240;--bs-warning-rgb:255,193,7;--bs-danger-rgb:220,53,69;--bs-light-rgb:248,249,250;--bs-dark-rgb:33,37,41;--bs-white-rgb:255,255,255;--bs-black-rgb:0,0,0;--bs-body-color-rgb:33,37,41;--bs-body-bg-rgb:255,255,255;--bs-font-sans-serif:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";--bs-font-monospace:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--bs-gradient:linear-gradient(180deg,hsla(0,0%,100%,.15),hsla(0,0%,100%,0));--bs-body-font-family:var(--bs-font-sans-serif);--bs-body-font-size:1rem;--bs-body-font-weight:400;--bs-body-line-height:1.5;--bs-body-color:#212529;--bs-body-bg:#fff}*{font-family:Manrope!important}body,html{height:100%}body{margin:0;font-family:Manrope;transition:all .6s ease}img{cursor:pointer!important}</style><link rel="stylesheet" href="styles.d284ac43800426f26d6c.css" media="all" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles.d284ac43800426f26d6c.css"></noscript><style>.center-container[_ngcontent-ctf-c491]{display:flex;justify-content:center;height:100vh;align-items:center}.center-container[_ngcontent-ctf-c491]   img[_ngcontent-ctf-c491]{animation:bounce 1s infinite alternate;-webkit-animation:bounce 1s infinite alternate}@keyframes bounce{0%{transform:translateY(0)}to{transform:translateY(-10px)}}.mat-progress-bar-loader[_ngcontent-ctf-c491]{position:fixed!important;top:0!important;left:0!important;right:0!important;z-index:10000!important}</style><script charset="utf-8" data-webpack="sample:chunk-7310" src="7310.9da8fe172d96d846b8f2.js"></script><script charset="utf-8" data-webpack="sample:chunk-5363" src="5363.c75a76f757d8702cac87.js"></script><script charset="utf-8" data-webpack="sample:chunk-6791" src="6791.54471228ec6d1a8e2595.js"></script><script charset="utf-8" data-webpack="sample:chunk-3275" src="3275.b24038c7c21f0ad6f017.js"></script></head>
+
+<body>
+  <app-root _nghost-ctf-c491="" app-version="3.11"><!----><!----><div _ngcontent-ctf-c491="" class="center-container"><div _ngcontent-ctf-c491="" class="bounce-7"><img _ngcontent-ctf-c491="" src="https://talentimages.s3.ap-south-1.amazonaws.com/New+Full+Logo+SVG.svg" style="width: 170px;"></div></div><!----></app-root>
+  <noscript>Please enable JavaScript to continue using this application.</noscript>
+  <!-- <script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="talentrecruit-test"></script> -->
+<script src="runtime.04a94dec6d0799f6e2d7.js" defer=""></script><script src="polyfills.0e29ffd34ddacda07c7f.js" defer=""></script><script src="main.ed2ec9f8f9c45f132667.js" defer=""></script>
+
+</body></html>

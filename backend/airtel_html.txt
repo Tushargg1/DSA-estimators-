@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="en-US"><head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width">
+            <title>Airtel</title>
+            <meta property="og:title" content="Airtel ">
+            <meta property="twitter:title" content="Airtel ">
+
+            <meta property="og:image" content="https://darwinbox-data-prod-mum.s3.ap-south-1.amazonaws.com/INSTANCE3_a647feda58d4ee_55/logo/a1394701086597d50584098__tenant-avatar-55_54373435.png">
+            <meta property="twitter:image" content="https://darwinbox-data-prod-mum.s3.ap-south-1.amazonaws.com/INSTANCE3_a647feda58d4ee_55/logo/a1394701086597d50584098__tenant-avatar-55_54373435.png">
+
+            <meta property="og:image:alt" content="Airtel">
+
+          </head>
+          <body>
+            Airtel - 
+          <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;796f05beba604f8aacd73b7ceaf40d93&quot;,&quot;spa&quot;:2}" crossorigin="anonymous"></script>
+
+          </body></html>

@@ -64,6 +64,17 @@ public class TestFullPipeline {
         
         List<JobPortalAdapter> adapters = new ArrayList<>();
         adapters.add(new WorkdayJobAdapter());
+        adapters.add(new DarwinboxJobAdapter());
+        adapters.add(new CareersAtTechJobAdapter());
+        adapters.add(new LgeJobAdapter());
+        adapters.add(new TalentRecruitJobAdapter());
+        adapters.add(new GreenhouseJobAdapter());
+        adapters.add(new LeverJobAdapter());
+        adapters.add(new IcimsJobAdapter());
+        adapters.add(new AccentureJobAdapter());
+        adapters.add(new JioJobAdapter());
+        adapters.add(new SmartRecruitersJobAdapter());
+        adapters.add(new AshbyJobAdapter());
         
         JobSourceService service = new JobSourceService(sources, null, null, null, adapters, writer, null);
         

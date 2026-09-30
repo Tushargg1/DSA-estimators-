@@ -488,12 +488,12 @@ function JobBoard() {
           
           {error && <div className="form-error" role="alert"><span>!</span>{error}</div>}
           {success && <p className="job-success" role="status">{success}</p>}
-          {loading ? <div className="jobs-loading"><span className="button-spinner" />Loading opportunities…</div>
+          {loading && !page ? <div className="jobs-loading"><span className="button-spinner" />Loading opportunities…</div>
             : visibleJobs.length === 0 ? <div className="empty-state jobs-empty">
               <span className="empty-state-icon" aria-hidden="true">⌕</span>
               <h3>{page?.totalElements ? 'No matching opportunities' : 'No jobs shared yet'}</h3>
               <p>{page?.totalElements ? 'Try another search or filter.' : 'Be the first to share an opportunity.'}</p>
-            </div> : <ol className="job-list">
+            </div> : <ol className="job-list" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
               {visibleJobs.map((job) => <JobCard key={job.id} job={job} updatingId={updatingId} onToggle={toggleApplied} />)}
             </ol>}
           {page && page.totalPages > 1 && <nav className="jobs-pagination" aria-label="Job listing pages">
@@ -600,12 +600,12 @@ function JobBoard() {
           </div>
           
           {error && <div className="form-error" role="alert"><span>!</span>{error}</div>}
-          {loading ? <div className="jobs-loading"><span className="button-spinner" />Loading opportunities…</div>
+          {loading && !page ? <div className="jobs-loading"><span className="button-spinner" />Loading opportunities…</div>
             : visibleJobs.length === 0 ? <div className="empty-state jobs-empty">
               <span className="empty-state-icon" aria-hidden="true">⌕</span>
               <h3>No matching opportunities</h3>
               <p>Try selecting a different role or wait for more jobs to be scraped.</p>
-            </div> : <ol className="job-list">
+            </div> : <ol className="job-list" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
               {visibleJobs.map((job) => <JobCard key={job.id} job={job} updatingId={updatingId} onToggle={toggleApplied} />)}
             </ol>}
         </div>
@@ -618,7 +618,7 @@ function JobBoard() {
           <span className="eyebrow">Add a career site</span>
           <h3>Fetch jobs from a company</h3>
           <p>Paste a careers URL and we'll tell you straight away whether it can be extracted.
-            Boards on Greenhouse, Lever, Ashby and Accenture are fully supported. Large boards
+            Boards on <strong>Greenhouse, Lever, Ashby, Workday, Accenture, SmartRecruiters</strong> and <strong>iCIMS</strong> are fully supported. Large boards
             keep loading in the background until every job is stored, then refresh daily.</p>
           <form onSubmit={addSource} aria-busy={sourceAdding}>
             <div className="source-edit-fields">
@@ -675,12 +675,12 @@ function JobBoard() {
           </div>
           {sourceError && <div className="form-error" role="alert"><span>!</span>{sourceError}</div>}
           {sourceSuccess && <p className="job-success" role="status">{sourceSuccess}</p>}
-          {sourceLoading ? <div className="jobs-loading"><span className="button-spinner" />Loading sources…</div>
+          {sourceLoading && sources.length === 0 ? <div className="jobs-loading"><span className="button-spinner" />Loading sources…</div>
             : sources.length === 0 ? <div className="empty-state jobs-empty">
               <span className="empty-state-icon" aria-hidden="true">🔗</span>
               <h3>No career sites added</h3>
               <p>Add a careers page URL and scrape it to discover job listings for the community.</p>
-            </div> : <div className="company-groups">
+            </div> : <div className="company-groups" style={{ opacity: sourceLoading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
               {sources
                 .filter(s => !sourceQuery || (s.label || '').toLowerCase().includes(sourceQuery.toLowerCase()) || (s.url || '').toLowerCase().includes(sourceQuery.toLowerCase()))
                 .map((source) => {
