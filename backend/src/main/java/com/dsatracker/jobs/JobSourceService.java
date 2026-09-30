@@ -509,7 +509,8 @@ public class JobSourceService {
                         "--no-sandbox",
                         "--disable-setuid-sandbox",
                         "--disable-dev-shm-usage",
-                        "--disable-gpu"
+                        "--disable-gpu",
+                        "--disable-blink-features=AutomationControlled"
                     ))
             );
             com.microsoft.playwright.BrowserContext context = browser.newContext(new com.microsoft.playwright.Browser.NewContextOptions()
@@ -557,7 +558,40 @@ public class JobSourceService {
                 } catch (Exception ignored) { /* try next selector */ }
             }
 
+            // Evaluate generic job extractor script for sites that don't use real hrefs
+            String jsExtractor = 
+                "() => {\n" +
+                "  let jobs = [];\n" +
+                "  let elements = document.querySelectorAll('a, [class*=job], [class*=position], [class*=vacancy], [class*=card], li, div');\n" +
+                "  for(let el of elements) {\n" +
+                "    let title = el.innerText ? el.innerText.trim() : '';\n" +
+                "    if(title.length > 5 && title.length < 150 && !title.includes('\\n') && " +
+                "       (title.toLowerCase().includes('engineer') || title.toLowerCase().includes('manager') || title.toLowerCase().includes('developer') || title.toLowerCase().includes('analyst') || title.toLowerCase().includes('consultant'))) {\n" +
+                "       let url = el.href || (window.location.href.split('#')[0] + '#/job-' + encodeURIComponent(title.replace(/\\s+/g, '-').toLowerCase()));\n" +
+                "       if(url.startsWith('http')) jobs.push({url: url, title: title});\n" +
+                "    }\n" +
+                "  }\n" +
+                "  return jobs;\n" +
+                "}";
+
             String html = page.content();
+            
+            try {
+                Object extracted = page.evaluate(jsExtractor);
+                if (extracted instanceof java.util.List) {
+                    for (Object o : (java.util.List<?>) extracted) {
+                        if (o instanceof java.util.Map) {
+                            java.util.Map<?, ?> map = (java.util.Map<?, ?>) o;
+                            String jUrl = (String) map.get("url");
+                            String jTitle = (String) map.get("title");
+                            if (jUrl != null) {
+                                html += "\n<a href=\"" + jUrl + "\">" + (jTitle != null ? jTitle : "Job") + "</a>";
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+
             browser.close();
             return html;
         } catch (Exception playwrightEx) {
@@ -600,17 +634,25 @@ public class JobSourceService {
     private static final int DESCRIPTION_CONTEXT_CHARS = 1500;
     private static final int DESCRIPTION_MAX_CHARS = 2000;
 
+    private static final Pattern ANY_URL_PATTERN = Pattern.compile(
+            "[\"']((?:https?://[^\"']+|/[^\"']+))[\"']", Pattern.CASE_INSENSITIVE);
+
     List<ScrapedLink> extractJobLinks(String html, String baseUrl) {
         List<ScrapedLink> results = new ArrayList<>();
-        Matcher hrefMatcher = HREF_PATTERN.matcher(html);
+        Matcher hrefMatcher = ANY_URL_PATTERN.matcher(html);
         Set<String> seen = new java.util.HashSet<>();
 
         while (hrefMatcher.find() && results.size() < 500) {
             String href = hrefMatcher.group(1).trim();
             String resolved = resolveUrl(href, baseUrl);
             if (resolved == null) continue;
+            
+            // Exclude static assets
+            String lowerResolved = resolved.toLowerCase();
+            if (lowerResolved.matches(".*\\.(png|jpg|jpeg|gif|svg|ico|css|js|woff|woff2|ttf|eot)(\\?.*)?$")) continue;
+            
             if (!JOB_URL_PATTERN.matcher(resolved).find()) continue;
-            if (!seen.add(resolved.toLowerCase())) continue;
+            if (!seen.add(lowerResolved)) continue;
 
             // Try to extract title from surrounding anchor text
             String title = null;
