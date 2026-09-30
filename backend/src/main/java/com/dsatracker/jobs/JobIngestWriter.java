@@ -75,27 +75,19 @@ class JobIngestWriter {
             
             JobListing listing = toListing(job, sourceId, postedBy, company);
             
-            // Apply strict filters based on user request:
-            // 1. Must be 0 experience (null or 0)
-            if (listing.getExperienceRequired() != null && listing.getExperienceRequired() > 0) {
-                continue;
-            }
-            
-            // 2. Must match one of the target roles using basic regex first, then Groq
-            String detected = null;
-            for (JobProfile profile : targetProfiles) {
-                if (matchesProfileRegex(profile, listing.getTitle(), listing.getDescription())) {
-                    if (groqService.confirmJobMatch(profile.getRoleTitle(), profile.getKeywords(), listing.getTitle(), listing.getDescription())) {
-                        detected = profile.getRoleTitle();
-                        break;
+            // Apply matching to flag relevant jobs, but save everything (user wants all jobs)
+            if (listing.getExperienceRequired() == null || listing.getExperienceRequired() == 0) {
+                String detected = null;
+                for (JobProfile profile : targetProfiles) {
+                    if (matchesProfileRegex(profile, listing.getTitle(), listing.getDescription())) {
+                        if (groqService.confirmJobMatch(profile.getRoleTitle(), profile.getKeywords(), listing.getTitle(), listing.getDescription())) {
+                            detected = profile.getRoleTitle();
+                            break;
+                        }
                     }
                 }
+                listing.setDetectedRole(detected);
             }
-
-            if (detected == null) {
-                continue;
-            }
-            listing.setDetectedRole(detected);
             
             batch.add(listing);
         }
